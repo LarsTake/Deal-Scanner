@@ -59,6 +59,8 @@ jobs:
           test -n "$CERTIFICATE_IDENTITY"
           echo "APPLE_SIGNING_IDENTITY=$CERTIFICATE_IDENTITY" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
+      - name: Test native desktop shell
+        run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
       - run: pnpm --filter @deal-scanner/desktop tauri build
         env:
           APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}

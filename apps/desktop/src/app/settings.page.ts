@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
+import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loopback.service';
 
 @Component({
   standalone: true,
@@ -28,13 +29,34 @@ import { AuthService } from './auth.service';
       @if (saved()) { <span class="notice">Gespeichert.</span> }
       @if (error()) { <span class="notice error">{{ error() }}</span> }
     </form></mat-card>
+    <section class="section-head"><div><p class="eyebrow">Browser-Erweiterung</p><h2>Sichere Desktop-Kopplung</h2></div></section>
+    <mat-card class="form-card compact">
+      @if (!loopback.available()) {
+        <div class="notice">Die native Loopback-Kopplung ist nur in der installierten Desktop-App verfügbar.</div>
+      } @else {
+        <p>Erzeugt für fünf Minuten einen lokalen Import-Endpunkt. Das Supabase-JWT bleibt im Desktop-Prozess.</p>
+        <div class="row">
+          <button mat-flat-button type="button" (click)="startLoopback()">Neue Kopplung erzeugen</button>
+          @if (pairing()) { <button mat-stroked-button type="button" (click)="stopLoopback()">Widerrufen</button> }
+        </div>
+        @if (pairing(); as current) {
+          <mat-form-field><mat-label>API-Adresse für die Erweiterung</mat-label><input matInput readonly [value]="current.apiUrl" /></mat-form-field>
+          <mat-form-field><mat-label>Pairing-Token</mat-label><input matInput readonly [value]="current.pairingToken" /></mat-form-field>
+          <small>Gültig bis {{ expiresAt(current) }}. Beide Werte in der Erweiterung speichern; der Token wird danach automatisch ungültig.</small>
+        }
+        @if (loopbackError()) { <div class="notice error">{{ loopbackError() }}</div> }
+      }
+    </mat-card>
   `,
 })
 export class SettingsPage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
+  readonly loopback = inject(ExtensionLoopbackService);
   readonly saved = signal(false);
   readonly error = signal('');
+  readonly pairing = signal<LoopbackPairing | null>(null);
+  readonly loopbackError = signal('');
   readonly form = new FormGroup({
     apiUrl: new FormControl(localStorage.getItem('deal-scanner-api-url') ?? 'http://127.0.0.1:8000', { nonNullable: true, validators: [Validators.required] }),
     supabaseUrl: new FormControl(localStorage.getItem('deal-scanner-supabase-url') ?? '', { nonNullable: true }),
@@ -77,5 +99,23 @@ export class SettingsPage implements OnInit {
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Provider-Konfiguration konnte nicht gespeichert werden');
     }
+  }
+
+  async startLoopback(): Promise<void> {
+    this.loopbackError.set('');
+    try {
+      this.pairing.set(await this.loopback.start(this.form.controls.apiUrl.value));
+    } catch (error) {
+      this.loopbackError.set(error instanceof Error ? error.message : 'Loopback-Kopplung konnte nicht gestartet werden');
+    }
+  }
+
+  async stopLoopback(): Promise<void> {
+    await this.loopback.stop();
+    this.pairing.set(null);
+  }
+
+  expiresAt(pairing: LoopbackPairing): string {
+    return new Date(pairing.expiresAtUnix * 1000).toLocaleTimeString('de-DE');
   }
 }

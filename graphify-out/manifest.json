@@ -15,6 +15,14 @@
     "mtime": 1784745113.098024,
     "hash": "dbe15c0ac3d123f6cccdc0bf0994a180"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\api-target.test.ts": {
+    "mtime": 1784748598.931041,
+    "hash": "c2cc070a07b3e8bd705db9b3ccc38886"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\api-target.ts": {
+    "mtime": 1784748598.9300327,
+    "hash": "9445d69490455cc57827d7ec1123fc02"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\background.ts": {
     "mtime": 1784741716.5527983,
     "hash": "72524e34c0a84e21d346c27ea8196788"
@@ -28,8 +36,8 @@
     "hash": "b16de5bde824c4154068361d3715a0e0"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\popup.ts": {
-    "mtime": 1784737862.1677032,
-    "hash": "6cec7049360bdd73f4faf6c41dd50b44"
+    "mtime": 1784748598.9320414,
+    "hash": "e10a5192707f725601a742163ec7ffa3"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\types.ts": {
     "mtime": 1784743508.4642458,
@@ -74,6 +82,10 @@
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\desktop-notification.service.ts": {
     "mtime": 1784736327.8971758,
     "hash": "28878bfbb1c920156e1605bf824eb335"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\extension-loopback.service.ts": {
+    "mtime": 1784748346.2374427,
+    "hash": "78cb85879161f384a7a9e9cd5f7db233"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\listing-detail.page.ts": {
     "mtime": 1784745470.8916476,
@@ -120,8 +132,8 @@
     "hash": "39ce3d5528f034cf767246edaf8e68f4"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\settings.page.ts": {
-    "mtime": 1784744042.4836893,
-    "hash": "7ed5a8735f3560e937acb4b1da82a80b"
+    "mtime": 1784748346.2384708,
+    "hash": "21c5bb22766e76f0bca0905114acbf6e"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\system.page.ts": {
     "mtime": 1784744983.9857316,
@@ -135,9 +147,13 @@
     "mtime": 1784742709.2656362,
     "hash": "1be34a5c61c2c35365de3dab14298f0b"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\extension_loopback.rs": {
+    "mtime": 1784748670.8550863,
+    "hash": "d2e04eb3213c79787c6affd5fcabafa6"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\lib.rs": {
-    "mtime": 1784736327.8951447,
-    "hash": "ba6745cb86ca4f8c5c8e9df5fc614591"
+    "mtime": 1784748393.504203,
+    "hash": "06c737c57236c139f61e76c7741f4c3d"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\main.rs": {
     "mtime": 1784742709.2656362,
@@ -328,7 +344,7 @@
     "hash": "c63e216f1ffe079fdc0c0f91850a92b3"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\generated.ts": {
-    "mtime": 1784747858.480162,
+    "mtime": 1784749036.627527,
     "hash": "97fc34ed0a7a5ff8395a06d20999c21c"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\index.ts": {
@@ -412,8 +428,8 @@
     "hash": "46237d3deebbfd6e8749c8182d613bc5"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\README.md": {
-    "mtime": 1784746350.6684084,
-    "hash": "6e1b76ef870a8ddd94f1eb0aced893e0"
+    "mtime": 1784749306.592561,
+    "hash": "6dd949dbc2f81bb4a8e4911477de8d93"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\popup.html": {
     "mtime": 1784742709.2605698,
@@ -424,8 +440,8 @@
     "hash": "d5f9d56b925dd3502f4508689175fee6"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\acceptance.md": {
-    "mtime": 1784742617.0006683,
-    "hash": "73d4174af943dec3362275a8de46a3c7"
+    "mtime": 1784749306.5915112,
+    "hash": "f65f3f17b89036c14a5098a0d6509a35"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\architecture.md": {
     "mtime": 1784742709.2666507,
@@ -440,20 +456,20 @@
     "hash": "192a5c3db071e7504f5c6980e3b88942"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\mvp-audit.md": {
-    "mtime": 1784748019.996372,
-    "hash": "cff9db85467c2401f978da5192ec7ed8"
+    "mtime": 1784748633.716697,
+    "hash": "fc92a3aca907b6fa3c1f2967fe6cc5a5"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\operations.md": {
     "mtime": 1784736797.5417185,
     "hash": "711e77ee8443e1e04166149d511b82d8"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\security.md": {
-    "mtime": 1784738734.138161,
-    "hash": "b89670b5fa43cd5e1d28ea60ea48c757"
+    "mtime": 1784748633.7156334,
+    "hash": "cc469faf0520d8023ab2de2ca53a1685"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\setup-and-integrations.md": {
-    "mtime": 1784747639.5489392,
-    "hash": "4b5b0aa7c2126baa226e5b17b783d156"
+    "mtime": 1784748633.7146246,
+    "hash": "caa4aed670192574a5fd6d4daaae26cc"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\adr\\0001-modular-monorepo.md": {
     "mtime": 1784742709.2666507,
@@ -486,6 +502,10 @@
   "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_185657_which_improved_deal_scanner_plan_requirements_stil.md": {
     "mtime": 1784746617.5385113,
     "hash": "7bf65f1c106eab5af09552322c262add"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_192150_which_explicit_requirements_in_the_improved_deal_s.md": {
+    "mtime": 1784748110.3419192,
+    "hash": "380ecbbe63b9bead0b7d069857850d59"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\128x128.png": {
     "mtime": 1784737196.5386457,

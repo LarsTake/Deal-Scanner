@@ -36,6 +36,14 @@ landen in Quarantäne; Original-EMLs werden archiviert. Die gebaute MV3-Erweiter
 importiert nur nach Nutzeraktion sichtbare Kleinanzeigen-Daten und verwendet ein kurzlebiges,
 widerrufbares Pairing-Token.
 
+Für die direkte Desktop-Kopplung unter **Einstellungen → Sichere Desktop-Kopplung** eine neue
+Kopplung erzeugen und die angezeigte API-Adresse samt Token in der Erweiterung speichern. Tauri
+bindet dafür fünf Minuten lang einen zufälligen Port ausschließlich an `127.0.0.1`. Der lokale
+Proxy akzeptiert nur Browser- und Bildimport, begrenzt Requests auf 2 MiB, folgt keinen Redirects
+und reicht das Supabase-JWT intern an die konfigurierte API weiter. **Widerrufen** beendet den
+Listener sofort; spätestens nach fünf Minuten endet er automatisch. Alternativ kann die
+Erweiterung weiterhin direkt die Server-API mit einem dort erzeugten Pairing-Token verwenden.
+
 ## Ollama, OCR und Benachrichtigungen
 
 `DEAL_SCANNER_OLLAMA_TEXT_MODEL` aktiviert strukturierte Textanalyse; leere Konfiguration lässt

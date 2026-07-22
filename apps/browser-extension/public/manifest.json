@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Deal Scanner Import",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Importiert ausschließlich sichtbare Kleinanzeigen-Angebote nach Nutzeraktion.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
     "https://www.kleinanzeigen.de/*",
-    "https://kleinanzeigen.de/*",
-    "http://127.0.0.1:8000/*",
-    "http://localhost:8000/*"
+    "https://kleinanzeigen.de/*"
   ],
-  "optional_host_permissions": ["https://*/*"],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
   "background": { "service_worker": "background.js", "type": "module" },
   "action": { "default_popup": "popup.html", "default_title": "Deal Scanner" },
   "content_scripts": [

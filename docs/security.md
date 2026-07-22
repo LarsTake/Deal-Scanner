@@ -10,6 +10,10 @@
   Data-API-Schema veröffentlicht. Worker greifen ausschließlich über Lease-Endpunkte zu.
 - Import-URLs werden gegen Provider-Allowlisten geprüft. Private, Loopback- und Link-Local-Ziele
   werden nicht durch den Server abgerufen.
-- Erweiterungsimporte benötigen einen kurzlebigen Pairing-Token; nur dessen SHA-256-Hash wird gespeichert.
+- Erweiterungsimporte benötigen einen kurzlebigen Pairing-Token; nur dessen SHA-256-Hash wird
+  gespeichert. Der optionale Tauri-Proxy bindet ausschließlich an `127.0.0.1`, hält ebenfalls nur
+  den Hash im Arbeitsspeicher, akzeptiert genau zwei Import-Routen, folgt keinen Redirects und
+  beendet sich nach fünf Minuten oder beim manuellen Widerruf. Das Benutzer-JWT wird nie an die
+  Erweiterung ausgegeben.
 - E-Mails und Bilder liegen privat; Logs enthalten keine Tokens, vollständigen Mailtexte oder PII.
 - Cloud-Modelle sind standardmäßig deaktiviert. Verkäuferkontakte und automatische Käufe sind kein Bestandteil.

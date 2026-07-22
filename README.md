@@ -28,7 +28,9 @@ uv run pytest
 uv run ruff check .
 uv run mypy packages/python apps/server-api apps/scheduler apps/analysis-worker providers
 pnpm typecheck
+pnpm test
 pnpm build
+cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
 ```
 
 Ein nativer Windows-Release wird mit

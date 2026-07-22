@@ -7,8 +7,9 @@ Analyse-Worker sind getrennte Python-Prozesse.
 
 ## Schnellstart
 
-Voraussetzungen: Python 3.12, `uv`, Node.js 24, `pnpm` 10. Für Tauri zusätzlich Rust und die
-plattformabhängigen Tauri-Systembibliotheken; für den Serverbetrieb Docker.
+Voraussetzungen: Python 3.12, `uv`, Node.js 24, `pnpm` 10. Die Supabase-CLI ist als exakt
+gepinntes Workspace-Werkzeug enthalten. Für Tauri werden zusätzlich Rust und die
+plattformabhängigen Tauri-Systembibliotheken benötigt; für den Serverbetrieb Docker.
 
 ```powershell
 Copy-Item .env.example .env
@@ -32,6 +33,10 @@ pnpm test
 pnpm build
 cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
 ```
+
+Mit einer lokalen PostgreSQL-17-Laufzeit führt
+`infrastructure/scripts/test-postgres-local.ps1 -FullSuite` zusätzlich alle Migrationen,
+Workspace-/Storage-RLS und den konkurrierenden Job-Claim in einem kurzlebigen Testcluster aus.
 
 Ein nativer Windows-Release wird mit
 `pnpm --filter @deal-scanner/desktop tauri build` erzeugt. Die Installer liegen anschließend

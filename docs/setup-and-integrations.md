@@ -10,6 +10,15 @@ Prozesse. `docker compose up --build` verwendet dieselben Verträge und persiste
 Marktdaten-CSV werden auf der Preis-Seite ausgewählt: Im Browser übernimmt ein beschränktes
 Dateifeld den Import, in Tauri ein nativer Dialog. Beide Wege verwenden denselben API-Vertrag.
 
+Die PostgreSQL-/RLS-Abnahme kann auch ohne Docker gegen eine lokale PostgreSQL-17-Laufzeit
+ausgeführt werden. Das Skript erzeugt dafür einen kurzlebigen Cluster auf einem freien
+Loopback-Port und entfernt ihn nach dem Test wieder:
+
+```powershell
+$env:DEAL_SCANNER_POSTGRES_BIN='C:\Pfad\zu\pgsql\bin'
+.\infrastructure\scripts\test-postgres-local.ps1 -FullSuite
+```
+
 ## Supabase
 
 Ein Projekt wird ausschließlich über die SQL-Dateien in
@@ -17,6 +26,8 @@ Ein Projekt wird ausschließlich über die SQL-Dateien in
 JWKS-Audience, PostgreSQL-Verbindung und die eingeschränkte Datenbankrolle gesetzt werden.
 Die Publishable-Konfiguration darf in Web/desktop stehen; Service-Role-Key und DB-Passwort nur
 im Server-Secret-Store. Die Buckets `listing-images` und `mail-archive` bleiben privat.
+Die gepinnte CLI wird mit `pnpm exec supabase --workdir infrastructure <Befehl>` aufgerufen;
+`supabase start` und `supabase status` benötigen einen laufenden Docker-kompatiblen Dienst.
 
 Scheduler und Analyse-Worker authentifizieren sich ebenfalls an der API. Im Entwicklungsmodus
 kann dafür `DEAL_SCANNER_DEVELOPMENT_USER_ID` verwendet werden. In Produktion ist ein gültiges,
@@ -57,7 +68,9 @@ auffindbar ist. Desktop ist der Standardkanal; `DEAL_SCANNER_NTFY_URL` aktiviert
 ## ERP und Migration
 
 `POST /api/v1/erp/exports/{listingId}` liefert das stabile Mock-Format `erp-purchase-v1`.
-Ein echter Adapter ersetzt nur den Port, nicht die öffentliche Route. Neue Datenbankschemata
+Es enthält Kauf- und Nebenkosten, Verkäuferdaten, erkannte Komponenten, Bildreferenzen mit
+Hashes sowie die letzte Marktwert-/Score-Auswertung. Ein echter Adapter ersetzt nur den Port,
+nicht die öffentliche Route. Neue Datenbankschemata
 werden als weitere, vorwärtsgerichtete Supabase-Migration ergänzt; historische Snapshots,
 Analysen und Audit-Ereignisse werden nie überschrieben.
 
@@ -86,6 +99,8 @@ OAuth-Tokens, IMAP führt nur Login/NOOP aus und Ollama/Supabase werden nur übe
 `DEAL_SCANNER_SUPABASE_DB_URL` aktiviert zusätzlich die read-only Prüfung der migrierten
 Kerntabellen, aktivierten RLS-Flags und privaten Storage-Buckets. Der eBay-Smoke ruft nach OAuth
 eine einzelne read-only Browse-Suche mit `limit=1` auf.
+`DEAL_SCANNER_RUN_OLLAMA_INFERENCE_TESTS=1` aktiviert zusätzlich einen bewusst separaten,
+rechenintensiveren Modellaufruf, dessen Ausgabe gegen den produktiven Pydantic-Vertrag validiert wird.
 
 ## Desktop-Signierung und Notarisierung
 

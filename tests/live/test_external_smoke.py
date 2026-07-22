@@ -3,11 +3,14 @@ from __future__ import annotations
 import asyncio
 import imaplib
 import os
+from uuid import UUID
 
 import httpx
 import psycopg
 import pytest
+from deal_scanner_core.models import TextAnalysisRequest
 from deal_scanner_ebay import EbayProvider, EbaySettings
+from deal_scanner_worker.ollama import OllamaProvider
 
 pytestmark = [
     pytest.mark.live,
@@ -108,3 +111,23 @@ async def test_ollama_model_is_available_read_only() -> None:
     response.raise_for_status()
     names = {item.get("name") for item in response.json().get("models", [])}
     assert model in names or any(isinstance(name, str) and name.startswith(f"{model}:") for name in names)
+
+
+@pytest.mark.asyncio
+async def test_ollama_structured_inference_contract() -> None:
+    if os.getenv("DEAL_SCANNER_RUN_OLLAMA_INFERENCE_TESTS") != "1":
+        pytest.skip("set DEAL_SCANNER_RUN_OLLAMA_INFERENCE_TESTS=1 for the compute-intensive model call")
+    url = required("DEAL_SCANNER_OLLAMA_URL").rstrip("/")
+    model = required("DEAL_SCANNER_OLLAMA_TEXT_MODEL")
+    async with httpx.AsyncClient() as client:
+        result = await OllamaProvider(url, model, client).analyze_text(
+            TextAnalysisRequest(
+                listing_id=UUID("00000000-0000-4000-8000-000000000999"),
+                title="Gaming PC mit RTX 4070S und Ryzen 7 5800X3D",
+                description="32 GB RAM, 1 TB SSD, Rechnung und Abholung mit Funktionstest.",
+                category_profile="computer",
+            )
+        )
+    assert result.category == "computer"
+    assert result.schema_version == "1.0.0"
+    assert 0 <= result.overall_confidence <= 1

@@ -16,7 +16,7 @@ Implementierungs- und Prüfnachweis zu. Ein grüner lokaler Nachweis ersetzt nic
 | 8 | Kleinanzeigen-Erweiterung | Manifest V3, sichtbare Karten/Detaildaten, Inline-Bewertung/Bekannt-Status, Server-Pairing und nativer Tauri-Loopback-Proxy | DOM-/Ziel-URL-Fixtures, Extension-Build, Pairing-API- und Rust-Proxytests | lokal erfüllt |
 | 9 | E-Mail-Importer | Absenderprüfung, versionierter Parser, Archiv, Retry und Quarantäne | Mail-Fixtures; IMAP-Verbindung extern | lokal erfüllt, live offen |
 | 10 | Regelbasierte Produkterkennung | Regeln, Aliase, Normalisierung und Fuzzy Matching vor KI | RTX/QR/DJI/ELRS-Normalisierungstests | lokal erfüllt |
-| 11 | Lokaler Ollama-Provider | typisierter AI-Port, Modell- und Health-Vertrag | Adapter-/Schema-Tests; Modelllauf extern | lokal erfüllt, live offen |
+| 11 | Lokaler Ollama-Provider | typisierter AI-Port, Modell- und Health-Vertrag | Adapter-/Schema-Tests und realer schema-validierter Lauf mit lokalem Ollama | lokal und live geprüft |
 | 12 | Strukturierte Textanalyse | versioniertes Pydantic-/JSON-Schema mit Evidenz und Konfidenz | ungültige Modellausgabe wird verworfen | lokal erfüllt |
 | 13 | Kategorieprofile | versionierte YAML-Profile für PC, Simracing, FPV und allgemein | Build-Validierung und Extraktionstests | lokal erfüllt |
 | 14 | Risiko-Score | evidenzbasierte, versionierte Signale; fehlende Daten neutral | Risiko- und Worker-Ergebnistests | lokal erfüllt |
@@ -29,7 +29,10 @@ Implementierungs- und Prüfnachweis zu. Ein grüner lokaler Nachweis ersetzt nic
 
 Zusätzliche Plananforderungen wie private Bildablage, SHA-256/pHash, OCR-Vertrag,
 Desktop-Benachrichtigungen, ntfy-Adapter, ERP-Mock, Offline-Outbox, OpenAPI-generierter Client,
-strukturierte Logs, Secret-Scan und Audit-Ereignisse sind ebenfalls implementiert. Der generierte
+strukturierte Logs, Secret-Scan und Audit-Ereignisse sind ebenfalls implementiert. Normalisierte
+Text-Fingerprints erkennen kopierte Anzeigen auch bei neuer externer ID; der ERP-Mock exportiert
+Verkäufer, Komponenten, Bildreferenzen und die letzte Marktwertauswertung. Datenbanksicherungen
+werden als validierte PostgreSQL-Custom-Archive erzeugt und testweise wiederhergestellt. Der generierte
 Client prüft Verb, Route, Parameter, Body und Response statisch gegen OpenAPI. Compose enthält
 mtime-basierte Healthchecks für Scheduler und Worker; die Workflows prüfen Compose, bauen alle
 drei Container und werden zusätzlich mit YAML-Lint, Zizmor sowie Python-, Node- und Rust-

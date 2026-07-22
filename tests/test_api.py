@@ -8,7 +8,7 @@ os.environ["DEAL_SCANNER_AUTO_CREATE_DB"] = "true"
 os.environ["DEAL_SCANNER_AUTH_MODE"] = "development"
 
 from deal_scanner_api.database import session_factory
-from deal_scanner_api.db_models import AnalysisJobRow
+from deal_scanner_api.db_models import AnalysisJobRow, ListingImageRow
 from deal_scanner_api.main import app
 from fastapi.testclient import TestClient
 
@@ -40,6 +40,28 @@ def set_job_times(job_id: str, *, expire_lease: bool = False, make_available: bo
             await session.commit()
 
     asyncio.run(update())
+
+
+def add_erp_image(listing_id: str, workspace_id: str) -> None:
+    async def insert() -> None:
+        async with session_factory() as session:
+            session.add(
+                ListingImageRow(
+                    workspace_id=UUID(workspace_id),
+                    listing_id=UUID(listing_id),
+                    source_url="https://img.kleinanzeigen.de/erp-fixture.png",
+                    storage_path="fixture/erp-image.png",
+                    sha256_hash="a" * 64,
+                    perceptual_hash="b" * 16,
+                    width=1280,
+                    height=720,
+                    mime_type="image/png",
+                    analysis_status="COMPLETED",
+                )
+            )
+            await session.commit()
+
+    asyncio.run(insert())
 
 
 def test_end_to_end_import_feedback_and_worker_lease() -> None:
@@ -303,6 +325,28 @@ def test_system_status_reports_all_required_components_without_secrets() -> None
         assert "token" not in serialized
 
 
+def test_new_external_id_with_copied_description_creates_duplicate_signal() -> None:
+    copied_text = (
+        "Einmaliger Fixture-Text für die Dublettenprüfung mit Rechnung, Originalverpackung, "
+        "vollständigem Zubehör und Abholung nach vorheriger Funktionsprüfung vor Ort."
+    )
+    first = payload(copied_text)
+    first["externalId"] = "copy-source-listing"
+    first["url"] = "https://www.kleinanzeigen.de/s-anzeige/gaming-pc/2234567890-228-1234"
+    second = payload(copied_text)
+    second["externalId"] = "copy-target-listing"
+    second["url"] = "https://www.kleinanzeigen.de/s-anzeige/gaming-pc/3234567890-228-1234"
+    with TestClient(app) as client:
+        assert client.post("/api/v1/imports/manual", json=first).status_code == 201
+        imported = client.post("/api/v1/imports/manual", json=second)
+        assert imported.status_code == 201, imported.text
+        listing = imported.json()["listing"]
+        duplicate = next(signal for signal in listing["riskSignals"] if signal["type"] == "duplicate_description")
+        assert duplicate["source"] == "deduplication-v1"
+        assert duplicate["confidence"] == 0.95
+        assert listing["riskScore"] > 0
+
+
 def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
     evaluation_payload = payload("Abholung und Test möglich")
     evaluation_payload["externalId"] = "evaluation-listing"
@@ -341,14 +385,28 @@ def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
 def test_erp_mock_uses_stable_purchase_contract() -> None:
     target = payload()
     target["externalId"] = "erp-contract-listing"
+    target["seller"] = {
+        "externalId": "erp-seller-1",
+        "displayName": "ERP Testverkäufer",
+        "location": "Berlin",
+        "ratingScore": "99.50",
+        "reviewCount": 42,
+    }
     with TestClient(app) as client:
-        listing_id = client.post("/api/v1/imports/manual", json=target).json()["listing"]["id"]
+        listing = client.post("/api/v1/imports/manual", json=target).json()["listing"]
+        listing_id = listing["id"]
+        add_erp_image(listing_id, listing["workspaceId"])
         response = client.post(f"/api/v1/erp/exports/{listing_id}")
         assert response.status_code == 200, response.text
         export = response.json()
         assert export["status"] == "mocked"
         assert export["purchasePayload"]["formatVersion"] == "erp-purchase-v1"
         assert export["purchasePayload"]["relationships"]["listingId"] == listing_id
+        assert export["purchasePayload"]["seller"]["externalId"] == "erp-seller-1"
+        assert export["purchasePayload"]["seller"]["ratingScore"] == "99.50"
+        assert export["purchasePayload"]["images"][0]["sha256Hash"] == "a" * 64
+        assert any(component["model"] == "RTX 4070 Super" for component in export["purchasePayload"]["components"])
+        assert export["purchasePayload"]["marketValue"]["riskScore"] == 0
 
 
 def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -> None:

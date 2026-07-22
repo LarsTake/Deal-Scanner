@@ -7,8 +7,8 @@ from decimal import Decimal
 from urllib.parse import urlparse
 from uuid import UUID
 
-from deal_scanner_extraction import RuleExtractor
-from deal_scanner_scoring import RiskScoreEngine
+from deal_scanner_extraction import RuleExtractor, listing_text_fingerprint, listing_text_similarity
+from deal_scanner_scoring import RiskScoreEngine, RiskSignal
 from fastapi import HTTPException
 from sqlalchemy import desc, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -437,6 +437,7 @@ async def import_listing(
 ) -> ImportResponse:
     validate_import_url(str(payload.url), payload.platform)
     digest = request_content_hash(payload)
+    text_fingerprint = listing_text_fingerprint(payload.title, payload.description)
     now = datetime.now(UTC)
     seller = await upsert_seller(session, workspace_id, payload.platform, payload.seller, now)
     if payload.search_profile_id is not None:
@@ -520,7 +521,11 @@ async def import_listing(
         workspace_id=workspace_id,
         listing_id=listing.id,
         content_hash=digest,
-        raw_data={**payload.raw_data, "normalizedInput": payload.model_dump(mode="json")},
+        raw_data={
+            **payload.raw_data,
+            "normalizedInput": payload.model_dump(mode="json"),
+            "textFingerprint": text_fingerprint,
+        },
         provider_version=payload.provider_version,
         fetched_at=now,
     )
@@ -556,8 +561,51 @@ async def import_listing(
     listing.analysis_status = "PENDING"
 
     rule_analysis = RuleExtractor().analyze(payload.title, payload.description)
-    risk_result = RiskScoreEngine().score(rule_analysis.risk_signals)
-    for signal in rule_analysis.risk_signals:
+    duplicate_signals: list[RiskSignal] = []
+    candidate_rows = (
+        await session.execute(
+            select(ListingRow)
+            .where(
+                ListingRow.workspace_id == workspace_id,
+                ListingRow.id != listing.id,
+            )
+            .order_by(desc(ListingRow.last_seen_at))
+            .limit(1_000)
+        )
+    ).scalars()
+    for candidate in candidate_rows:
+        candidate_fingerprint = listing_text_fingerprint(candidate.title, candidate.description)
+        if candidate_fingerprint == text_fingerprint and len(payload.description.split()) >= 8:
+            duplicate_signals.append(
+                RiskSignal(
+                    type="duplicate_description",
+                    weight=20,
+                    confidence=0.95,
+                    evidence=f"Normalisierter Text stimmt mit Angebot {candidate.id} überein.",
+                    source="deduplication-v1",
+                )
+            )
+            break
+        similarity = listing_text_similarity(
+            payload.title,
+            payload.description,
+            candidate.title,
+            candidate.description,
+        )
+        if similarity >= 0.90:
+            duplicate_signals.append(
+                RiskSignal(
+                    type="similar_description",
+                    weight=12,
+                    confidence=round(similarity, 3),
+                    evidence=f"Textähnlichkeit {similarity:.1%} zu Angebot {candidate.id}.",
+                    source="deduplication-v1",
+                )
+            )
+            break
+    risk_signals = [*rule_analysis.risk_signals, *duplicate_signals]
+    risk_result = RiskScoreEngine().score(risk_signals)
+    for signal in risk_signals:
         session.add(
             RiskSignalRow(
                 workspace_id=workspace_id,

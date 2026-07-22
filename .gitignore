@@ -14,6 +14,7 @@ node_modules/
 dist/
 target/
 .data/
+.backups/
 coverage/
 apps/desktop/src-tauri/gen/
 graphify-out/.graphify_*

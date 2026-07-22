@@ -10,6 +10,8 @@
   aktive Angebote.
 - Job-Claim mit `SKIP LOCKED`, Lease/Renew, drei Versuchen, Backoff, Dead-Letter und
   Schema-Validierung der Ollama-Ausgabe.
+- Read-only Ollama-Smoke sowie ein realer, gegen `TextAnalysisResult` validierter Modelllauf mit
+  dem lokal verfügbaren Modell `gpt-oss:latest`.
 - Angular-Webbuild, Tauri-Rust-, native Dateiauswahl- und Loopback-Proxytests,
   Manifest-V3-Extension mit Inline-Bewertung/Bekannt-Status, OpenAPI-Vertrag und generierte
   TypeScript-Typen.
@@ -19,7 +21,8 @@
   kurzlebigem Zugriff und einem real ausführbaren Tesseract-OCR-Worker.
 - PostgreSQL-17-Testsuite, die in CI die Supabase-Migration anwendet und Workspace- sowie private
   Storage-RLS mit zwei getrennten Benutzeridentitäten prüft; die Ausführung benötigt einen
-  PostgreSQL-Dienst.
+  PostgreSQL-Dienst. `infrastructure/scripts/test-postgres-local.ps1` stellt dafür alternativ
+  einen kurzlebigen lokalen Testcluster bereit.
 - Schema-validierte Compose-Definitionen und konfigurierte CI-Builds für
   `linux/amd64`/`linux/arm64` sowie native Windows-, Apple-Silicon- und Linux-Artefakte.
 - Lokal erzeugte Windows-Artefakte: MSI und NSIS-Installer unter
@@ -36,7 +39,7 @@
 - eBay Sandbox und Produktion read-only mit freigeschalteten Client-Credentials.
 - IMAP-Retry, Roharchivierung und Quarantäne gegen das Testpostfach; bei konfiguriertem
   Supabase werden EML-Dateien zusätzlich in den privaten Bucket hochgeladen.
-- Ollama-Modelllauf und optionale ntfy-Zustellung.
+- Optionale ntfy-Zustellung.
 - Signierte Installer und Apple-Notarisierung; ohne Zertifikate erzeugt CI unsignierte Artefakte.
 
 Die Live-Smoke-Tests bleiben absichtlich credential-gesteuert und führen weder Käufe noch

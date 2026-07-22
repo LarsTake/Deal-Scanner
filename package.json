@@ -21,7 +21,8 @@
     "scheduler": "uv run --package deal-scanner-scheduler deal-scanner-scheduler"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.10.0"
+    "openapi-typescript": "^7.10.0",
+    "supabase": "2.109.1"
   },
   "pnpm": {
     "overrides": {

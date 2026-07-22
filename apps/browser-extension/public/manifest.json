@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Deal Scanner Import",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Importiert ausschließlich sichtbare Kleinanzeigen-Angebote nach Nutzeraktion.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [

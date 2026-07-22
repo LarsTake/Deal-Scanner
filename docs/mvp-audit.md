@@ -13,7 +13,7 @@ Implementierungs- und Prüfnachweis zu. Ein grüner lokaler Nachweis ersetzt nic
 | 5 | Suchaufträge | vollständiges CRUD, Filter, Intervalle und Schwellenwerte | API-Flow und Angular-Build | lokal erfüllt |
 | 6 | eBay-Provider | Browse API, OAuth, `EBAY_DE`, Delta-Fenster, Deduplizierung und Backoff | Provider-Mocks; Sandbox/Produktion extern | lokal erfüllt, live offen |
 | 7 | Manueller Link-Import | URL-/Payload-Import mit Idempotenz und offizieller eBay-Auflösung | API-Deduplizierungs- und Historientests | lokal erfüllt |
-| 8 | Kleinanzeigen-Erweiterung | Manifest V3, sichtbare Karten/Detaildaten, Server-Pairing und nativer Tauri-Loopback-Proxy | DOM-/Ziel-URL-Fixtures, Extension-Build, Pairing-API- und Rust-Proxytests | lokal erfüllt |
+| 8 | Kleinanzeigen-Erweiterung | Manifest V3, sichtbare Karten/Detaildaten, Inline-Bewertung/Bekannt-Status, Server-Pairing und nativer Tauri-Loopback-Proxy | DOM-/Ziel-URL-Fixtures, Extension-Build, Pairing-API- und Rust-Proxytests | lokal erfüllt |
 | 9 | E-Mail-Importer | Absenderprüfung, versionierter Parser, Archiv, Retry und Quarantäne | Mail-Fixtures; IMAP-Verbindung extern | lokal erfüllt, live offen |
 | 10 | Regelbasierte Produkterkennung | Regeln, Aliase, Normalisierung und Fuzzy Matching vor KI | RTX/QR/DJI/ELRS-Normalisierungstests | lokal erfüllt |
 | 11 | Lokaler Ollama-Provider | typisierter AI-Port, Modell- und Health-Vertrag | Adapter-/Schema-Tests; Modelllauf extern | lokal erfüllt, live offen |
@@ -32,5 +32,7 @@ Desktop-Benachrichtigungen, ntfy-Adapter, ERP-Mock, Offline-Outbox, OpenAPI-gene
 strukturierte Logs, Secret-Scan und Audit-Ereignisse sind ebenfalls implementiert. Der generierte
 Client prüft Verb, Route, Parameter, Body und Response statisch gegen OpenAPI. Compose enthält
 mtime-basierte Healthchecks für Scheduler und Worker; die Workflows prüfen Compose, bauen alle
-drei Container und werden zusätzlich mit YAML-Lint und Zizmor validiert. Die genaue Trennung
+drei Container und werden zusätzlich mit YAML-Lint, Zizmor sowie Python-, Node- und Rust-
+Abhängigkeitsaudits validiert. Die Desktop-/Web-Dateiabstraktion importiert Marktdaten-CSV bis
+2 MB, ohne im Tauri-Webview einen lokalen Dateipfad offenzulegen. Die genaue Trennung
 zwischen lokal reproduzierbarer Abnahme und externen Voraussetzungen steht in `acceptance.md`.

@@ -48,4 +48,22 @@ describe('DealScannerClient', () => {
       message: '[401] Token fehlt',
     } satisfies Partial<ApiProblemError>);
   });
+
+  it('uploads market data through the generated multipart route', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+      expect(request.url).toBe('https://api.example.test/api/v1/market-data/imports/csv');
+      const form = await request.formData();
+      const file = form.get('file');
+      expect(file).toBeInstanceOf(File);
+      expect((file as File).name).toBe('prices.csv');
+      expect(await (file as File).text()).toContain('observedPrice');
+      return Response.json({ rowsImported: 1, filename: 'prices.csv' }, { status: 201 });
+    }));
+    const client = new DealScannerClient({ baseUrl: 'https://api.example.test' });
+
+    await expect(client.importMarketDataCsv('prices.csv', 'observedPrice\n100')).resolves.toEqual({
+      rowsImported: 1,
+      filename: 'prices.csv',
+    });
+  });
 });

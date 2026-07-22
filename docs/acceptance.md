@@ -10,8 +10,9 @@
   aktive Angebote.
 - Job-Claim mit `SKIP LOCKED`, Lease/Renew, drei Versuchen, Backoff, Dead-Letter und
   Schema-Validierung der Ollama-Ausgabe.
-- Angular-Webbuild, Tauri-Rust- und Loopback-Proxytests, Manifest-V3-Extension, OpenAPI-Vertrag
-  und generierte TypeScript-Typen.
+- Angular-Webbuild, Tauri-Rust-, native Dateiauswahl- und Loopback-Proxytests,
+  Manifest-V3-Extension mit Inline-Bewertung/Bekannt-Status, OpenAPI-Vertrag und generierte
+  TypeScript-Typen.
 - SQLite-Desktopcache, idempotente Outbox, sichtbare Konflikte, Stronghold-Sitzungsspeicher
   und native Desktop-Benachrichtigung.
 - Private Bildablage mit Domain-Allowlist, MIME-/Größenprüfung, SHA-256/pHash-Dubletten,

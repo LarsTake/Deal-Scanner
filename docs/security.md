@@ -15,5 +15,21 @@
   den Hash im Arbeitsspeicher, akzeptiert genau zwei Import-Routen, folgt keinen Redirects und
   beendet sich nach fünf Minuten oder beim manuellen Widerruf. Das Benutzer-JWT wird nie an die
   Erweiterung ausgegeben.
+- Der native CSV-Dateidialog akzeptiert nur CSV-Dateien bis 2 MB, liest sie als UTF-8 und gibt
+  ausschließlich Dateiname und Inhalt an den Webview zurück; lokale Dateipfade bleiben verborgen.
 - E-Mails und Bilder liegen privat; Logs enthalten keine Tokens, vollständigen Mailtexte oder PII.
 - Cloud-Modelle sind standardmäßig deaktiviert. Verkäuferkontakte und automatische Käufe sind kein Bestandteil.
+
+## Nachverfolgte RustSec-Ausnahmen
+
+- `RUSTSEC-2026-0194` und `RUSTSEC-2026-0195` betreffen `quick-xml 0.39` ausschließlich im
+  Linux-Buildwerkzeug `wayland-scanner`. Es verarbeitet dabei die fest versionierten
+  Wayland-Protokollquellen, keine Listing-, Datei- oder Netzwerkdaten. `rfd` wird aktualisiert,
+  sobald dessen Wayland-Abhängigkeit `quick-xml >=0.41` zulässt.
+- `RUSTSEC-2023-0071` betrifft `rsa 0.9`, das nur als nicht aktivierter MySQL-Zweig von SQLx im
+  Lockfile enthalten ist. Der Desktop aktiviert ausschließlich SQLite; `cargo tree --target all
+  -i rsa` weist keinen Laufzeit- oder Buildpfad nach. Die Ausnahme entfällt, sobald SQLx den
+  Eintrag nicht mehr in den aufgelösten Lockfile-Graphen übernimmt.
+
+Die CI ignoriert ausschließlich diese drei Advisory-IDs; neue RustSec-Befunde lassen den Build
+weiterhin fehlschlagen.

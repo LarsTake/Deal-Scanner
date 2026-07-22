@@ -1,4 +1,4 @@
-import type { ImportMessage } from './types';
+import type { ImportMessage, ImportOutcome, ImportResponseMessage } from './types';
 
 interface Configuration { apiUrl?: string; token?: string; tokenType?: 'bearer' | 'pairing' }
 
@@ -10,8 +10,12 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
       chrome.storage.local.get(['token']),
     ]);
     const config = { ...shared, ...secrets } as Configuration;
-    if (!config.apiUrl || !config.token) { sendResponse({ imported: 0, error: 'Erweiterung zuerst konfigurieren' }); return; }
+    if (!config.apiUrl || !config.token) {
+      sendResponse({ imported: 0, results: [], error: 'Erweiterung zuerst konfigurieren' } satisfies ImportResponseMessage);
+      return;
+    }
     let imported = 0;
+    const results: ImportOutcome[] = [];
     for (const listing of message.listings) {
       const response = await fetch(`${config.apiUrl.replace(/\/$/, '')}/api/v1/imports/browser`, {
         method: 'POST',
@@ -21,8 +25,28 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
         },
         body: JSON.stringify(listing),
       });
-      if (!response.ok) { const body = await response.text(); sendResponse({ imported, error: body.slice(0, 180) }); return; }
-      const result = await response.json() as { listing: { id: string }; snapshotCreated: boolean };
+      if (!response.ok) {
+        const body = await response.text();
+        sendResponse({ imported, results, error: body.slice(0, 180) } satisfies ImportResponseMessage);
+        return;
+      }
+      const result = await response.json() as {
+        listing: {
+          id: string;
+          dealScore: number | null;
+          riskScore: number | null;
+          dataQualityScore: number | null;
+        };
+        snapshotCreated: boolean;
+      };
+      results.push({
+        externalId: listing.externalId,
+        listingId: result.listing.id,
+        snapshotCreated: result.snapshotCreated,
+        dealScore: result.listing.dealScore,
+        riskScore: result.listing.riskScore,
+        dataQualityScore: result.listing.dataQualityScore,
+      });
       const imageUrls = listing.rawData.imageUrls ?? [];
       if (result.snapshotCreated && imageUrls.length) {
         const imageResponse = await fetch(
@@ -38,13 +62,17 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
         );
         if (!imageResponse.ok) {
           const body = await imageResponse.text();
-          sendResponse({ imported: imported + 1, error: `Angebot importiert, Bildimport fehlgeschlagen: ${body.slice(0, 120)}` });
+          sendResponse({
+            imported: imported + 1,
+            results,
+            error: `Angebot importiert, Bildimport fehlgeschlagen: ${body.slice(0, 120)}`,
+          } satisfies ImportResponseMessage);
           return;
         }
       }
       imported += 1;
     }
-    sendResponse({ imported });
+    sendResponse({ imported, results } satisfies ImportResponseMessage);
   })();
   return true;
 });

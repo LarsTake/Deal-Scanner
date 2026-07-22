@@ -1,5 +1,6 @@
 import type {
   AnalysisJob,
+  CsvImport,
   FeedbackCreate,
   ListingDetail,
   ListingEvaluation,
@@ -233,6 +234,17 @@ export class DealScannerClient {
     return this.unwrap(
       await this.client.GET('/api/v1/price-observations', {
         params: { query: { canonicalProductId } },
+      }),
+    );
+  }
+
+  async importMarketDataCsv(filename: string, content: string): Promise<CsvImport> {
+    const form = new FormData();
+    form.append('file', new Blob([content], { type: 'text/csv;charset=utf-8' }), filename);
+    return this.unwrap(
+      await this.client.POST('/api/v1/market-data/imports/csv', {
+        body: { file: filename },
+        bodySerializer: () => form,
       }),
     );
   }

@@ -22,6 +22,7 @@ export type ProviderConfigurationUpsert = components['schemas']['ProviderConfigu
 export type MailImport = components['schemas']['MailImportResponse'];
 export type AnalysisJob = components['schemas']['JobResponse'];
 export type PriceObservation = components['schemas']['PriceObservationResponse'];
+export type CsvImport = components['schemas']['CsvImportResponse'];
 export type ListingImage = components['schemas']['ListingImageResponse'];
 export type ImageAccess = components['schemas']['ImageAccessResponse'];
 

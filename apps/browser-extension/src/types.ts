@@ -24,3 +24,18 @@ export interface ImportMessage {
   type: 'IMPORT_VISIBLE_LISTINGS';
   listings: VisibleListing[];
 }
+
+export interface ImportOutcome {
+  externalId: string;
+  listingId: string;
+  snapshotCreated: boolean;
+  dealScore: number | null;
+  riskScore: number | null;
+  dataQualityScore: number | null;
+}
+
+export interface ImportResponseMessage {
+  imported: number;
+  results: ImportOutcome[];
+  error?: string;
+}

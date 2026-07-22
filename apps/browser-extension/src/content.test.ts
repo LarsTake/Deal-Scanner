@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { collectDetail, externalId, price } from './content';
+import { collectDetail, externalId, price, renderImportOutcomes } from './content';
 
 describe('visible Kleinanzeigen extraction', () => {
   beforeEach(() => {
@@ -29,5 +29,33 @@ describe('visible Kleinanzeigen extraction', () => {
     expect(listing.location).toBe('Hamburg');
     expect(listing.seller?.displayName).toBe('Privater Anbieter');
     expect(listing.seller?.rawData.source).toBe('visibleBrowserPage');
+  });
+
+  it('renders a known listing score directly on the open detail page', () => {
+    renderImportOutcomes([{
+      externalId: '1234567890',
+      listingId: '00000000-0000-4000-8000-000000000001',
+      snapshotCreated: false,
+      dealScore: 82,
+      riskScore: 19,
+      dataQualityScore: 74,
+    }]);
+
+    expect(document.querySelector('[data-deal-scanner-badge="1234567890"]')?.textContent)
+      .toBe('Deal 82 · Risiko 19 · Daten 74');
+  });
+
+  it('marks unchanged imports as already known while analysis is pending', () => {
+    renderImportOutcomes([{
+      externalId: '1234567890',
+      listingId: '00000000-0000-4000-8000-000000000001',
+      snapshotCreated: false,
+      dealScore: null,
+      riskScore: null,
+      dataQualityScore: null,
+    }]);
+
+    expect(document.querySelector('[data-deal-scanner-badge="1234567890"]')?.textContent)
+      .toBe('Bereits bekannt · Analyse offen');
   });
 });

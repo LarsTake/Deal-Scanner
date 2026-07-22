@@ -1,4 +1,5 @@
 mod extension_loopback;
+mod file_access;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -7,6 +8,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             extension_loopback::start_extension_loopback,
             extension_loopback::stop_extension_loopback,
+            file_access::select_csv_file,
         ])
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_notification::init())

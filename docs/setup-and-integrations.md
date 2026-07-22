@@ -7,6 +7,8 @@ Installiert werden Python 3.12, `uv`, Node.js 24, pnpm 10 und für Desktop-Build
 Abhängigkeiten her. Danach starten `uv run --package deal-scanner-api uvicorn
 deal_scanner_api.main:app --reload`, `deal-scanner-scheduler` und `deal-scanner-worker` die drei
 Prozesse. `docker compose up --build` verwendet dieselben Verträge und persistente Volumes.
+Marktdaten-CSV werden auf der Preis-Seite ausgewählt: Im Browser übernimmt ein beschränktes
+Dateifeld den Import, in Tauri ein nativer Dialog. Beide Wege verwenden denselben API-Vertrag.
 
 ## Supabase
 
@@ -34,7 +36,8 @@ IMAP benötigt Host, Benutzer, Passwort und eine enge Absender-Allowlist. Unbeka
 landen in Quarantäne; Original-EMLs werden archiviert. Die gebaute MV3-Erweiterung liegt unter
 `apps/browser-extension/dist` und wird in Chrome/Edge als entpackte Erweiterung geladen. Sie
 importiert nur nach Nutzeraktion sichtbare Kleinanzeigen-Daten und verwendet ein kurzlebiges,
-widerrufbares Pairing-Token.
+widerrufbares Pairing-Token. Nach dem Import zeigt sie auf sichtbaren Karten die vorhandenen
+Deal-, Risiko- und Datenqualitätswerte oder den Status **Bereits bekannt** an.
 
 Für die direkte Desktop-Kopplung unter **Einstellungen → Sichere Desktop-Kopplung** eine neue
 Kopplung erzeugen und die angezeigte API-Adresse samt Token in der Erweiterung speichern. Tauri

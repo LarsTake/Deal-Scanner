@@ -1,4 +1,4 @@
-import type { ImportMessage, VisibleListing } from './types';
+import type { ImportMessage, ImportOutcome, ImportResponseMessage, VisibleListing } from './types';
 
 function text(root: ParentNode, selectors: string[]): string {
   for (const selector of selectors) {
@@ -84,6 +84,7 @@ export function collectCards(): VisibleListing[] {
     const id = externalId(url);
     if (seen.has(id)) continue;
     seen.add(id);
+    if (card instanceof HTMLElement) card.dataset.dealScannerExternalId = id;
     listings.push({
       platform: 'kleinanzeigen', externalId: id, url,
       title: text(card, ['h2', 'h3', '.ellipsis']), description: '',
@@ -96,13 +97,50 @@ export function collectCards(): VisibleListing[] {
   return listings.filter((listing) => listing.title && listing.price !== '0.00');
 }
 
+function outcomeText(outcome: ImportOutcome): string {
+  if (outcome.dealScore !== null) {
+    const risk = outcome.riskScore === null ? '–' : String(outcome.riskScore);
+    const quality = outcome.dataQualityScore === null ? '–' : String(outcome.dataQualityScore);
+    return `Deal ${outcome.dealScore} · Risiko ${risk} · Daten ${quality}`;
+  }
+  return outcome.snapshotCreated ? 'Importiert · Analyse offen' : 'Bereits bekannt · Analyse offen';
+}
+
+export function renderImportOutcomes(outcomes: ImportOutcome[]): void {
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-deal-scanner-external-id]')];
+  for (const outcome of outcomes) {
+    const detailPage = location.pathname.includes('/s-anzeige/');
+    const host = cards.find((card) => card.dataset.dealScannerExternalId === outcome.externalId)
+      ?? (detailPage ? document.body : null);
+    if (!host) continue;
+    const badgeId = `deal-scanner-score-${outcome.externalId}`;
+    let badge = document.getElementById(badgeId);
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = badgeId;
+      badge.dataset.dealScannerBadge = outcome.externalId;
+      host.append(badge);
+    }
+    badge.textContent = outcomeText(outcome);
+    badge.style.cssText = detailPage
+      ? 'position:fixed;right:20px;bottom:72px;z-index:2147483647;padding:9px 12px;border-radius:9px;background:#0f1c19;color:#57e6ae;font:700 13px system-ui;box-shadow:0 8px 30px #0008'
+      : 'display:inline-block;margin:8px;padding:7px 10px;border-radius:8px;background:#0f1c19;color:#57e6ae;font:700 12px system-ui';
+  }
+}
+
 async function importVisible(): Promise<void> {
   const button = document.querySelector<HTMLButtonElement>('#deal-scanner-import');
   const listings = location.pathname.includes('/s-anzeige/') ? collectDetail() : collectCards();
   if (!listings.length) { if (button) button.textContent = 'Keine sichtbaren Angebote'; return; }
   const message: ImportMessage = { type: 'IMPORT_VISIBLE_LISTINGS', listings };
-  const result = await chrome.runtime.sendMessage(message) as { imported: number; error?: string };
-  if (button) button.textContent = result.error ? `Fehler: ${result.error}` : `${result.imported} importiert`;
+  const result = await chrome.runtime.sendMessage(message) as ImportResponseMessage;
+  renderImportOutcomes(result.results ?? []);
+  if (button) {
+    const known = result.results.filter((item) => !item.snapshotCreated).length;
+    button.textContent = result.error
+      ? `Fehler: ${result.error}`
+      : `${result.imported} verarbeitet${known ? ` · ${known} bekannt` : ''}`;
+  }
 }
 
 const button = document.createElement('button');

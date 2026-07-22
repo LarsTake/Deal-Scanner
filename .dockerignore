@@ -1,0 +1,8 @@
+.git
+.venv
+node_modules
+**/node_modules
+**/dist
+**/target
+.data
+graphify-out

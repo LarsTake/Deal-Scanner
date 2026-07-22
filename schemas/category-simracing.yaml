@@ -1,0 +1,8 @@
+id: simracing
+version: 1.0.0
+product_types: [wheelbase, wheel, pedals, shifter, handbrake, cockpit, seat, table_clamp, power_supply, quick_release, accessory, bundle]
+completeness_fields: [model, platform_compatibility, quick_release, power_supply, condition]
+risk_weights:
+  unclear_quick_release: 10
+  missing_power_supply: 15
+  incompatible_platform: 20

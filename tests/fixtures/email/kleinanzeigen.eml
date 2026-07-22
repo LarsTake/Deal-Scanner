@@ -1,0 +1,13 @@
+From: Kleinanzeigen <newsletter@kleinanzeigen.de>
+To: test@example.com
+Subject: Gaming PC mit RTX 4070 Super
+Message-ID: <fixture-1@example.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html><body>
+<h1>Gaming PC mit RTX 4070 Super</h1>
+<p>Preis: 499,00 EUR</p>
+<a href="https://www.kleinanzeigen.de/s-anzeige/gaming-pc/1234567890-228-1234">Angebot ansehen</a>
+<img src="https://img.kleinanzeigen.de/fixture.jpg">
+</body></html>

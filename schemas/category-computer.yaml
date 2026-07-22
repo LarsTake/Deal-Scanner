@@ -1,0 +1,8 @@
+id: computer
+version: 1.0.0
+product_types: [complete_pc, cpu, gpu, mainboard, ram, ssd, hdd, psu, cooler, case, monitor, peripheral, bundle]
+completeness_fields: [cpu, gpu, ram, storage, mainboard, psu, condition]
+risk_weights:
+  wrong_model_name: 15
+  no_function_test: 10
+  unknown_psu: 5

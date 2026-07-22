@@ -1,0 +1,46 @@
+[project]
+name = "deal-scanner-workspace"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28,<1",
+  "mypy>=1.17,<2",
+  "pytest>=8.4,<9",
+  "pytest-asyncio>=1.1,<2",
+  "pytest-cov>=6.2,<7",
+  "ruff>=0.12,<1",
+  "types-pyyaml>=6.0.12,<7",
+  "types-psutil>=7.0.0,<8",
+]
+
+[tool.uv.workspace]
+members = [
+  "apps/server-api",
+  "apps/scheduler",
+  "apps/analysis-worker",
+  "packages/python/*",
+  "providers/*",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers --disable-warnings"
+asyncio_mode = "auto"
+testpaths = ["tests", "packages", "apps", "providers"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["**/target/**", "**/node_modules/**", "**/dist/**", "graphify-out/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
+ignore = ["B008", "S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]

@@ -1,0 +1,26 @@
+{
+  "name": "deal-scanner",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @deal-scanner/desktop start",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "pretypecheck": "pnpm --filter @deal-scanner/contracts build && pnpm --filter @deal-scanner/api-client build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "openapi:export": "uv run --package deal-scanner-api python infrastructure/scripts/export_openapi.py",
+    "contracts:generate": "openapi-typescript schemas/openapi.json -o packages/typescript/contracts/src/generated.ts",
+    "api:dev": "uv run --package deal-scanner-api uvicorn deal_scanner_api.main:app --reload --port 8000",
+    "api:test": "uv run pytest",
+    "worker": "uv run --package deal-scanner-worker deal-scanner-worker",
+    "scheduler": "uv run --package deal-scanner-scheduler deal-scanner-scheduler"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.10.0"
+  }
+}

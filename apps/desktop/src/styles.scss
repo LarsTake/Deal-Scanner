@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+html { @include mat.theme((color: (primary: mat.$green-palette, tertiary: mat.$cyan-palette), typography: Roboto, density: 0)); }
+:root { --background: #08100f; --surface: #101a18; --surface-2: #15221f; --line: #24332f; --text: #edf8f4; --muted: #8fa39d; --accent: #57e6ae; --danger: #ff8a80; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: radial-gradient(circle at 80% -20%, #163b31 0, transparent 38%), var(--background); color: var(--text); font-family: Inter, Roboto, system-ui, sans-serif; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(32px, 4vw, 56px); line-height: 1.02; max-width: 720px; letter-spacing: -.045em; }
+h2 { letter-spacing: -.025em; }
+a { color: inherit; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 10px 0 34px; }
+.page-header p:not(.eyebrow) { color: var(--muted); max-width: 700px; }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 800; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.metric-grid mat-card, .listing-card, .form-card, .profile-list mat-card { background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); padding: 22px; border-radius: 16px; }
+.metric-grid mat-card span, .metric-grid mat-card small { color: var(--muted); }
+.metric-grid mat-card strong { display: block; font-size: 34px; margin: 14px 0 8px; }
+.metric-grid mat-card.accent { background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--surface)), var(--surface)); }
+.section-head { display: flex; justify-content: space-between; align-items: flex-end; margin: 48px 0 18px; }
+.listing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.listing-grid.wide { grid-template-columns: repeat(2, 1fr); }
+.listing-card h3 { margin: 18px 0 12px; min-height: 48px; }
+.listing-card h3 a { text-decoration: none; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.age, small { color: var(--muted); }
+.price { font-size: 24px; font-weight: 800; }
+.price small { font-size: 12px; font-weight: 500; }
+.score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; }
+.score-row div { display: flex; flex-direction: column; gap: 5px; }
+.score-row b { font-size: 18px; overflow: hidden; text-overflow: ellipsis; }
+.score-row .deal { color: var(--accent); } .score-row .risk { color: var(--danger); }
+.empty { color: var(--muted); padding: 32px; border: 1px dashed var(--line); border-radius: 16px; grid-column: 1 / -1; }
+.notice { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; } .notice.error { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+.two-column { display: grid; grid-template-columns: minmax(320px, 1fr) 1.3fr; gap: 22px; align-items: start; }
+.form-card form { display: flex; flex-direction: column; gap: 8px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.profile-list { display: flex; flex-direction: column; gap: 12px; }
+.tag { border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; color: var(--accent); }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+@media (max-width: 1000px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } .listing-grid, .listing-grid.wide { grid-template-columns: 1fr; } .two-column { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .page-header { display: block; } .metric-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }

@@ -1,0 +1,78 @@
+name: deal-scanner
+
+x-common: &common
+  restart: unless-stopped
+  env_file: .env
+  networks: [internal]
+  security_opt: [no-new-privileges:true]
+
+services:
+  api:
+    <<: *common
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    environment:
+      DEAL_SCANNER_AUTO_CREATE_DB: "false"
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["api-data:/app/.data"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 768m
+    cpus: 1.5
+
+  scheduler:
+    <<: *common
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.scheduler
+    environment:
+      DEAL_SCANNER_API_URL: http://api:8000
+    depends_on:
+      api: { condition: service_healthy }
+    volumes: ["mail-archive:/app/.data/mail-archive"]
+    mem_limit: 384m
+    cpus: 0.75
+
+  analysis-worker:
+    <<: *common
+    profiles: [analysis]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.worker
+    environment:
+      DEAL_SCANNER_API_URL: http://api:8000
+      DEAL_SCANNER_OLLAMA_URL: http://host.docker.internal:11434
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    depends_on:
+      api: { condition: service_healthy }
+    mem_limit: 512m
+    cpus: 1.0
+
+  reverse-proxy:
+    image: caddy:2.10-alpine
+    profiles: [tls]
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DEAL_SCANNER_DOMAIN: ${DEAL_SCANNER_DOMAIN:-localhost}
+    volumes:
+      - ./infrastructure/docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [internal]
+    depends_on:
+      api: { condition: service_healthy }
+
+networks:
+  internal: {}
+
+volumes:
+  api-data: {}
+  caddy-data: {}
+  caddy-config: {}
+  mail-archive: {}

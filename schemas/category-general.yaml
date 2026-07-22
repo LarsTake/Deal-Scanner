@@ -1,0 +1,7 @@
+id: general
+version: 1.0.0
+product_types: [product, accessory, bundle]
+completeness_fields: [manufacturer, model, condition, included_items]
+risk_weights:
+  no_function_test: 10
+  inconsistent_description: 15

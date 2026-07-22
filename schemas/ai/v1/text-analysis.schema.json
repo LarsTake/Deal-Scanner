@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deal-scanner.local/schemas/ai/v1/text-analysis.schema.json",
+  "title": "TextAnalysisResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["category", "products", "attributes", "riskSignals", "contradictions", "missingInformation", "overallConfidence", "schemaVersion"],
+  "properties": {
+    "category": { "type": "string" },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["productType", "model", "quantity", "confidence", "sources", "evidence"],
+        "properties": {
+          "productType": { "type": "string" },
+          "manufacturer": { "type": ["string", "null"] },
+          "model": { "type": "string" },
+          "variant": { "type": ["string", "null"] },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "sources": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "attributes": { "type": "array", "items": { "type": "object" } },
+    "riskSignals": { "type": "array", "items": { "type": "object" } },
+    "contradictions": { "type": "array", "items": { "type": "object" } },
+    "missingInformation": { "type": "array", "items": { "type": "string" } },
+    "overallConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "schemaVersion": { "const": "1.0.0" }
+  }
+}

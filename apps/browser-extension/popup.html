@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="de">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deal Scanner</title>
+    <style>body{font:14px system-ui;width:320px;padding:18px;background:#0c1513;color:#eef8f5}label{display:block;margin:12px 0 4px;color:#9aafa8}input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #2a3a36;background:#13201d;color:inherit}button{margin-top:16px;width:100%;padding:10px;border:0;border-radius:9px;background:#57e6ae;font-weight:800}small{display:block;margin-top:12px;color:#9aafa8}</style>
+  </head>
+  <body><strong>Deal Scanner</strong><label for="api">API-Adresse</label><input id="api" value="http://127.0.0.1:8000"><label for="token">Access- oder Pairing-Token</label><input id="token" type="password"><button id="save">Verbindung speichern</button><small id="status">Es werden nur Daten übertragen, deren Import du auf der Seite auslöst.</small><script type="module" src="/src/popup.ts"></script></body>
+</html>

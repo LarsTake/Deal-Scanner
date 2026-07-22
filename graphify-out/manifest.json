@@ -1,0 +1,618 @@
+{
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\main.py": {
+    "mtime": 1784741738.9971027,
+    "hash": "c3aee78623795d0007918330161606b2"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\ollama.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "41e7fd96005c4012cf3029120e70737a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "4867131295172353fe6c2295851defc7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\vite.config.ts": {
+    "mtime": 1784735958.3526418,
+    "hash": "c703f00b6da9112163ce24de83ac7dda"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\background.ts": {
+    "mtime": 1784741716.5527983,
+    "hash": "72524e34c0a84e21d346c27ea8196788"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\content.ts": {
+    "mtime": 1784741716.5517974,
+    "hash": "36a792d7f436c217bb3ad1bbc2daddaf"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\popup.ts": {
+    "mtime": 1784737862.1677032,
+    "hash": "6cec7049360bdd73f4faf6c41dd50b44"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\types.ts": {
+    "mtime": 1784741716.5507965,
+    "hash": "14050731b824d873017632a35b6f4ab3"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\main.ts": {
+    "mtime": 1784735764.6716602,
+    "hash": "e4f2b44efa3c6e9c0391ad64dc07e530"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\api.service.ts": {
+    "mtime": 1784736327.8982484,
+    "hash": "a99979f8784c9a8e1c538b9c1a4bc756"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\app.component.ts": {
+    "mtime": 1784741065.782954,
+    "hash": "d1c77b0b8f5a96da5f30257d9360dbc4"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\app.config.ts": {
+    "mtime": 1784738366.3583417,
+    "hash": "9c8f994caf9dadf093224d9ab41cc2f7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\app.routes.ts": {
+    "mtime": 1784741065.7819426,
+    "hash": "565bdd8c05c8de1babf4144ec16051f8"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\auth.service.ts": {
+    "mtime": 1784737790.1649027,
+    "hash": "4560f39fefdbef479c911f3517d07732"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\catalog.page.ts": {
+    "mtime": 1784741233.4295874,
+    "hash": "710c39e1aee0cab4e08d35a9207c663a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\conflicts.page.ts": {
+    "mtime": 1784741051.741204,
+    "hash": "8ac08a8d1643e9d3bc74aaa488d2701a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\dashboard.page.ts": {
+    "mtime": 1784735864.7878625,
+    "hash": "14247dff8a08f9d2b71c7c9bbef51ee0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\desktop-notification.service.ts": {
+    "mtime": 1784736327.8971758,
+    "hash": "28878bfbb1c920156e1605bf824eb335"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\listing-detail.page.ts": {
+    "mtime": 1784741785.5554457,
+    "hash": "b59d9e33a4c0011c796dc841196bfc27"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\listings.page.ts": {
+    "mtime": 1784740833.1413448,
+    "hash": "7b0121075ce3f93517234d4dc80fd62c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\login.page.ts": {
+    "mtime": 1784737790.1659083,
+    "hash": "f051ba73c348432945bd4b8487abc794"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\manual-import.page.ts": {
+    "mtime": 1784741020.7303982,
+    "hash": "8f3884e78b32bee14a3819c74b2fa5b2"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\notification-polling.service.ts": {
+    "mtime": 1784738022.784046,
+    "hash": "1bcfc88f9076b25bbcac6751a9758344"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\offline-cache.service.ts": {
+    "mtime": 1784741051.7401938,
+    "hash": "2fdb43c1ddc44fcda2100ad245fd75fb"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\outbox-sync.service.ts": {
+    "mtime": 1784741051.741204,
+    "hash": "61219c49226a92707d4b45c590bd0760"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\prices.page.ts": {
+    "mtime": 1784740906.9958737,
+    "hash": "4bcb06d43c688b450baacc721df3d503"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\queue.page.ts": {
+    "mtime": 1784740906.9947436,
+    "hash": "6dabeaea5099a0329e660f21340eb37e"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\search-profiles.page.ts": {
+    "mtime": 1784735896.035061,
+    "hash": "5a7400afeaf13ac3edbeaaac03e152c2"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\settings.page.ts": {
+    "mtime": 1784737790.1669195,
+    "hash": "679b651f2477bce87536cde2a75f9290"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\system.page.ts": {
+    "mtime": 1784737790.1669195,
+    "hash": "36330dc96cd17ea68460d33a12479e7a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\workers.page.ts": {
+    "mtime": 1784735864.7898748,
+    "hash": "856c9661313500d0282a29772ce97c65"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\build.rs": {
+    "mtime": 1784735896.0371778,
+    "hash": "4134700bc21c0804e41e162487d8988e"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\lib.rs": {
+    "mtime": 1784736327.8951447,
+    "hash": "ba6745cb86ca4f8c5c8e9df5fc614591"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\main.rs": {
+    "mtime": 1784735896.0381887,
+    "hash": "af8aa4fd68c51fad5d08a9fb6ad502da"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\scheduler\\src\\deal_scanner_scheduler\\main.py": {
+    "mtime": 1784741716.5507965,
+    "hash": "078c6b2e365e7048805a6cee44197da8"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\scheduler\\src\\deal_scanner_scheduler\\__init__.py": {
+    "mtime": 1784735621.582106,
+    "hash": "4867131295172353fe6c2295851defc7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\auth.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "0634b17ab79811a976b51aba7594ad02"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\context.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "e266dcb607ea164bcd73f6e13745d0e0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\database.py": {
+    "mtime": 1784738776.9958613,
+    "hash": "3d79b965e5fe64f8ce67ca20c2f514aa"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\db_models.py": {
+    "mtime": 1784741342.1051557,
+    "hash": "8685bc045cb9fec2fb7b0d0fde36b260"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\image_service.py": {
+    "mtime": 1784741656.6902695,
+    "hash": "a03d240f67ab301254eb3fceef86b2e7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\main.py": {
+    "mtime": 1784741551.519566,
+    "hash": "1c95407702bc063e48b2c59025e301ba"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\market_service.py": {
+    "mtime": 1784740465.6071312,
+    "hash": "61ddfe303bad78b5225a1c5729b8dba5"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\problems.py": {
+    "mtime": 1784736877.6559472,
+    "hash": "5d01a8ad25afc1b9fbc657fe2f30e8fe"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\product_service.py": {
+    "mtime": 1784740221.4504128,
+    "hash": "0b8284ccd9686cfded3add872f621142"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\schemas.py": {
+    "mtime": 1784741358.309082,
+    "hash": "9bda821d5d8f47c4a81ea110630573f6"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\services.py": {
+    "mtime": 1784740755.72288,
+    "hash": "7fa5fd43b0f197fec7fa6c1c08037a20"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\settings.py": {
+    "mtime": 1784741342.1063063,
+    "hash": "e180be032f45fb35f6c9dcee3970cec0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "4867131295172353fe6c2295851defc7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\auth.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "1c0b2403f5d4c1fe35a58a634d0fda3c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\health.py": {
+    "mtime": 1784738446.7218015,
+    "hash": "25782bdb184242edb590d7a4f4332be4"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\images.py": {
+    "mtime": 1784741716.549755,
+    "hash": "12490cf1695e9d425f861693fdc3cb9a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\imports.py": {
+    "mtime": 1784738460.285274,
+    "hash": "7aa1b7a76ddfe71b3102bd337dba13a0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\listings.py": {
+    "mtime": 1784740771.1508796,
+    "hash": "9577d2347b94d73284c640d745a0071a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\market.py": {
+    "mtime": 1784741095.6651359,
+    "hash": "b9a42256669ea32359e33534a4b7fb4c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\search_profiles.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "5ff5bc7d8e2c0638fb5faf30014bec56"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\system.py": {
+    "mtime": 1784740663.5872097,
+    "hash": "f2e73aca917ce4806df6080fa13a72ab"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\workers.py": {
+    "mtime": 1784741462.4459817,
+    "hash": "f0b1269b49ea8c5f2634af85842027c3"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\__init__.py": {
+    "mtime": 1784735621.5797758,
+    "hash": "04b2d26d9e63e7448c996f77bda37f26"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\infrastructure\\scripts\\export_openapi.py": {
+    "mtime": 1784735621.5797758,
+    "hash": "4e64e1a57f000f62c67c6c06df24141d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\infrastructure\\supabase\\migrations\\202607220001_initial.sql": {
+    "mtime": 1784740755.7193923,
+    "hash": "bff1ae18dfa24e9555100d8611bf4d0f"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\core\\src\\deal_scanner_core\\errors.py": {
+    "mtime": 1784735621.5787752,
+    "hash": "182d24bb6fb947f4486bce9b3707f048"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\core\\src\\deal_scanner_core\\models.py": {
+    "mtime": 1784741342.1051557,
+    "hash": "516d161316d847ef8959cfb2061431c7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\core\\src\\deal_scanner_core\\ports.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "e63236971e8e31f1806987bc27154520"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\core\\src\\deal_scanner_core\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "6d51bf023e63938e96516101abb1d8b9"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\extraction\\src\\deal_scanner_extraction\\engine.py": {
+    "mtime": 1784736883.6232367,
+    "hash": "147b754df9518b7ee4d12b2772376bdf"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\extraction\\src\\deal_scanner_extraction\\images.py": {
+    "mtime": 1784737373.2392209,
+    "hash": "3137ead352fcfb18e36f9eeb6b740a17"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\extraction\\src\\deal_scanner_extraction\\profiles.py": {
+    "mtime": 1784735621.577605,
+    "hash": "9a3206ed2f54055e8cdb9ee8c4f69e3d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\extraction\\src\\deal_scanner_extraction\\__init__.py": {
+    "mtime": 1784737373.2402258,
+    "hash": "980c6fc291225a88154e66a7df116177"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\provider-sdk\\src\\deal_scanner_provider_sdk\\utils.py": {
+    "mtime": 1784735621.577605,
+    "hash": "93eb2da511e2089a8a6b4cdb4455dc78"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\provider-sdk\\src\\deal_scanner_provider_sdk\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "23ace8899fbeca6f442a4a5c81f898b0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\scoring\\src\\deal_scanner_scoring\\engine.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "c706c2ef39cca0573f2a12a67ba19cd9"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\scoring\\src\\deal_scanner_scoring\\models.py": {
+    "mtime": 1784735621.577605,
+    "hash": "d93ed9e11b0497499c514a014e379f36"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\python\\scoring\\src\\deal_scanner_scoring\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "a5942845dbd28c525aa9e7ad7a8c3410"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\api-client\\src\\index.ts": {
+    "mtime": 1784741766.8653083,
+    "hash": "1f73d763952e3b757214bd552c02cf4a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\generated.ts": {
+    "mtime": 1784742521.8806088,
+    "hash": "c219d42931fc696cbb4f15008e03ecd0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\index.ts": {
+    "mtime": 1784741766.8642955,
+    "hash": "fa6f59312b415a1f776504ff1d467dd8"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\ebay\\src\\deal_scanner_ebay\\provider.py": {
+    "mtime": 1784736883.6218317,
+    "hash": "ed8ae0b69ef81c3c12d2c0929b02efe4"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\ebay\\src\\deal_scanner_ebay\\__init__.py": {
+    "mtime": 1784735621.5797758,
+    "hash": "358290720ab76ccfe690a36c32e5049d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\kleinanzeigen-email\\src\\deal_scanner_email\\parser.py": {
+    "mtime": 1784740575.8641944,
+    "hash": "af0f807206619ba19f2359116d0f58ea"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\kleinanzeigen-email\\src\\deal_scanner_email\\__init__.py": {
+    "mtime": 1784735621.5808275,
+    "hash": "c5109628ecc4241e59e6bc35f8c3c307"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\manual-import\\src\\deal_scanner_manual\\provider.py": {
+    "mtime": 1784736883.6232367,
+    "hash": "dc203ece630fcdbdfb77d55ea8701652"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\providers\\manual-import\\src\\deal_scanner_manual\\__init__.py": {
+    "mtime": 1784735621.577605,
+    "hash": "3b9dbcbb0855670207aafd84bc20380c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_api.py": {
+    "mtime": 1784741084.1896827,
+    "hash": "47b6802e7a7e91d35405e347fc4a53de"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_extraction.py": {
+    "mtime": 1784735621.5808275,
+    "hash": "411ce43d419aa09cdf9cf66696fe82ef"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_images.py": {
+    "mtime": 1784741626.4166164,
+    "hash": "27bcbc28dcae43c4c468dda0e10388d3"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_postgres_rls.py": {
+    "mtime": 1784742491.3632789,
+    "hash": "4022372cec78e7eb1454cf441b86f34d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_providers.py": {
+    "mtime": 1784738156.1200774,
+    "hash": "474943fc3bb16b29ac5d663db630c28d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_scoring.py": {
+    "mtime": 1784736883.6232367,
+    "hash": "307b5096bd506bf7be4832b6046f3bff"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\postgres\\bootstrap.sql": {
+    "mtime": 1784742465.206226,
+    "hash": "b55fb5fecb7decf439424349b84c7264"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\compose.yaml": {
+    "mtime": 1784738299.2972438,
+    "hash": "07adc81c187f652981738fd9b9b22c88"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\pnpm-workspace.yaml": {
+    "mtime": 1784734586.3402603,
+    "hash": "f4c0d60d388efbbc607935f8b1bbebcf"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\README.md": {
+    "mtime": 1784738511.3673735,
+    "hash": "97a85ed0d2f2036e44df4597f43a919b"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\popup.html": {
+    "mtime": 1784735958.3547468,
+    "hash": "b3a1d3ad289664db87b6a9ae12055d2f"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\index.html": {
+    "mtime": 1784735764.6716602,
+    "hash": "73b193829ea2dfc1f296c62cf84d1ecf"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\acceptance.md": {
+    "mtime": 1784738511.3673735,
+    "hash": "0edbeef9eb87d1b89f08838c10bba499"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\architecture.md": {
+    "mtime": 1784734586.3434637,
+    "hash": "365666638ece43226efe7a6e2f86ee24"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\operations.md": {
+    "mtime": 1784736797.5417185,
+    "hash": "711e77ee8443e1e04166149d511b82d8"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\security.md": {
+    "mtime": 1784738734.138161,
+    "hash": "b89670b5fa43cd5e1d28ea60ea48c757"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\adr\\0001-modular-monorepo.md": {
+    "mtime": 1784734586.3434637,
+    "hash": "ce123d0ab2a5e91e998b843bf810f787"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-computer.yaml": {
+    "mtime": 1784734759.82816,
+    "hash": "8351e9b13a16e07a4be08c169ed47f24"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-fpv.yaml": {
+    "mtime": 1784734759.8291612,
+    "hash": "9cff6effec8aecc0a6f1fe407fa4b644"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-general.yaml": {
+    "mtime": 1784734759.8301623,
+    "hash": "7731164929a43a21a91d77bbc25e3c4d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-simracing.yaml": {
+    "mtime": 1784734759.82816,
+    "hash": "1ee350737fa69c16cc8f6a6adf03b7c2"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md": {
+    "mtime": 1784740014.4561553,
+    "hash": "7b5dd5141d4c17109fc92e199a42876c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\128x128.png": {
+    "mtime": 1784737196.5386457,
+    "hash": "9cfc3dbf472e1937eeb5f06525074cec"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\128x128@2x.png": {
+    "mtime": 1784737196.5548542,
+    "hash": "212186affaf554f1a3132898fdc51ad5"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\32x32.png": {
+    "mtime": 1784737196.5294206,
+    "hash": "b71a750b00ad7783365e5ff0fdf5abdc"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\64x64.png": {
+    "mtime": 1784737196.5325232,
+    "hash": "a5c287cba9826000f6bfad6813b748bc"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\app-icon.svg": {
+    "mtime": 1784737190.856388,
+    "hash": "11f2cdee2dcca3506a6add02e009a6bf"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\icon.png": {
+    "mtime": 1784737196.5993454,
+    "hash": "32afa41ea84c732ee2426fbbe4eb1d34"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square107x107Logo.png": {
+    "mtime": 1784737196.152478,
+    "hash": "2f9890539d7ffa625e17e42bc798a2b4"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square142x142Logo.png": {
+    "mtime": 1784737196.1596074,
+    "hash": "53281ee12c75bead9bf6271107f308a0"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square150x150Logo.png": {
+    "mtime": 1784737196.1680686,
+    "hash": "18b9ea85822c1fe64a42febe867add5c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square284x284Logo.png": {
+    "mtime": 1784737196.1868308,
+    "hash": "cf98db05701073a7d5bda666ad754f1a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square30x30Logo.png": {
+    "mtime": 1784737196.1384394,
+    "hash": "4b747858009a3004c0016edf74c44c24"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square310x310Logo.png": {
+    "mtime": 1784737196.2090776,
+    "hash": "fe5f378997777b81f8a038aed5960e36"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square44x44Logo.png": {
+    "mtime": 1784737196.140465,
+    "hash": "f6bf9eaaf412c39f7a18bd9c11a3c82f"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square71x71Logo.png": {
+    "mtime": 1784737196.1434977,
+    "hash": "733732e4e4f4c1d18db72fbf071dccba"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\Square89x89Logo.png": {
+    "mtime": 1784737196.147544,
+    "hash": "a47accee0d1288aa5bfe121b04c5f840"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\StoreLogo.png": {
+    "mtime": 1784737196.137417,
+    "hash": "21a5633ba2067b3e1dbbb0bcb69fd75c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-hdpi\\ic_launcher.png": {
+    "mtime": 1784737196.905869,
+    "hash": "63dda94c6e9b89208064b28863cc4616"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-hdpi\\ic_launcher_foreground.png": {
+    "mtime": 1784737196.8238008,
+    "hash": "58d761c611136fa374b2729c8007dd1a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-hdpi\\ic_launcher_round.png": {
+    "mtime": 1784737196.9038475,
+    "hash": "277c3589ad6b485f03352eeb08c30671"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-mdpi\\ic_launcher.png": {
+    "mtime": 1784737196.9089422,
+    "hash": "c17fd1907634291fd21b86533b26ac57"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-mdpi\\ic_launcher_foreground.png": {
+    "mtime": 1784737196.8289485,
+    "hash": "8ef4c79d0d030a7a116f22a4f11ff70a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-mdpi\\ic_launcher_round.png": {
+    "mtime": 1784737196.907925,
+    "hash": "6f20c77e3193b7dc9907f2e4235585c3"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xhdpi\\ic_launcher.png": {
+    "mtime": 1784737196.918375,
+    "hash": "80e6fcb857288420de47ac48b11eaba1"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1784737196.8421466,
+    "hash": "984e06b592b360f92917da51407586eb"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xhdpi\\ic_launcher_round.png": {
+    "mtime": 1784737196.9131966,
+    "hash": "4053e97c09cbc7079b9a2adfe72e80d6"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxhdpi\\ic_launcher.png": {
+    "mtime": 1784737196.937826,
+    "hash": "2961f91f6aac3483d501a50ed2554753"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1784737196.8654218,
+    "hash": "4f39d07abe41e82a9983053d230096c6"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxhdpi\\ic_launcher_round.png": {
+    "mtime": 1784737196.9277897,
+    "hash": "d5471d0d3d458b28075e92fcd6a5c07a"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxxhdpi\\ic_launcher.png": {
+    "mtime": 1784737196.9683025,
+    "hash": "c394548cfac0b968bd0b135b31705566"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1784737196.9014122,
+    "hash": "58c54653595c0208159db901aa0d6a0f"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\android\\mipmap-xxxhdpi\\ic_launcher_round.png": {
+    "mtime": 1784737196.9540825,
+    "hash": "fa4061645efb963944dea7dc0ead3376"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-20x20@1x.png": {
+    "mtime": 1784737196.6013608,
+    "hash": "00dad532b35eb1d6cffb531b12889740"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-20x20@2x-1.png": {
+    "mtime": 1784737196.6003501,
+    "hash": "246260f1335f756a1c1b1a002655e34c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-20x20@2x.png": {
+    "mtime": 1784737196.603542,
+    "hash": "246260f1335f756a1c1b1a002655e34c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-20x20@3x.png": {
+    "mtime": 1784737196.6055744,
+    "hash": "233a8b126a3618122345ca97d63b46d9"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-29x29@1x.png": {
+    "mtime": 1784737196.6096506,
+    "hash": "59cc94f5b6058d8d9ba93f4dc3fff288"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-29x29@2x-1.png": {
+    "mtime": 1784737196.6086397,
+    "hash": "dc14f297b556d4a575d33542ea135100"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-29x29@2x.png": {
+    "mtime": 1784737196.6118276,
+    "hash": "dc14f297b556d4a575d33542ea135100"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-29x29@3x.png": {
+    "mtime": 1784737196.6161776,
+    "hash": "36c37d41401cdd4b4a23903ec82916ee"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-40x40@1x.png": {
+    "mtime": 1784737196.6202474,
+    "hash": "246260f1335f756a1c1b1a002655e34c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-40x40@2x-1.png": {
+    "mtime": 1784737196.6192327,
+    "hash": "a1b35867e5a0423b07063644fd6491e5"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-40x40@2x.png": {
+    "mtime": 1784737196.6233625,
+    "hash": "a1b35867e5a0423b07063644fd6491e5"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-40x40@3x.png": {
+    "mtime": 1784737196.6295376,
+    "hash": "7cae58a1bc060ed109d762ea3e065250"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-512@2x.png": {
+    "mtime": 1784737196.8127017,
+    "hash": "7ba4093f232ff7dcf7eb9bb9ed561481"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-60x60@2x.png": {
+    "mtime": 1784737196.635669,
+    "hash": "7cae58a1bc060ed109d762ea3e065250"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-60x60@3x.png": {
+    "mtime": 1784737196.6469693,
+    "hash": "0a6b12df3fd3feee63ef36144a906a38"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-76x76@1x.png": {
+    "mtime": 1784737196.6501029,
+    "hash": "3f3a9a0c7114d0b27205211344cada4f"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-76x76@2x.png": {
+    "mtime": 1784737196.6582923,
+    "hash": "c035e3c86662d12a4792fb8ffc5111c2"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\ios\\AppIcon-83.5x83.5@2x.png": {
+    "mtime": 1784737196.6673732,
+    "hash": "ab637cf1226ebac1c03f3883e0b2f840"
+  }
+}

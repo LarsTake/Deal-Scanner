@@ -1,0 +1,8 @@
+id: fpv
+version: 1.0.0
+product_types: [copter, frame, flight_controller, esc, stack, motor, vtx, camera, receiver, radio, goggles, antenna, battery, charger, gps, bundle]
+completeness_fields: [video_system, receiver, battery_voltage, condition, binding_status]
+risk_weights:
+  swollen_battery: 35
+  bound_dji_device: 20
+  no_function_test: 10

@@ -5209,7 +5209,7 @@
       "label": "Nur mit bereitgestellten externen Zug\u00e4ngen pr\u00fcfbar",
       "file_type": "document",
       "source_file": "docs/acceptance.md",
-      "source_location": "L20",
+      "source_location": "L26",
       "id": "docs_acceptance_nur_mit_bereitgestellten_externen_zug\u00e4ngen_pr\u00fcfbar",
       "community": 21,
       "norm_label": "nur mit bereitgestellten externen zugangen prufbar"
@@ -5446,9 +5446,9 @@
       "source_file": "apps/analysis-worker/src/deal_scanner_worker/main.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_worker_main_workersettings",
-      "target": "deal_scanner_core_models_imageocrresult",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_imageocrresult"
     },
     {
       "relation": "uses",
@@ -5516,9 +5516,9 @@
       "source_file": "apps/analysis-worker/src/deal_scanner_worker/main.py",
       "source_location": "L81",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_worker_main_workeragent",
-      "target": "deal_scanner_worker_main_workeragent_detect_gpu",
-      "confidence_score": 1.0
+      "target": "deal_scanner_worker_main_workeragent_detect_gpu"
     },
     {
       "relation": "method",
@@ -5566,9 +5566,9 @@
       "source_file": "apps/analysis-worker/src/deal_scanner_worker/main.py",
       "source_location": "L198",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_worker_main_workeragent",
-      "target": "deal_scanner_worker_main_workeragent_ocr",
-      "confidence_score": 1.0
+      "target": "deal_scanner_worker_main_workeragent_ocr"
     },
     {
       "relation": "method",
@@ -5597,9 +5597,9 @@
       "source_file": "apps/analysis-worker/src/deal_scanner_worker/main.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_worker_main_workeragent",
-      "target": "deal_scanner_core_models_imageocrresult",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_imageocrresult"
     },
     {
       "relation": "uses",
@@ -5639,9 +5639,9 @@
       "source_file": "apps/analysis-worker/src/deal_scanner_worker/main.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_worker_main_workeragent_register",
-      "target": "deal_scanner_worker_main_workeragent_detect_gpu",
-      "confidence_score": 1.0
+      "target": "deal_scanner_worker_main_workeragent_detect_gpu"
     },
     {
       "relation": "calls",
@@ -5943,9 +5943,9 @@
       "source_file": "apps/browser-extension/src/content.ts",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_browser_extension_src_content_ts",
-      "target": "src_content_imageurls",
-      "confidence_score": 1.0
+      "target": "src_content_imageurls"
     },
     {
       "relation": "contains",
@@ -6126,9 +6126,9 @@
       "source_file": "apps/browser-extension/src/content.ts",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_content_collectdetail",
-      "target": "src_content_imageurls",
-      "confidence_score": 1.0
+      "target": "src_content_imageurls"
     },
     {
       "relation": "calls",
@@ -6137,9 +6137,9 @@
       "source_file": "apps/browser-extension/src/content.ts",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_content_collectcards",
-      "target": "src_content_imageurls",
-      "confidence_score": 1.0
+      "target": "src_content_imageurls"
     },
     {
       "relation": "calls",
@@ -6264,9 +6264,9 @@
       "source_file": "apps/desktop/src/app/catalog.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_catalog_page_ts",
-      "target": "apps_desktop_src_app_api_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_api_service_ts"
     },
     {
       "relation": "imports_from",
@@ -6275,9 +6275,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "apps_desktop_src_app_api_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_api_service_ts"
     },
     {
       "relation": "imports_from",
@@ -6297,9 +6297,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_listing_detail_page_ts",
-      "target": "apps_desktop_src_app_api_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_api_service_ts"
     },
     {
       "relation": "imports_from",
@@ -6352,9 +6352,9 @@
       "source_file": "apps/desktop/src/app/prices.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_prices_page_ts",
-      "target": "apps_desktop_src_app_api_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_api_service_ts"
     },
     {
       "relation": "imports_from",
@@ -6363,9 +6363,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_queue_page_ts",
-      "target": "apps_desktop_src_app_api_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_api_service_ts"
     },
     {
       "relation": "imports_from",
@@ -6417,9 +6417,9 @@
       "source_file": "apps/desktop/src/app/catalog.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_catalog_page_ts",
-      "target": "app_api_service_apiservice",
-      "confidence_score": 1.0
+      "target": "app_api_service_apiservice"
     },
     {
       "relation": "imports",
@@ -6428,9 +6428,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "app_api_service_apiservice",
-      "confidence_score": 1.0
+      "target": "app_api_service_apiservice"
     },
     {
       "relation": "imports",
@@ -6450,9 +6450,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_listing_detail_page_ts",
-      "target": "app_api_service_apiservice",
-      "confidence_score": 1.0
+      "target": "app_api_service_apiservice"
     },
     {
       "relation": "imports",
@@ -6505,9 +6505,9 @@
       "source_file": "apps/desktop/src/app/prices.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_prices_page_ts",
-      "target": "app_api_service_apiservice",
-      "confidence_score": 1.0
+      "target": "app_api_service_apiservice"
     },
     {
       "relation": "imports",
@@ -6516,9 +6516,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_queue_page_ts",
-      "target": "app_api_service_apiservice",
-      "confidence_score": 1.0
+      "target": "app_api_service_apiservice"
     },
     {
       "relation": "imports",
@@ -6668,9 +6668,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "apps_desktop_src_app_catalog_page_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_catalog_page_ts"
     },
     {
       "relation": "imports",
@@ -6679,9 +6679,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "app_catalog_page_catalogpage",
-      "confidence_score": 1.0
+      "target": "app_catalog_page_catalogpage"
     },
     {
       "relation": "imports_from",
@@ -6690,9 +6690,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "apps_desktop_src_app_conflicts_page_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_conflicts_page_ts"
     },
     {
       "relation": "imports",
@@ -6701,9 +6701,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "app_conflicts_page_conflictspage",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage"
     },
     {
       "relation": "imports_from",
@@ -6734,9 +6734,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "apps_desktop_src_app_listing_detail_page_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_listing_detail_page_ts"
     },
     {
       "relation": "imports",
@@ -6745,9 +6745,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "app_listing_detail_page_listingdetailpage",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage"
     },
     {
       "relation": "imports_from",
@@ -6800,9 +6800,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "apps_desktop_src_app_prices_page_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_prices_page_ts"
     },
     {
       "relation": "imports",
@@ -6811,9 +6811,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "app_prices_page_pricespage",
-      "confidence_score": 1.0
+      "target": "app_prices_page_pricespage"
     },
     {
       "relation": "imports_from",
@@ -6822,9 +6822,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "apps_desktop_src_app_queue_page_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_queue_page_ts"
     },
     {
       "relation": "imports",
@@ -6833,9 +6833,9 @@
       "source_file": "apps/desktop/src/app/app.routes.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_app_routes_ts",
-      "target": "app_queue_page_queuepage",
-      "confidence_score": 1.0
+      "target": "app_queue_page_queuepage"
     },
     {
       "relation": "imports_from",
@@ -7131,9 +7131,9 @@
       "source_file": "apps/desktop/src/app/catalog.page.ts",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_catalog_page_ts",
-      "target": "app_catalog_page_catalogpage",
-      "confidence_score": 1.0
+      "target": "app_catalog_page_catalogpage"
     },
     {
       "relation": "method",
@@ -7141,9 +7141,9 @@
       "source_file": "apps/desktop/src/app/catalog.page.ts",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_catalog_page_catalogpage",
-      "target": "app_catalog_page_catalogpage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_catalog_page_catalogpage_ngoninit"
     },
     {
       "relation": "imports_from",
@@ -7152,9 +7152,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "apps_desktop_src_app_offline_cache_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_offline_cache_service_ts"
     },
     {
       "relation": "imports",
@@ -7163,9 +7163,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "app_offline_cache_service_offlinecacheservice",
-      "confidence_score": 1.0
+      "target": "app_offline_cache_service_offlinecacheservice"
     },
     {
       "relation": "imports",
@@ -7174,9 +7174,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "app_offline_cache_service_outboxitem",
-      "confidence_score": 1.0
+      "target": "app_offline_cache_service_outboxitem"
     },
     {
       "relation": "imports_from",
@@ -7185,9 +7185,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "apps_desktop_src_app_outbox_sync_service_ts",
-      "confidence_score": 1.0
+      "target": "apps_desktop_src_app_outbox_sync_service_ts"
     },
     {
       "relation": "imports",
@@ -7196,9 +7196,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "app_outbox_sync_service_outboxsyncservice",
-      "confidence_score": 1.0
+      "target": "app_outbox_sync_service_outboxsyncservice"
     },
     {
       "relation": "contains",
@@ -7206,9 +7206,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_conflicts_page_ts",
-      "target": "app_conflicts_page_conflictspage",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage"
     },
     {
       "relation": "method",
@@ -7216,9 +7216,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage",
-      "target": "app_conflicts_page_conflictspage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_ngoninit"
     },
     {
       "relation": "method",
@@ -7226,9 +7226,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage",
-      "target": "app_conflicts_page_conflictspage_load",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_load"
     },
     {
       "relation": "method",
@@ -7236,9 +7236,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage",
-      "target": "app_conflicts_page_conflictspage_retry",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_retry"
     },
     {
       "relation": "method",
@@ -7246,9 +7246,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage",
-      "target": "app_conflicts_page_conflictspage_discard",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_discard"
     },
     {
       "relation": "calls",
@@ -7257,9 +7257,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage_ngoninit",
-      "target": "app_conflicts_page_conflictspage_load",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_load"
     },
     {
       "relation": "calls",
@@ -7268,9 +7268,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage_retry",
-      "target": "app_conflicts_page_conflictspage_load",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_load"
     },
     {
       "relation": "calls",
@@ -7279,9 +7279,9 @@
       "source_file": "apps/desktop/src/app/conflicts.page.ts",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_conflicts_page_conflictspage_discard",
-      "target": "app_conflicts_page_conflictspage_load",
-      "confidence_score": 1.0
+      "target": "app_conflicts_page_conflictspage_load"
     },
     {
       "relation": "contains",
@@ -7351,9 +7351,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_listing_detail_page_ts",
-      "target": "app_listing_detail_page_listingdetailpage",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage"
     },
     {
       "relation": "method",
@@ -7361,9 +7361,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L76",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_ngoninit"
     },
     {
       "relation": "method",
@@ -7371,9 +7371,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_ngondestroy",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_ngondestroy"
     },
     {
       "relation": "method",
@@ -7381,9 +7381,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L84",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_evaluate",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_evaluate"
     },
     {
       "relation": "method",
@@ -7391,9 +7391,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_reanalyze",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_reanalyze"
     },
     {
       "relation": "method",
@@ -7401,9 +7401,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_togglefavorite",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_togglefavorite"
     },
     {
       "relation": "method",
@@ -7411,9 +7411,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L96",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_togglehidden",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_togglehidden"
     },
     {
       "relation": "method",
@@ -7421,9 +7421,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_feedback",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_feedback"
     },
     {
       "relation": "method",
@@ -7431,9 +7431,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_run",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_run"
     },
     {
       "relation": "method",
@@ -7441,9 +7441,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage",
-      "target": "app_listing_detail_page_listingdetailpage_reload",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_reload"
     },
     {
       "relation": "calls",
@@ -7452,9 +7452,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_ngoninit",
-      "target": "app_listing_detail_page_listingdetailpage_reload",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_reload"
     },
     {
       "relation": "calls",
@@ -7463,9 +7463,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_evaluate",
-      "target": "app_listing_detail_page_listingdetailpage_run",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_run"
     },
     {
       "relation": "calls",
@@ -7474,9 +7474,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_reanalyze",
-      "target": "app_listing_detail_page_listingdetailpage_run",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_run"
     },
     {
       "relation": "calls",
@@ -7485,9 +7485,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L93",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_togglefavorite",
-      "target": "app_listing_detail_page_listingdetailpage_feedback",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_feedback"
     },
     {
       "relation": "calls",
@@ -7496,9 +7496,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L97",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_togglehidden",
-      "target": "app_listing_detail_page_listingdetailpage_feedback",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_feedback"
     },
     {
       "relation": "calls",
@@ -7507,9 +7507,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_feedback",
-      "target": "app_listing_detail_page_listingdetailpage_run",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_run"
     },
     {
       "relation": "calls",
@@ -7518,9 +7518,9 @@
       "source_file": "apps/desktop/src/app/listing-detail.page.ts",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_listing_detail_page_listingdetailpage_run",
-      "target": "app_listing_detail_page_listingdetailpage_reload",
-      "confidence_score": 1.0
+      "target": "app_listing_detail_page_listingdetailpage_reload"
     },
     {
       "relation": "imports_from",
@@ -7663,9 +7663,9 @@
       "source_file": "apps/desktop/src/app/manual-import.page.ts",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_manual_import_page_manualimportpage",
-      "target": "app_manual_import_page_manualimportpage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_manual_import_page_manualimportpage_ngoninit"
     },
     {
       "relation": "method",
@@ -7673,9 +7673,9 @@
       "source_file": "apps/desktop/src/app/manual-import.page.ts",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_manual_import_page_manualimportpage",
-      "target": "app_manual_import_page_manualimportpage_loadhistory",
-      "confidence_score": 1.0
+      "target": "app_manual_import_page_manualimportpage_loadhistory"
     },
     {
       "relation": "method",
@@ -7694,9 +7694,9 @@
       "source_file": "apps/desktop/src/app/manual-import.page.ts",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_manual_import_page_manualimportpage_ngoninit",
-      "target": "app_manual_import_page_manualimportpage_loadhistory",
-      "confidence_score": 1.0
+      "target": "app_manual_import_page_manualimportpage_loadhistory"
     },
     {
       "relation": "calls",
@@ -7705,9 +7705,9 @@
       "source_file": "apps/desktop/src/app/manual-import.page.ts",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_manual_import_page_manualimportpage_submit",
-      "target": "app_manual_import_page_manualimportpage_loadhistory",
-      "confidence_score": 1.0
+      "target": "app_manual_import_page_manualimportpage_loadhistory"
     },
     {
       "relation": "contains",
@@ -7878,9 +7878,9 @@
       "source_file": "apps/desktop/src/app/offline-cache.service.ts",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_offline_cache_service_offlinecacheservice",
-      "target": "app_offline_cache_service_offlinecacheservice_retry",
-      "confidence_score": 1.0
+      "target": "app_offline_cache_service_offlinecacheservice_retry"
     },
     {
       "relation": "method",
@@ -7888,9 +7888,9 @@
       "source_file": "apps/desktop/src/app/offline-cache.service.ts",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_offline_cache_service_offlinecacheservice",
-      "target": "app_offline_cache_service_offlinecacheservice_discard",
-      "confidence_score": 1.0
+      "target": "app_offline_cache_service_offlinecacheservice_discard"
     },
     {
       "relation": "method",
@@ -8002,9 +8002,9 @@
       "source_file": "apps/desktop/src/app/prices.page.ts",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_prices_page_ts",
-      "target": "app_prices_page_pricespage",
-      "confidence_score": 1.0
+      "target": "app_prices_page_pricespage"
     },
     {
       "relation": "method",
@@ -8012,9 +8012,9 @@
       "source_file": "apps/desktop/src/app/prices.page.ts",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_prices_page_pricespage",
-      "target": "app_prices_page_pricespage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_prices_page_pricespage_ngoninit"
     },
     {
       "relation": "method",
@@ -8022,9 +8022,9 @@
       "source_file": "apps/desktop/src/app/prices.page.ts",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_prices_page_pricespage",
-      "target": "app_prices_page_pricespage_productname",
-      "confidence_score": 1.0
+      "target": "app_prices_page_pricespage_productname"
     },
     {
       "relation": "contains",
@@ -8032,9 +8032,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_desktop_src_app_queue_page_ts",
-      "target": "app_queue_page_queuepage",
-      "confidence_score": 1.0
+      "target": "app_queue_page_queuepage"
     },
     {
       "relation": "method",
@@ -8042,9 +8042,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_queue_page_queuepage",
-      "target": "app_queue_page_queuepage_ngoninit",
-      "confidence_score": 1.0
+      "target": "app_queue_page_queuepage_ngoninit"
     },
     {
       "relation": "method",
@@ -8052,9 +8052,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_queue_page_queuepage",
-      "target": "app_queue_page_queuepage_load",
-      "confidence_score": 1.0
+      "target": "app_queue_page_queuepage_load"
     },
     {
       "relation": "calls",
@@ -8063,9 +8063,9 @@
       "source_file": "apps/desktop/src/app/queue.page.ts",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_queue_page_queuepage_ngoninit",
-      "target": "app_queue_page_queuepage_load",
-      "confidence_score": 1.0
+      "target": "app_queue_page_queuepage_load"
     },
     {
       "relation": "contains",
@@ -8245,9 +8245,9 @@
       "source_file": "apps/scheduler/src/deal_scanner_scheduler/main.py",
       "source_location": "L192",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_scheduler_src_deal_scanner_scheduler_main_py",
-      "target": "deal_scanner_scheduler_main_ebay_image_urls",
-      "confidence_score": 1.0
+      "target": "deal_scanner_scheduler_main_ebay_image_urls"
     },
     {
       "relation": "contains",
@@ -8356,9 +8356,9 @@
       "source_file": "apps/scheduler/src/deal_scanner_scheduler/main.py",
       "source_location": "L333",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_scheduler_main_scheduler",
-      "target": "deal_scanner_scheduler_main_scheduler_record_mail",
-      "confidence_score": 1.0
+      "target": "deal_scanner_scheduler_main_scheduler_record_mail"
     },
     {
       "relation": "method",
@@ -8408,9 +8408,9 @@
       "source_file": "apps/scheduler/src/deal_scanner_scheduler/main.py",
       "source_location": "L157",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_scheduler_main_scheduler_sync_ebay",
-      "target": "deal_scanner_scheduler_main_ebay_image_urls",
-      "confidence_score": 1.0
+      "target": "deal_scanner_scheduler_main_ebay_image_urls"
     },
     {
       "relation": "calls",
@@ -8474,9 +8474,9 @@
       "source_file": "apps/scheduler/src/deal_scanner_scheduler/main.py",
       "source_location": "L216",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_scheduler_main_scheduler_poll_imap",
-      "target": "deal_scanner_scheduler_main_scheduler_record_mail",
-      "confidence_score": 1.0
+      "target": "deal_scanner_scheduler_main_scheduler_record_mail"
     },
     {
       "relation": "calls",
@@ -8962,9 +8962,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "apps_server_api_src_deal_scanner_api_context_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_context_py"
     },
     {
       "relation": "imports_from",
@@ -9279,9 +9279,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_listingimagerow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_listingimagerow"
     },
     {
       "relation": "contains",
@@ -9319,9 +9319,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L203",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_canonicalproductrow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_canonicalproductrow"
     },
     {
       "relation": "contains",
@@ -9329,9 +9329,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L226",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_productaliasrow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_productaliasrow"
     },
     {
       "relation": "contains",
@@ -9339,9 +9339,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_listingproductrow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_listingproductrow"
     },
     {
       "relation": "contains",
@@ -9349,9 +9349,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L260",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_productattributerow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_productattributerow"
     },
     {
       "relation": "contains",
@@ -9379,9 +9379,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_marketvalueestimaterow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_marketvalueestimaterow"
     },
     {
       "relation": "contains",
@@ -9409,9 +9409,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L368",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_providersyncrunrow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_providersyncrunrow"
     },
     {
       "relation": "contains",
@@ -9419,9 +9419,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L386",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "target": "deal_scanner_api_db_models_mailimportrow",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_mailimportrow"
     },
     {
       "relation": "contains",
@@ -9491,9 +9491,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_db_models_py"
     },
     {
       "relation": "imports_from",
@@ -9502,9 +9502,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_db_models_py"
     },
     {
       "relation": "imports_from",
@@ -9535,9 +9535,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "apps_server_api_src_deal_scanner_api_db_models_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_db_models_py"
     },
     {
       "relation": "imports_from",
@@ -9671,9 +9671,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_listingimagerow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9711,9 +9711,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L203",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_canonicalproductrow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9721,9 +9721,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L226",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_productaliasrow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9731,9 +9731,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_listingproductrow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9741,9 +9741,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L260",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_productattributerow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9771,9 +9771,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_marketvalueestimaterow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9801,9 +9801,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L368",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_providersyncrunrow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9811,9 +9811,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L386",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_mailimportrow",
-      "target": "deal_scanner_api_db_models_base",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_base"
     },
     {
       "relation": "inherits",
@@ -9901,9 +9901,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/db_models.py",
       "source_location": "L203",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_db_models_canonicalproductrow",
-      "target": "deal_scanner_api_db_models_timestampmixin",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_db_models_timestampmixin"
     },
     {
       "relation": "uses",
@@ -9911,9 +9911,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_searchprofilerow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_searchprofilerow"
     },
     {
       "relation": "calls",
@@ -9932,9 +9932,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_listingrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_listingrow"
     },
     {
       "relation": "calls",
@@ -10063,9 +10063,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_listingproductrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_listingproductrow"
     },
     {
       "relation": "calls",
@@ -10106,9 +10106,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_priceobservationrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_priceobservationrow"
     },
     {
       "relation": "calls",
@@ -10149,9 +10149,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_marketvalueestimaterow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_marketvalueestimaterow"
     },
     {
       "relation": "calls",
@@ -10170,9 +10170,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_dealevaluationrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_dealevaluationrow"
     },
     {
       "relation": "calls",
@@ -10246,9 +10246,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_notificationrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_notificationrow"
     },
     {
       "relation": "calls",
@@ -10278,9 +10278,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_market_service_evaluationoutcome",
-      "target": "deal_scanner_api_db_models_notificationdeliveryrow",
-      "confidence_score": 0.5
+      "target": "deal_scanner_api_db_models_notificationdeliveryrow"
     },
     {
       "relation": "calls",
@@ -10366,9 +10366,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "apps_server_api_src_deal_scanner_api_settings_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_settings_py"
     },
     {
       "relation": "contains",
@@ -10376,9 +10376,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_validate_image_url",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_validate_image_url"
     },
     {
       "relation": "contains",
@@ -10386,9 +10386,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_download_provider_image",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_download_provider_image"
     },
     {
       "relation": "contains",
@@ -10396,9 +10396,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_store_private_image",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_store_private_image"
     },
     {
       "relation": "contains",
@@ -10406,9 +10406,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_write_once",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_write_once"
     },
     {
       "relation": "contains",
@@ -10416,9 +10416,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_create_image_access",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_create_image_access"
     },
     {
       "relation": "contains",
@@ -10426,9 +10426,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "target": "deal_scanner_api_image_service_resolve_local_image",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_resolve_local_image"
     },
     {
       "relation": "imports_from",
@@ -10437,9 +10437,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "apps_server_api_src_deal_scanner_api_image_service_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_image_service_py"
     },
     {
       "relation": "calls",
@@ -10448,9 +10448,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/image_service.py",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_image_service_download_provider_image",
-      "target": "deal_scanner_api_image_service_validate_image_url",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_image_service_validate_image_url"
     },
     {
       "relation": "calls",
@@ -10611,9 +10611,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/main.py",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_main_py",
-      "target": "deal_scanner_api_main_security_headers",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_main_security_headers"
     },
     {
       "relation": "contains",
@@ -10642,9 +10642,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "apps_server_api_src_deal_scanner_api_settings_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_settings_py"
     },
     {
       "relation": "contains",
@@ -10652,9 +10652,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "deal_scanner_api_market_service_evaluationoutcome",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_evaluationoutcome"
     },
     {
       "relation": "contains",
@@ -10662,9 +10662,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "deal_scanner_api_market_service_estimate_listing_market",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_estimate_listing_market"
     },
     {
       "relation": "contains",
@@ -10672,9 +10672,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L95",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "deal_scanner_api_market_service_evaluate_listing_record",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_evaluate_listing_record"
     },
     {
       "relation": "contains",
@@ -10682,9 +10682,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L231",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "target": "deal_scanner_api_market_service_send_ntfy",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_send_ntfy"
     },
     {
       "relation": "imports_from",
@@ -10693,9 +10693,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/market.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_market_py",
-      "target": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_market_service_py"
     },
     {
       "relation": "imports_from",
@@ -10704,9 +10704,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/workers.py",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_workers_py",
-      "target": "apps_server_api_src_deal_scanner_api_market_service_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_market_service_py"
     },
     {
       "relation": "calls",
@@ -10715,9 +10715,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L222",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_market_service_evaluate_listing_record",
-      "target": "deal_scanner_api_market_service_evaluationoutcome",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_evaluationoutcome"
     },
     {
       "relation": "calls",
@@ -10726,9 +10726,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_market_service_evaluate_listing_record",
-      "target": "deal_scanner_api_market_service_estimate_listing_market",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_estimate_listing_market"
     },
     {
       "relation": "calls",
@@ -10759,9 +10759,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/market_service.py",
       "source_location": "L218",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_market_service_evaluate_listing_record",
-      "target": "deal_scanner_api_market_service_send_ntfy",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_market_service_send_ntfy"
     },
     {
       "relation": "calls",
@@ -10844,9 +10844,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_normalize_alias",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_normalize_alias"
     },
     {
       "relation": "contains",
@@ -10854,9 +10854,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_clean_label",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_clean_label"
     },
     {
       "relation": "contains",
@@ -10864,9 +10864,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_canonicalize_detection",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_canonicalize_detection"
     },
     {
       "relation": "contains",
@@ -10874,9 +10874,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_resolve_canonical_product",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_resolve_canonical_product"
     },
     {
       "relation": "contains",
@@ -10884,9 +10884,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_persist_listing_products",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_persist_listing_products"
     },
     {
       "relation": "contains",
@@ -10894,9 +10894,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L201",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "target": "deal_scanner_api_product_service_persist_attributes",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_persist_attributes"
     },
     {
       "relation": "imports_from",
@@ -10905,9 +10905,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/services.py",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_services_py",
-      "target": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_product_service_py"
     },
     {
       "relation": "imports_from",
@@ -10916,9 +10916,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/workers.py",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_workers_py",
-      "target": "apps_server_api_src_deal_scanner_api_product_service_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_product_service_py"
     },
     {
       "relation": "calls",
@@ -10927,9 +10927,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_canonicalize_detection",
-      "target": "deal_scanner_api_product_service_normalize_alias",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_normalize_alias"
     },
     {
       "relation": "calls",
@@ -10938,9 +10938,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_resolve_canonical_product",
-      "target": "deal_scanner_api_product_service_normalize_alias",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_normalize_alias"
     },
     {
       "relation": "calls",
@@ -10949,9 +10949,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_canonicalize_detection",
-      "target": "deal_scanner_api_product_service_clean_label",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_clean_label"
     },
     {
       "relation": "calls",
@@ -10960,9 +10960,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L150",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_persist_listing_products",
-      "target": "deal_scanner_api_product_service_canonicalize_detection",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_canonicalize_detection"
     },
     {
       "relation": "calls",
@@ -10982,9 +10982,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L151",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_persist_listing_products",
-      "target": "deal_scanner_api_product_service_resolve_canonical_product",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_resolve_canonical_product"
     },
     {
       "relation": "calls",
@@ -10993,9 +10993,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/product_service.py",
       "source_location": "L197",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_product_service_persist_listing_products",
-      "target": "deal_scanner_api_product_service_persist_attributes",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_product_service_persist_attributes"
     },
     {
       "relation": "calls",
@@ -11285,9 +11285,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L251",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_productresponse",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_productresponse"
     },
     {
       "relation": "contains",
@@ -11295,9 +11295,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L263",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_productpage",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_productpage"
     },
     {
       "relation": "contains",
@@ -11305,9 +11305,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L267",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_listingimageimport",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_listingimageimport"
     },
     {
       "relation": "contains",
@@ -11315,9 +11315,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_listingimageresponse",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_listingimageresponse"
     },
     {
       "relation": "contains",
@@ -11325,9 +11325,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L285",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_imageaccessresponse",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_imageaccessresponse"
     },
     {
       "relation": "contains",
@@ -11335,9 +11335,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L290",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_providersyncruncreate",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_providersyncruncreate"
     },
     {
       "relation": "contains",
@@ -11345,9 +11345,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L296",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_providersyncrunupdate",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_providersyncrunupdate"
     },
     {
       "relation": "contains",
@@ -11355,9 +11355,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L304",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_providersyncrunresponse",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_providersyncrunresponse"
     },
     {
       "relation": "contains",
@@ -11365,9 +11365,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L317",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_providersyncrunpage",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_providersyncrunpage"
     },
     {
       "relation": "contains",
@@ -11375,9 +11375,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L321",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_mailimportcreate",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_mailimportcreate"
     },
     {
       "relation": "contains",
@@ -11385,9 +11385,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L334",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "target": "deal_scanner_api_schemas_mailimportresponse",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_mailimportresponse"
     },
     {
       "relation": "contains",
@@ -11468,9 +11468,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "apps_server_api_src_deal_scanner_api_schemas_py",
-      "confidence_score": 1.0
+      "target": "apps_server_api_src_deal_scanner_api_schemas_py"
     },
     {
       "relation": "imports_from",
@@ -11755,9 +11755,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L251",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_productresponse",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11765,9 +11765,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L263",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_productpage",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11775,9 +11775,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L267",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_listingimageimport",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11785,9 +11785,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_listingimageresponse",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11795,9 +11795,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L285",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_imageaccessresponse",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11805,9 +11805,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L290",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_providersyncruncreate",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11815,9 +11815,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L296",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_providersyncrunupdate",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11825,9 +11825,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L304",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_providersyncrunresponse",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11835,9 +11835,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L317",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_providersyncrunpage",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -11845,9 +11845,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L321",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_mailimportcreate",
-      "target": "camelmodel",
-      "confidence_score": 1.0
+      "target": "camelmodel"
     },
     {
       "relation": "inherits",
@@ -12368,9 +12368,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_productresponse",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "calls",
@@ -12389,9 +12389,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_productpage",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "uses",
@@ -12399,9 +12399,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_listingimageimport",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "uses",
@@ -12409,9 +12409,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_listingimageresponse",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "calls",
@@ -12430,9 +12430,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_imageaccessresponse",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "calls",
@@ -12451,9 +12451,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_providersyncruncreate",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "uses",
@@ -12461,9 +12461,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_providersyncrunupdate",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "uses",
@@ -12471,9 +12471,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_providersyncrunresponse",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "calls",
@@ -12492,9 +12492,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_providersyncrunpage",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "inherits",
@@ -12502,9 +12502,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L334",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_api_schemas_mailimportresponse",
-      "target": "deal_scanner_api_schemas_mailimportcreate",
-      "confidence_score": 1.0
+      "target": "deal_scanner_api_schemas_mailimportcreate"
     },
     {
       "relation": "uses",
@@ -12512,9 +12512,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_mailimportcreate",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "uses",
@@ -12522,9 +12522,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/schemas.py",
       "source_location": "L8",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "deal_scanner_api_schemas_mailimportresponse",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 0.5
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "calls",
@@ -13063,9 +13063,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_image_response",
-      "confidence_score": 1.0
+      "target": "routers_images_image_response"
     },
     {
       "relation": "contains",
@@ -13073,9 +13073,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_import_listing_images",
-      "confidence_score": 1.0
+      "target": "routers_images_import_listing_images"
     },
     {
       "relation": "contains",
@@ -13083,9 +13083,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L138",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_listing_images",
-      "confidence_score": 1.0
+      "target": "routers_images_listing_images"
     },
     {
       "relation": "contains",
@@ -13093,9 +13093,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L152",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_owned_image",
-      "confidence_score": 1.0
+      "target": "routers_images_owned_image"
     },
     {
       "relation": "contains",
@@ -13103,9 +13103,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L167",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_image_access",
-      "confidence_score": 1.0
+      "target": "routers_images_image_access"
     },
     {
       "relation": "contains",
@@ -13113,9 +13113,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L175",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_images_py",
-      "target": "routers_images_image_content",
-      "confidence_score": 1.0
+      "target": "routers_images_image_content"
     },
     {
       "relation": "calls",
@@ -13124,9 +13124,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L127",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_images_import_listing_images",
-      "target": "routers_images_image_response",
-      "confidence_score": 1.0
+      "target": "routers_images_image_response"
     },
     {
       "relation": "calls",
@@ -13135,9 +13135,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L149",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_images_listing_images",
-      "target": "routers_images_image_response",
-      "confidence_score": 1.0
+      "target": "routers_images_image_response"
     },
     {
       "relation": "calls",
@@ -13157,9 +13157,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L168",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_images_image_access",
-      "target": "routers_images_owned_image",
-      "confidence_score": 1.0
+      "target": "routers_images_owned_image"
     },
     {
       "relation": "calls",
@@ -13168,9 +13168,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/images.py",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_images_image_content",
-      "target": "routers_images_owned_image",
-      "confidence_score": 1.0
+      "target": "routers_images_owned_image"
     },
     {
       "relation": "contains",
@@ -13397,9 +13397,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/market.py",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_market_py",
-      "target": "routers_market_price_observations",
-      "confidence_score": 1.0
+      "target": "routers_market_price_observations"
     },
     {
       "relation": "contains",
@@ -13656,9 +13656,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L153",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_sync_response",
-      "confidence_score": 1.0
+      "target": "routers_system_sync_response"
     },
     {
       "relation": "contains",
@@ -13676,9 +13676,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L185",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_create_provider_sync_run",
-      "confidence_score": 1.0
+      "target": "routers_system_create_provider_sync_run"
     },
     {
       "relation": "contains",
@@ -13686,9 +13686,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L213",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_complete_provider_sync_run",
-      "confidence_score": 1.0
+      "target": "routers_system_complete_provider_sync_run"
     },
     {
       "relation": "contains",
@@ -13696,9 +13696,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_mail_response",
-      "confidence_score": 1.0
+      "target": "routers_system_mail_response"
     },
     {
       "relation": "contains",
@@ -13706,9 +13706,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L258",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_mail_imports",
-      "confidence_score": 1.0
+      "target": "routers_system_mail_imports"
     },
     {
       "relation": "contains",
@@ -13716,9 +13716,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_system_py",
-      "target": "routers_system_record_mail_import",
-      "confidence_score": 1.0
+      "target": "routers_system_record_mail_import"
     },
     {
       "relation": "calls",
@@ -13727,9 +13727,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L181",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_system_provider_sync_runs",
-      "target": "routers_system_sync_response",
-      "confidence_score": 1.0
+      "target": "routers_system_sync_response"
     },
     {
       "relation": "calls",
@@ -13738,9 +13738,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L209",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_system_create_provider_sync_run",
-      "target": "routers_system_sync_response",
-      "confidence_score": 1.0
+      "target": "routers_system_sync_response"
     },
     {
       "relation": "calls",
@@ -13749,9 +13749,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L237",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_system_complete_provider_sync_run",
-      "target": "routers_system_sync_response",
-      "confidence_score": 1.0
+      "target": "routers_system_sync_response"
     },
     {
       "relation": "calls",
@@ -13760,9 +13760,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L267",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_system_mail_imports",
-      "target": "routers_system_mail_response",
-      "confidence_score": 1.0
+      "target": "routers_system_mail_response"
     },
     {
       "relation": "calls",
@@ -13771,9 +13771,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/system.py",
       "source_location": "L284",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_system_record_mail_import",
-      "target": "routers_system_mail_response",
-      "confidence_score": 1.0
+      "target": "routers_system_mail_response"
     },
     {
       "relation": "contains",
@@ -13821,9 +13821,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/workers.py",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_server_api_src_deal_scanner_api_routers_workers_py",
-      "target": "routers_workers_list_jobs",
-      "confidence_score": 1.0
+      "target": "routers_workers_list_jobs"
     },
     {
       "relation": "contains",
@@ -13957,9 +13957,9 @@
       "source_file": "apps/server-api/src/deal_scanner_api/routers/workers.py",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "routers_workers_list_jobs",
-      "target": "routers_workers_job_response",
-      "confidence_score": 1.0
+      "target": "routers_workers_job_response"
     },
     {
       "relation": "calls",
@@ -14349,9 +14349,9 @@
       "source_file": "packages/python/core/src/deal_scanner_core/models.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_python_core_src_deal_scanner_core_models_py",
-      "target": "deal_scanner_core_models_imageocrresult",
-      "confidence_score": 1.0
+      "target": "deal_scanner_core_models_imageocrresult"
     },
     {
       "relation": "contains",
@@ -14461,9 +14461,9 @@
       "source_file": "packages/python/core/src/deal_scanner_core/models.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deal_scanner_core_models_imageocrresult",
-      "target": "deal_scanner_core_models_camelmodel",
-      "confidence_score": 1.0
+      "target": "deal_scanner_core_models_camelmodel"
     },
     {
       "relation": "inherits",
@@ -16171,9 +16171,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_listing",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_listing"
     },
     {
       "relation": "method",
@@ -16181,9 +16181,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L82",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_listingimages",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_listingimages"
     },
     {
       "relation": "method",
@@ -16191,9 +16191,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_imageobjecturl",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_imageobjecturl"
     },
     {
       "relation": "method",
@@ -16201,9 +16201,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L108",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_evaluatelisting",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_evaluatelisting"
     },
     {
       "relation": "method",
@@ -16211,9 +16211,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_reanalyzelisting",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_reanalyzelisting"
     },
     {
       "relation": "method",
@@ -16251,9 +16251,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L128",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_jobs",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_jobs"
     },
     {
       "relation": "method",
@@ -16271,9 +16271,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_products",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_products"
     },
     {
       "relation": "method",
@@ -16281,9 +16281,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L140",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_priceobservations",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_priceobservations"
     },
     {
       "relation": "method",
@@ -16291,9 +16291,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L146",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_providersyncruns",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_providersyncruns"
     },
     {
       "relation": "method",
@@ -16301,9 +16301,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L150",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient",
-      "target": "src_index_dealscannerclient_mailimports",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_mailimports"
     },
     {
       "relation": "method",
@@ -16354,9 +16354,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L79",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_listing",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16365,9 +16365,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_listingimages",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16376,9 +16376,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_evaluatelisting",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16387,9 +16387,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_reanalyzelisting",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16431,9 +16431,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L129",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_jobs",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16453,9 +16453,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L137",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_products",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16464,9 +16464,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_priceobservations",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16475,9 +16475,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L147",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_providersyncruns",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16486,9 +16486,9 @@
       "source_file": "packages/typescript/api-client/src/index.ts",
       "source_location": "L151",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_index_dealscannerclient_mailimports",
-      "target": "src_index_dealscannerclient_request",
-      "confidence_score": 1.0
+      "target": "src_index_dealscannerclient_request"
     },
     {
       "relation": "calls",
@@ -16610,9 +16610,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_listingdetail",
-      "confidence_score": 1.0
+      "target": "src_index_listingdetail"
     },
     {
       "relation": "contains",
@@ -16700,9 +16700,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_product",
-      "confidence_score": 1.0
+      "target": "src_index_product"
     },
     {
       "relation": "contains",
@@ -16710,9 +16710,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_productpage",
-      "confidence_score": 1.0
+      "target": "src_index_productpage"
     },
     {
       "relation": "contains",
@@ -16720,9 +16720,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_providersyncrun",
-      "confidence_score": 1.0
+      "target": "src_index_providersyncrun"
     },
     {
       "relation": "contains",
@@ -16730,9 +16730,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_providersyncrunpage",
-      "confidence_score": 1.0
+      "target": "src_index_providersyncrunpage"
     },
     {
       "relation": "contains",
@@ -16740,9 +16740,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_mailimport",
-      "confidence_score": 1.0
+      "target": "src_index_mailimport"
     },
     {
       "relation": "contains",
@@ -16750,9 +16750,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_analysisjob",
-      "confidence_score": 1.0
+      "target": "src_index_analysisjob"
     },
     {
       "relation": "contains",
@@ -16760,9 +16760,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_priceobservation",
-      "confidence_score": 1.0
+      "target": "src_index_priceobservation"
     },
     {
       "relation": "contains",
@@ -16770,9 +16770,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_listingimage",
-      "confidence_score": 1.0
+      "target": "src_index_listingimage"
     },
     {
       "relation": "contains",
@@ -16780,9 +16780,9 @@
       "source_file": "packages/typescript/contracts/src/index.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "packages_typescript_contracts_src_index_ts",
-      "target": "src_index_imageaccess",
-      "confidence_score": 1.0
+      "target": "src_index_imageaccess"
     },
     {
       "relation": "contains",
@@ -17254,9 +17254,9 @@
       "source_file": "tests/test_api.py",
       "source_location": "L187",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_api_py",
-      "target": "tests_test_api_test_worker_completion_canonicalizes_product_and_evaluates_automatically",
-      "confidence_score": 1.0
+      "target": "tests_test_api_test_worker_completion_canonicalizes_product_and_evaluates_automatically"
     },
     {
       "relation": "contains",
@@ -17264,9 +17264,9 @@
       "source_file": "tests/test_api.py",
       "source_location": "L279",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_api_py",
-      "target": "tests_test_api_test_provider_sync_and_mail_import_history_are_persisted",
-      "confidence_score": 1.0
+      "target": "tests_test_api_test_provider_sync_and_mail_import_history_are_persisted"
     },
     {
       "relation": "contains",
@@ -17274,9 +17274,9 @@
       "source_file": "tests/test_api.py",
       "source_location": "L339",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_api_py",
-      "target": "tests_test_api_test_listing_views_follow_versioned_favorite_and_hidden_feedback",
-      "confidence_score": 1.0
+      "target": "tests_test_api_test_listing_views_follow_versioned_favorite_and_hidden_feedback"
     },
     {
       "relation": "calls",
@@ -17329,9 +17329,9 @@
       "source_file": "tests/test_api.py",
       "source_location": "L188",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_api_test_worker_completion_canonicalizes_product_and_evaluates_automatically",
-      "target": "tests_test_api_payload",
-      "confidence_score": 1.0
+      "target": "tests_test_api_payload"
     },
     {
       "relation": "calls",
@@ -17340,9 +17340,9 @@
       "source_file": "tests/test_api.py",
       "source_location": "L340",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_api_test_listing_views_follow_versioned_favorite_and_hidden_feedback",
-      "target": "tests_test_api_payload",
-      "confidence_score": 1.0
+      "target": "tests_test_api_payload"
     },
     {
       "relation": "contains",
@@ -17463,9 +17463,9 @@
       "source_file": "tests/test_images.py",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_images_py",
-      "target": "tests_test_images_test_provider_image_download_rejects_unknown_hosts_and_redirects",
-      "confidence_score": 1.0
+      "target": "tests_test_images_test_provider_image_download_rejects_unknown_hosts_and_redirects"
     },
     {
       "relation": "contains",
@@ -17473,9 +17473,9 @@
       "source_file": "tests/test_images.py",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_images_py",
-      "target": "tests_test_images_test_image_import_queues_ocr_and_marks_exact_duplicate",
-      "confidence_score": 1.0
+      "target": "tests_test_images_test_image_import_queues_ocr_and_marks_exact_duplicate"
     },
     {
       "relation": "calls",
@@ -17495,9 +17495,9 @@
       "source_file": "tests/test_images.py",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_images_test_provider_image_download_rejects_unknown_hosts_and_redirects",
-      "target": "tests_test_images_image",
-      "confidence_score": 1.0
+      "target": "tests_test_images_image"
     },
     {
       "relation": "calls",
@@ -17506,9 +17506,9 @@
       "source_file": "tests/test_images.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_images_test_image_import_queues_ocr_and_marks_exact_duplicate",
-      "target": "tests_test_images_image",
-      "confidence_score": 1.0
+      "target": "tests_test_images_image"
     },
     {
       "relation": "contains",
@@ -17516,9 +17516,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_py",
-      "target": "tests_test_postgres_rls_postgres",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_postgres"
     },
     {
       "relation": "contains",
@@ -17526,9 +17526,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_py",
-      "target": "tests_test_postgres_rls_workspace_for",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_workspace_for"
     },
     {
       "relation": "contains",
@@ -17536,9 +17536,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_py",
-      "target": "tests_test_postgres_rls_visible_workspaces",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_visible_workspaces"
     },
     {
       "relation": "contains",
@@ -17546,9 +17546,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_py",
-      "target": "tests_test_postgres_rls_test_rls_isolates_two_personal_workspaces",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_test_rls_isolates_two_personal_workspaces"
     },
     {
       "relation": "contains",
@@ -17556,9 +17556,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_py",
-      "target": "tests_test_postgres_rls_test_private_storage_policy_uses_workspace_path",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_test_private_storage_policy_uses_workspace_path"
     },
     {
       "relation": "calls",
@@ -17567,9 +17567,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_test_rls_isolates_two_personal_workspaces",
-      "target": "tests_test_postgres_rls_workspace_for",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_workspace_for"
     },
     {
       "relation": "calls",
@@ -17578,9 +17578,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_test_private_storage_policy_uses_workspace_path",
-      "target": "tests_test_postgres_rls_workspace_for",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_workspace_for"
     },
     {
       "relation": "calls",
@@ -17589,9 +17589,9 @@
       "source_file": "tests/test_postgres_rls.py",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_postgres_rls_test_rls_isolates_two_personal_workspaces",
-      "target": "tests_test_postgres_rls_visible_workspaces",
-      "confidence_score": 1.0
+      "target": "tests_test_postgres_rls_visible_workspaces"
     },
     {
       "relation": "contains",
@@ -17893,9 +17893,9 @@
       "source_file": "graphify-out/memory/query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "graphify_out_memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_md",
-      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_q_trace_the_existing_end_to_end_flow_from_listing_import_through_analysis_result_canonical_product_matching_market_value_evaluation_and_notification_identify_the_exact_missing_connections",
-      "confidence_score": 1.0
+      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_q_trace_the_existing_end_to_end_flow_from_listing_import_through_analysis_result_canonical_product_matching_market_value_evaluation_and_notification_identify_the_exact_missing_connections"
     },
     {
       "relation": "contains",
@@ -17903,9 +17903,9 @@
       "source_file": "graphify-out/memory/query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_q_trace_the_existing_end_to_end_flow_from_listing_import_through_analysis_result_canonical_product_matching_market_value_evaluation_and_notification_identify_the_exact_missing_connections",
-      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_answer",
-      "confidence_score": 1.0
+      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_answer"
     },
     {
       "relation": "contains",
@@ -17913,9 +17913,9 @@
       "source_file": "graphify-out/memory/query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_q_trace_the_existing_end_to_end_flow_from_listing_import_through_analysis_result_canonical_product_matching_market_value_evaluation_and_notification_identify_the_exact_missing_connections",
-      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_source_nodes",
-      "confidence_score": 1.0
+      "target": "memory_query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im_source_nodes"
     },
     {
       "relation": "contains",

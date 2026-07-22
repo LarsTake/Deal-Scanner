@@ -12,8 +12,8 @@
     "hash": "4867131295172353fe6c2295851defc7"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\vite.config.ts": {
-    "mtime": 1784735958.3526418,
-    "hash": "c703f00b6da9112163ce24de83ac7dda"
+    "mtime": 1784742709.2615857,
+    "hash": "fdb70687cc4a49c330a2bd3a81a9cecf"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\background.ts": {
     "mtime": 1784741716.5527983,
@@ -32,8 +32,8 @@
     "hash": "14050731b824d873017632a35b6f4ab3"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\main.ts": {
-    "mtime": 1784735764.6716602,
-    "hash": "e4f2b44efa3c6e9c0391ad64dc07e530"
+    "mtime": 1784742709.2636054,
+    "hash": "10963bfa55be8ab12c58e5d34f9ad9b5"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\api.service.ts": {
     "mtime": 1784736327.8982484,
@@ -64,8 +64,8 @@
     "hash": "8ac08a8d1643e9d3bc74aaa488d2701a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\dashboard.page.ts": {
-    "mtime": 1784735864.7878625,
-    "hash": "14247dff8a08f9d2b71c7c9bbef51ee0"
+    "mtime": 1784742709.262596,
+    "hash": "3e649ba1eda85deeab5752c78164e33a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\desktop-notification.service.ts": {
     "mtime": 1784736327.8971758,
@@ -120,20 +120,20 @@
     "hash": "36330dc96cd17ea68460d33a12479e7a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\workers.page.ts": {
-    "mtime": 1784735864.7898748,
-    "hash": "856c9661313500d0282a29772ce97c65"
+    "mtime": 1784742709.262596,
+    "hash": "bdc177ec4a674ee7978d8579bd68c1ae"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\build.rs": {
-    "mtime": 1784735896.0371778,
-    "hash": "4134700bc21c0804e41e162487d8988e"
+    "mtime": 1784742709.2656362,
+    "hash": "1be34a5c61c2c35365de3dab14298f0b"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\lib.rs": {
     "mtime": 1784736327.8951447,
     "hash": "ba6745cb86ca4f8c5c8e9df5fc614591"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\src\\main.rs": {
-    "mtime": 1784735896.0381887,
-    "hash": "af8aa4fd68c51fad5d08a9fb6ad502da"
+    "mtime": 1784742709.2656362,
+    "hash": "00c5effad808c81f0cb3bfccbd1b2aea"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\scheduler\\src\\deal_scanner_scheduler\\main.py": {
     "mtime": 1784741716.5507965,
@@ -364,28 +364,28 @@
     "hash": "07adc81c187f652981738fd9b9b22c88"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\pnpm-workspace.yaml": {
-    "mtime": 1784734586.3402603,
-    "hash": "f4c0d60d388efbbc607935f8b1bbebcf"
+    "mtime": 1784742709.2700613,
+    "hash": "46237d3deebbfd6e8749c8182d613bc5"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\README.md": {
-    "mtime": 1784738511.3673735,
-    "hash": "97a85ed0d2f2036e44df4597f43a919b"
+    "mtime": 1784742617.001677,
+    "hash": "82a8f80008f7664ae2e290656c47ca8b"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\popup.html": {
-    "mtime": 1784735958.3547468,
-    "hash": "b3a1d3ad289664db87b6a9ae12055d2f"
+    "mtime": 1784742709.2605698,
+    "hash": "1d73fde546ad481b154a6a265045964f"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\index.html": {
-    "mtime": 1784735764.6716602,
-    "hash": "73b193829ea2dfc1f296c62cf84d1ecf"
+    "mtime": 1784742709.2636054,
+    "hash": "d5f9d56b925dd3502f4508689175fee6"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\acceptance.md": {
-    "mtime": 1784738511.3673735,
-    "hash": "0edbeef9eb87d1b89f08838c10bba499"
+    "mtime": 1784742617.0006683,
+    "hash": "73d4174af943dec3362275a8de46a3c7"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\architecture.md": {
-    "mtime": 1784734586.3434637,
-    "hash": "365666638ece43226efe7a6e2f86ee24"
+    "mtime": 1784742709.2666507,
+    "hash": "fd2dd16c30eddfc73edfed4cd1127a97"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\operations.md": {
     "mtime": 1784736797.5417185,
@@ -396,24 +396,24 @@
     "hash": "b89670b5fa43cd5e1d28ea60ea48c757"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\adr\\0001-modular-monorepo.md": {
-    "mtime": 1784734586.3434637,
-    "hash": "ce123d0ab2a5e91e998b843bf810f787"
+    "mtime": 1784742709.2666507,
+    "hash": "c437824766ef393889c0d7b302161071"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-computer.yaml": {
-    "mtime": 1784734759.82816,
-    "hash": "8351e9b13a16e07a4be08c169ed47f24"
+    "mtime": 1784742709.2730737,
+    "hash": "0315594e31af05361e4d85a6be5a1ec2"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-fpv.yaml": {
-    "mtime": 1784734759.8291612,
-    "hash": "9cff6effec8aecc0a6f1fe407fa4b644"
+    "mtime": 1784742709.2740748,
+    "hash": "e391413d6e5616ffc3f6738f4bca5cb9"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-general.yaml": {
-    "mtime": 1784734759.8301623,
-    "hash": "7731164929a43a21a91d77bbc25e3c4d"
+    "mtime": 1784742709.2740748,
+    "hash": "4636887c26089b5526185c5cc5163a78"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\schemas\\category-simracing.yaml": {
-    "mtime": 1784734759.82816,
-    "hash": "1ee350737fa69c16cc8f6a6adf03b7c2"
+    "mtime": 1784742709.2750754,
+    "hash": "1fcf83da7f11d1ed49506eccc47e7ace"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md": {
     "mtime": 1784740014.4561553,

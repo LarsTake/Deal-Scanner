@@ -1,7 +1,11 @@
 id: general
 version: 1.0.0
 product_types: [product, accessory, bundle]
+aliases: {}
+extraction_rules: [manufacturer_model, included_accessories]
+market_rules: {condition_similarity: 0.75, bundle_discount: 0.9}
 completeness_fields: [manufacturer, model, condition, included_items]
+scoring_weights: {condition: 0.15, completeness: 0.15, resale: 0.15, relevance: 0.1}
 risk_weights:
   no_function_test: 10
   inconsistent_description: 15

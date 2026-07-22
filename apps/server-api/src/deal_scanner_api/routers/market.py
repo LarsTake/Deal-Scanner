@@ -1,9 +1,10 @@
 import csv
+from datetime import UTC, datetime
 from decimal import Decimal
 from io import StringIO
 from uuid import UUID
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 from pydantic import ValidationError
 from sqlalchemy import desc, select
 
@@ -11,6 +12,7 @@ from ..context import Context
 from ..db_models import (
     CanonicalProductRow,
     ListingRow,
+    NotificationDeliveryRow,
     NotificationRow,
     PriceObservationRow,
 )
@@ -137,6 +139,25 @@ async def notifications(context: Context) -> list[NotificationResponse]:
         )
         for row in rows
     ]
+
+
+@router.post("/notifications/{notification_id}/delivered", status_code=204)
+async def mark_desktop_notification_delivered(notification_id: UUID, context: Context) -> Response:
+    delivery = (
+        await context.session.execute(
+            select(NotificationDeliveryRow).where(
+                NotificationDeliveryRow.notification_id == notification_id,
+                NotificationDeliveryRow.workspace_id == context.workspace_id,
+                NotificationDeliveryRow.channel == "desktop",
+            )
+        )
+    ).scalar_one_or_none()
+    if delivery is None:
+        raise HTTPException(status_code=404, detail="desktop notification delivery not found")
+    delivery.status = "DELIVERED"
+    delivery.delivered_at = datetime.now(UTC)
+    await context.session.commit()
+    return Response(status_code=204)
 
 
 @router.post("/market-data/imports/csv", response_model=CsvImportResponse, status_code=201)

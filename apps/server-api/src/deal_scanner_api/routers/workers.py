@@ -269,7 +269,7 @@ async def complete_job(job_id: UUID, payload: JobCompleteRequest, context: Conte
                 listing.category_profile,
                 text_result.products,
                 source=f"analysis-result:{result.id}",
-                attributes=text_result.attributes,
+                attributes=[attribute.model_dump(by_alias=True) for attribute in text_result.attributes],
             )
             await evaluate_listing_record(
                 context.session,

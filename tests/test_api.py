@@ -25,7 +25,12 @@ def payload(description: str = "Abholung möglich") -> dict[str, object]:
 
 def test_end_to_end_import_feedback_and_worker_lease() -> None:
     with TestClient(app) as client:
-        assert client.get("/api/v1/health/live").status_code == 200
+        live = client.get("/api/v1/health/live")
+        assert live.status_code == 200
+        assert live.headers["x-content-type-options"] == "nosniff"
+        assert live.headers["x-frame-options"] == "DENY"
+        assert live.headers["x-request-id"]
+        assert int(live.headers["x-ratelimit-remaining"]) >= 0
 
         profile = client.post(
             "/api/v1/search-profiles",
@@ -181,7 +186,22 @@ def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
         assert evaluated.json()["riskScore"] == 0
         assert evaluated.json()["notificationCreated"] is True
         notifications = client.get("/api/v1/notifications")
-        assert any(item["listingId"] == listing_id for item in notifications.json())
+        notification = next(item for item in notifications.json() if item["listingId"] == listing_id)
+        delivered = client.post(f"/api/v1/notifications/{notification['id']}/delivered")
+        assert delivered.status_code == 204, delivered.text
+
+
+def test_erp_mock_uses_stable_purchase_contract() -> None:
+    target = payload()
+    target["externalId"] = "erp-contract-listing"
+    with TestClient(app) as client:
+        listing_id = client.post("/api/v1/imports/manual", json=target).json()["listing"]["id"]
+        response = client.post(f"/api/v1/erp/exports/{listing_id}")
+        assert response.status_code == 200, response.text
+        export = response.json()
+        assert export["status"] == "mocked"
+        assert export["purchasePayload"]["formatVersion"] == "erp-purchase-v1"
+        assert export["purchasePayload"]["relationships"]["listingId"] == listing_id
 
 
 def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -> None:
@@ -367,3 +387,163 @@ def test_listing_views_follow_versioned_favorite_and_hidden_feedback() -> None:
         )
         assert unhidden.status_code == 201, unhidden.text
         assert any(item["id"] == listing_id for item in client.get("/api/v1/listings").json()["items"])
+
+
+def test_manual_product_correction_updates_canonical_detail_and_preserves_history() -> None:
+    correction_payload = payload()
+    correction_payload["externalId"] = "manual-product-correction"
+    correction_payload["title"] = "Unklar bezeichnetes Simracing Bundle"
+    correction_payload["description"] = "Vom Nutzer später geprüft"
+    correction_payload["categoryProfile"] = "simracing"
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", json=correction_payload)
+        assert imported.status_code == 201, imported.text
+        listing = imported.json()["listing"]
+        corrected = client.post(
+            f"/api/v1/listings/{listing['id']}/feedback",
+            json={
+                "feedbackType": "correctedComponents",
+                "baseListingVersion": listing["version"],
+                "correctedProducts": [
+                    {
+                        "productType": "quick_release",
+                        "manufacturer": "Fanatec",
+                        "model": "QR2",
+                        "quantity": 1,
+                        "evidence": "QR2 am Produkt fotografisch geprüft",
+                    }
+                ],
+                "correctedAttributes": [{"productIndex": 0, "key": "material", "value": "Metall", "unit": None}],
+                "note": "Manuelle Korrektur im Detaildialog",
+            },
+        )
+        assert corrected.status_code == 201, corrected.text
+        assert corrected.json()["version"] == listing["version"] + 1
+
+        detail = client.get(f"/api/v1/listings/{listing['id']}")
+        assert detail.status_code == 200, detail.text
+        body = detail.json()
+        corrected_product = next(
+            product for product in body["products"] if product["detectionSource"].startswith("user-correction:")
+        )
+        assert corrected_product["model"] == "QR2"
+        assert corrected_product["confidence"] == 1
+        assert corrected_product["attributes"][0]["attributeKey"] == "material"
+        assert corrected_product["attributes"][0]["value"] == "Metall"
+        assert any(result["analysisType"] == "user_correction" for result in body["analysisResults"])
+        assert any(entry["feedbackType"] == "correctedComponents" for entry in body["feedback"])
+        assert len(body["snapshots"]) == 1
+        assert body["evaluations"]
+
+
+def test_search_profile_filters_and_notification_age_threshold_roundtrip() -> None:
+    with TestClient(app) as client:
+        profile = client.post(
+            "/api/v1/search-profiles",
+            json={
+                "name": "Regional und aktuell",
+                "query": "RTX 4070 Super",
+                "categoryProfile": "computer",
+                "location": "Hamburg",
+                "radiusKm": 50,
+                "requiredTerms": ["Rechnung"],
+                "excludedTerms": ["defekt"],
+                "requiredProducts": ["RTX 4070 Super"],
+                "excludedProducts": ["RTX 4070 Ti"],
+                "notificationSettings": {
+                    "minimumMarketAdvantagePercent": "15",
+                    "maximumListingAgeHours": 24,
+                    "desktopEnabled": True,
+                    "ntfyEnabled": False,
+                },
+            },
+        )
+        assert profile.status_code == 201, profile.text
+        created_profile = profile.json()
+        assert created_profile["location"] == "Hamburg"
+        assert created_profile["requiredProducts"] == ["RTX 4070 Super"]
+        assert created_profile["notificationSettings"]["maximumListingAgeHours"] == 24
+
+        target = payload("Rechnung vorhanden")
+        target["externalId"] = "notification-age-filter"
+        target["price"] = "100.00"
+        target["publishedAt"] = "2026-01-01T00:00:00Z"
+        target["searchProfileId"] = created_profile["id"]
+        listing_id = client.post("/api/v1/imports/manual", json=target).json()["listing"]["id"]
+        for index, price in enumerate(("900.00", "1000.00", "1100.00")):
+            response = client.post(
+                "/api/v1/price-observations",
+                json={
+                    "listingId": listing_id,
+                    "platform": "manual",
+                    "observedPrice": price,
+                    "currency": "EUR",
+                    "observationKind": "soldConfirmed",
+                    "observedAt": f"2026-07-{18 + index}T12:00:00Z",
+                },
+            )
+            assert response.status_code == 201, response.text
+        evaluated = client.post(f"/api/v1/listings/{listing_id}/evaluate")
+        assert evaluated.status_code == 200, evaluated.text
+        assert evaluated.json()["dealScore"] >= 75
+        assert evaluated.json()["notificationCreated"] is False
+
+
+def test_visible_seller_data_is_upserted_without_penalizing_missing_data() -> None:
+    seller_payload = payload()
+    seller_payload["externalId"] = "seller-roundtrip"
+    seller_payload["seller"] = {
+        "externalId": "visible-seller-42",
+        "displayName": "Privater Anbieter",
+        "accountAgeText": "Aktiv seit 2018",
+        "ratingText": "Sehr zufrieden",
+        "ratingScore": "98.5",
+        "reviewCount": 123,
+        "location": "Hamburg",
+        "rawData": {"visible": True},
+    }
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", json=seller_payload)
+        assert imported.status_code == 201, imported.text
+        listing_id = imported.json()["listing"]["id"]
+        detail = client.get(f"/api/v1/listings/{listing_id}").json()
+        assert detail["seller"]["externalId"] == "visible-seller-42"
+        assert detail["seller"]["reviewCount"] == 123
+        assert detail["seller"]["ratingScore"] == "98.50"
+        assert detail["riskScore"] == 0
+
+        seller_payload["description"] = "Aktualisierte sichtbare Daten"
+        seller_payload["seller"]["reviewCount"] = 124
+        updated = client.post("/api/v1/imports/manual", json=seller_payload)
+        assert updated.status_code == 201, updated.text
+        refreshed = client.get(f"/api/v1/listings/{listing_id}").json()
+        assert refreshed["seller"]["id"] == detail["seller"]["id"]
+        assert refreshed["seller"]["reviewCount"] == 124
+
+
+def test_provider_configuration_references_but_never_accepts_secrets() -> None:
+    with TestClient(app) as client:
+        configured = client.put(
+            "/api/v1/provider-configurations/ebay",
+            json={
+                "enabled": True,
+                "settings": {"environment": "sandbox", "marketplaceId": "EBAY_DE"},
+                "secretReference": "env:DEAL_SCANNER_EBAY_CLIENT_SECRET",
+            },
+        )
+        assert configured.status_code == 200, configured.text
+        assert configured.json()["settings"]["marketplaceId"] == "EBAY_DE"
+        listed = client.get("/api/v1/provider-configurations")
+        assert listed.status_code == 200, listed.text
+        assert any(item["provider"] == "ebay" for item in listed.json())
+
+        rejected = client.put(
+            "/api/v1/provider-configurations/ebay",
+            json={"enabled": True, "settings": {"clientSecret": "must-not-be-stored"}},
+        )
+        assert rejected.status_code == 422
+        unsupported = client.put(
+            "/api/v1/provider-configurations/unknown",
+            json={"enabled": True},
+        )
+        assert unsupported.status_code == 422

@@ -3133,6 +3133,152 @@
         }
       }
     },
+    "/api/v1/notifications/{notification_id}/delivered": {
+      "post": {
+        "tags": [
+          "market-data"
+        ],
+        "summary": "Mark Desktop Notification Delivered",
+        "operationId": "mark_desktop_notification_delivered_api_v1_notifications__notification_id__delivered_post",
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Notification Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-development-user",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Development-User"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/v1/market-data/imports/csv": {
       "post": {
         "tags": [
@@ -4535,6 +4681,315 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/provider-configurations": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Provider Configurations",
+        "operationId": "provider_configurations_api_v1_provider_configurations_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-development-user",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Development-User"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderConfigurationResponse"
+                  },
+                  "title": "Response Provider Configurations Api V1 Provider Configurations Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/provider-configurations/{provider}": {
+      "put": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Upsert Provider Configuration",
+        "operationId": "upsert_provider_configuration_api_v1_provider_configurations__provider__put",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-development-user",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Development-User"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderConfigurationUpsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderConfigurationResponse"
                 }
               }
             }
@@ -6710,6 +7165,63 @@
   },
   "components": {
     "schemas": {
+      "AnalysisResultResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysisType": {
+            "type": "string",
+            "title": "Analysistype"
+          },
+          "modelName": {
+            "type": "string",
+            "title": "Modelname"
+          },
+          "modelVersion": {
+            "type": "string",
+            "title": "Modelversion"
+          },
+          "promptVersion": {
+            "type": "string",
+            "title": "Promptversion"
+          },
+          "resultSchemaVersion": {
+            "type": "string",
+            "title": "Resultschemaversion"
+          },
+          "result": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Result"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "analysisType",
+          "modelName",
+          "modelVersion",
+          "promptVersion",
+          "resultSchemaVersion",
+          "result",
+          "confidence",
+          "createdAt"
+        ],
+        "title": "AnalysisResultResponse"
+      },
       "AuthMeResponse": {
         "properties": {
           "userId": {
@@ -6759,6 +7271,121 @@
         ],
         "title": "Body_import_csv_api_v1_market_data_imports_csv_post"
       },
+      "CorrectedAttributeInput": {
+        "properties": {
+          "productIndex": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 0.0,
+            "title": "Productindex",
+            "default": 0
+          },
+          "key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "CorrectedAttributeInput"
+      },
+      "CorrectedProductInput": {
+        "properties": {
+          "productType": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Producttype"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "default": 1
+          },
+          "evidence": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Evidence",
+            "default": "Manuelle Nutzerkorrektur"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "productType",
+          "model"
+        ],
+        "title": "CorrectedProductInput"
+      },
       "CsvImportResponse": {
         "properties": {
           "rowsImported": {
@@ -6777,6 +7404,125 @@
           "filename"
         ],
         "title": "CsvImportResponse"
+      },
+      "DealEvaluationHistoryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "marketValueMinimum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvalueminimum"
+          },
+          "marketValueMedian": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvaluemedian"
+          },
+          "marketValueMaximum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvaluemaximum"
+          },
+          "expectedResaleValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedresalevalue"
+          },
+          "estimatedMargin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimatedmargin"
+          },
+          "dealScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dealscore"
+          },
+          "riskScore": {
+            "type": "integer",
+            "title": "Riskscore"
+          },
+          "dataQualityScore": {
+            "type": "integer",
+            "title": "Dataqualityscore"
+          },
+          "relevanceScore": {
+            "type": "integer",
+            "title": "Relevancescore"
+          },
+          "explanation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Explanation"
+          },
+          "calculationVersion": {
+            "type": "string",
+            "title": "Calculationversion"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "marketValueMinimum",
+          "marketValueMedian",
+          "marketValueMaximum",
+          "expectedResaleValue",
+          "estimatedMargin",
+          "dealScore",
+          "riskScore",
+          "dataQualityScore",
+          "relevanceScore",
+          "explanation",
+          "calculationVersion",
+          "createdAt"
+        ],
+        "title": "DealEvaluationHistoryResponse"
       },
       "ErpExportResponse": {
         "properties": {
@@ -6835,6 +7581,80 @@
             "anyOf": [
               {
                 "items": {
+                  "$ref": "#/components/schemas/CorrectedProductInput"
+                },
+                "type": "array",
+                "maxItems": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correctedproducts"
+          },
+          "correctedAttributes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CorrectedAttributeInput"
+                },
+                "type": "array",
+                "maxItems": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correctedattributes"
+          },
+          "correctedValue": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correctedvalue"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "feedbackType",
+          "baseListingVersion"
+        ],
+        "title": "FeedbackCreate"
+      },
+      "FeedbackResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "feedbackType": {
+            "type": "string",
+            "title": "Feedbacktype"
+          },
+          "correctedProducts": {
+            "anyOf": [
+              {
+                "items": {
                   "additionalProperties": true,
                   "type": "object"
                 },
@@ -6876,23 +7696,37 @@
           "note": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 2000
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Note"
+          },
+          "baseListingVersion": {
+            "type": "integer",
+            "title": "Baselistingversion"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "id",
           "feedbackType",
-          "baseListingVersion"
+          "correctedProducts",
+          "correctedAttributes",
+          "correctedValue",
+          "note",
+          "baseListingVersion",
+          "createdAt"
         ],
-        "title": "FeedbackCreate"
+        "title": "FeedbackResponse"
       },
       "ImageAccessResponse": {
         "properties": {
@@ -7278,6 +8112,51 @@
             },
             "type": "array",
             "title": "Risksignals"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ListingProductResponse"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/ListingSnapshotResponse"
+            },
+            "type": "array",
+            "title": "Snapshots"
+          },
+          "analysisResults": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisResultResponse"
+            },
+            "type": "array",
+            "title": "Analysisresults"
+          },
+          "evaluations": {
+            "items": {
+              "$ref": "#/components/schemas/DealEvaluationHistoryResponse"
+            },
+            "type": "array",
+            "title": "Evaluations"
+          },
+          "feedback": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackResponse"
+            },
+            "type": "array",
+            "title": "Feedback"
+          },
+          "seller": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SellerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -7475,6 +8354,144 @@
           "items"
         ],
         "title": "ListingPage"
+      },
+      "ListingProductResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "canonicalProductId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonicalproductid"
+          },
+          "productType": {
+            "type": "string",
+            "title": "Producttype"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "detectionSource": {
+            "type": "string",
+            "title": "Detectionsource"
+          },
+          "evidence": {
+            "type": "string",
+            "title": "Evidence"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeResponse"
+            },
+            "type": "array",
+            "title": "Attributes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "canonicalProductId",
+          "productType",
+          "manufacturer",
+          "model",
+          "variant",
+          "quantity",
+          "confidence",
+          "detectionSource",
+          "evidence",
+          "createdAt"
+        ],
+        "title": "ListingProductResponse"
+      },
+      "ListingSnapshotResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "contentHash": {
+            "type": "string",
+            "title": "Contenthash"
+          },
+          "rawData": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rawdata"
+          },
+          "providerVersion": {
+            "type": "string",
+            "title": "Providerversion"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetchedat"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "contentHash",
+          "rawData",
+          "providerVersion",
+          "fetchedAt",
+          "createdAt"
+        ],
+        "title": "ListingSnapshotResponse"
       },
       "ListingSummary": {
         "properties": {
@@ -7898,6 +8915,16 @@
               }
             ],
             "title": "Searchprofileid"
+          },
+          "seller": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SellerInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -8023,6 +9050,87 @@
           "createdAt"
         ],
         "title": "NotificationResponse"
+      },
+      "NotificationSettings-Input": {
+        "properties": {
+          "minimumMarketAdvantagePercent": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Minimummarketadvantagepercent",
+            "default": "0"
+          },
+          "maximumListingAgeHours": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8760.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximumlistingagehours"
+          },
+          "desktopEnabled": {
+            "type": "boolean",
+            "title": "Desktopenabled",
+            "default": true
+          },
+          "ntfyEnabled": {
+            "type": "boolean",
+            "title": "Ntfyenabled",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NotificationSettings"
+      },
+      "NotificationSettings-Output": {
+        "properties": {
+          "minimumMarketAdvantagePercent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Minimummarketadvantagepercent",
+            "default": "0"
+          },
+          "maximumListingAgeHours": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8760.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximumlistingagehours"
+          },
+          "desktopEnabled": {
+            "type": "boolean",
+            "title": "Desktopenabled",
+            "default": true
+          },
+          "ntfyEnabled": {
+            "type": "boolean",
+            "title": "Ntfyenabled",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NotificationSettings"
       },
       "PairingResponse": {
         "properties": {
@@ -8337,6 +9445,64 @@
         ],
         "title": "ProblemDetails"
       },
+      "ProductAttributeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "attributeKey": {
+            "type": "string",
+            "title": "Attributekey"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "attributeKey",
+          "value",
+          "unit",
+          "confidence",
+          "source"
+        ],
+        "title": "ProductAttributeResponse"
+      },
       "ProductPage": {
         "properties": {
           "items": {
@@ -8426,6 +9592,114 @@
           "updatedAt"
         ],
         "title": "ProductResponse"
+      },
+      "ProviderConfigurationResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "secretReference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_./:-]{1,255}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secretreference"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "lastHealthStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasthealthstatus"
+          },
+          "lastHealthCheckedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasthealthcheckedat"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "lastHealthStatus",
+          "lastHealthCheckedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ProviderConfigurationResponse"
+      },
+      "ProviderConfigurationUpsert": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "secretReference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_./:-]{1,255}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secretreference"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProviderConfigurationUpsert"
       },
       "ProviderSyncRunCreate": {
         "properties": {
@@ -8726,6 +10000,31 @@
             ],
             "title": "Maximumprice"
           },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "radiusKm": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radiuskm"
+          },
           "requiredTerms": {
             "items": {
               "type": "string"
@@ -8740,6 +10039,20 @@
             "type": "array",
             "title": "Excludedterms"
           },
+          "requiredProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requiredproducts"
+          },
+          "excludedProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excludedproducts"
+          },
           "minimumDealScore": {
             "type": "integer",
             "maximum": 100.0,
@@ -8753,6 +10066,9 @@
             "minimum": 0.0,
             "title": "Maximumriskscore",
             "default": 45
+          },
+          "notificationSettings": {
+            "$ref": "#/components/schemas/NotificationSettings-Input"
           },
           "scanIntervalMinutes": {
             "type": "integer",
@@ -8829,6 +10145,31 @@
             ],
             "title": "Maximumprice"
           },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "radiusKm": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radiuskm"
+          },
           "requiredTerms": {
             "items": {
               "type": "string"
@@ -8843,6 +10184,20 @@
             "type": "array",
             "title": "Excludedterms"
           },
+          "requiredProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requiredproducts"
+          },
+          "excludedProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excludedproducts"
+          },
           "minimumDealScore": {
             "type": "integer",
             "maximum": 100.0,
@@ -8856,6 +10211,9 @@
             "minimum": 0.0,
             "title": "Maximumriskscore",
             "default": 45
+          },
+          "notificationSettings": {
+            "$ref": "#/components/schemas/NotificationSettings-Output"
           },
           "scanIntervalMinutes": {
             "type": "integer",
@@ -8901,6 +10259,243 @@
           "updatedAt"
         ],
         "title": "SearchProfileResponse"
+      },
+      "SellerInput": {
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Externalid"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "accountAgeText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accountagetext"
+          },
+          "accountCreatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accountcreatedat"
+          },
+          "ratingText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratingtext"
+          },
+          "ratingScore": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratingscore"
+          },
+          "reviewCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewcount"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rawData": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rawdata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "externalId"
+        ],
+        "title": "SellerInput"
+      },
+      "SellerResponse": {
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Externalid"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "accountAgeText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accountagetext"
+          },
+          "accountCreatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accountcreatedat"
+          },
+          "ratingText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratingtext"
+          },
+          "ratingScore": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratingscore"
+          },
+          "reviewCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewcount"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rawData": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rawdata"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "firstSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Firstseenat"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Lastseenat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "externalId",
+          "id",
+          "platform",
+          "firstSeenAt",
+          "lastSeenAt"
+        ],
+        "title": "SellerResponse"
       },
       "WorkerHeartbeat": {
         "properties": {

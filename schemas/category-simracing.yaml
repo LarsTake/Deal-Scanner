@@ -1,7 +1,13 @@
 id: simracing
 version: 1.0.0
 product_types: [wheelbase, wheel, pedals, shifter, handbrake, cockpit, seat, table_clamp, power_supply, quick_release, accessory, bundle]
+aliases:
+  fanatec_qr1: [QR1, Quick Release 1]
+  fanatec_qr2: [QR2, Quick Release 2]
+extraction_rules: [model_alias_first, platform_compatibility, included_accessories]
+market_rules: {condition_similarity: 0.85, bundle_discount: 0.9}
 completeness_fields: [model, platform_compatibility, quick_release, power_supply, condition]
+scoring_weights: {condition: 0.15, completeness: 0.2, resale: 0.15, relevance: 0.1}
 risk_weights:
   unclear_quick_release: 10
   missing_power_supply: 15

@@ -16,21 +16,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .db_models import (
     AnalysisJobRow,
+    AnalysisResultRow,
     AuditEventRow,
     DealEvaluationRow,
+    ListingProductRow,
     ListingRow,
     ListingSnapshotRow,
     PriceObservationRow,
+    ProductAttributeRow,
     RiskSignalRow,
     SearchProfileRow,
+    SellerRow,
+    UserFeedbackRow,
 )
 from .product_service import persist_listing_products
 from .schemas import (
+    AnalysisResultResponse,
+    DealEvaluationHistoryResponse,
+    FeedbackResponse,
     ImportResponse,
     ListingDetail,
+    ListingProductResponse,
+    ListingSnapshotResponse,
     ListingSummary,
     ManualImportRequest,
+    ProductAttributeResponse,
     RiskSignalResponse,
+    SellerInput,
+    SellerResponse,
 )
 
 ALLOWED_IMPORT_HOSTS = {
@@ -111,6 +124,163 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         )
         for signal in signals_result.scalars()
     ]
+    product_rows = list(
+        (
+            await session.execute(
+                select(ListingProductRow)
+                .where(ListingProductRow.listing_id == listing.id)
+                .order_by(desc(ListingProductRow.created_at), ListingProductRow.id)
+            )
+        ).scalars()
+    )
+    attributes_by_product: dict[UUID, list[ProductAttributeResponse]] = {row.id: [] for row in product_rows}
+    if product_rows:
+        attribute_rows = (
+            await session.execute(
+                select(ProductAttributeRow)
+                .where(ProductAttributeRow.listing_product_id.in_([row.id for row in product_rows]))
+                .order_by(ProductAttributeRow.created_at, ProductAttributeRow.id)
+            )
+        ).scalars()
+        for attribute in attribute_rows:
+            value: str | Decimal | bool
+            if attribute.value_boolean is not None:
+                value = attribute.value_boolean
+            elif attribute.value_number is not None:
+                value = attribute.value_number
+            else:
+                value = attribute.value_text or ""
+            attributes_by_product[attribute.listing_product_id].append(
+                ProductAttributeResponse(
+                    id=attribute.id,
+                    attribute_key=attribute.attribute_key,
+                    value=value,
+                    unit=attribute.unit,
+                    confidence=float(attribute.confidence),
+                    source=attribute.source,
+                )
+            )
+    products = [
+        ListingProductResponse(
+            id=row.id,
+            canonical_product_id=row.canonical_product_id,
+            product_type=row.product_type,
+            manufacturer=row.manufacturer,
+            model=row.model,
+            variant=row.variant,
+            quantity=row.quantity,
+            confidence=float(row.confidence),
+            detection_source=row.detection_source,
+            evidence=row.raw_match,
+            created_at=row.created_at,
+            attributes=attributes_by_product[row.id],
+        )
+        for row in product_rows
+    ]
+    snapshot_rows = (
+        await session.execute(
+            select(ListingSnapshotRow)
+            .where(ListingSnapshotRow.listing_id == listing.id)
+            .order_by(desc(ListingSnapshotRow.fetched_at))
+        )
+    ).scalars()
+    snapshots = [
+        ListingSnapshotResponse(
+            id=row.id,
+            content_hash=row.content_hash,
+            raw_data=row.raw_data,
+            provider_version=row.provider_version,
+            fetched_at=row.fetched_at,
+            created_at=row.created_at,
+        )
+        for row in snapshot_rows
+    ]
+    analysis_rows = (
+        await session.execute(
+            select(AnalysisResultRow)
+            .where(AnalysisResultRow.listing_id == listing.id)
+            .order_by(desc(AnalysisResultRow.created_at))
+        )
+    ).scalars()
+    analysis_results = [
+        AnalysisResultResponse(
+            id=row.id,
+            analysis_type=row.analysis_type,
+            model_name=row.model_name,
+            model_version=row.model_version,
+            prompt_version=row.prompt_version,
+            result_schema_version=row.result_schema_version,
+            result=row.result_json,
+            confidence=float(row.confidence),
+            created_at=row.created_at,
+        )
+        for row in analysis_rows
+    ]
+    evaluation_rows = (
+        await session.execute(
+            select(DealEvaluationRow)
+            .where(DealEvaluationRow.listing_id == listing.id)
+            .order_by(desc(DealEvaluationRow.created_at))
+        )
+    ).scalars()
+    evaluations = [
+        DealEvaluationHistoryResponse(
+            id=row.id,
+            market_value_minimum=row.estimated_market_value_min,
+            market_value_median=row.estimated_market_value_median,
+            market_value_maximum=row.estimated_market_value_max,
+            expected_resale_value=row.expected_resale_value,
+            estimated_margin=row.estimated_margin,
+            deal_score=row.deal_score,
+            risk_score=row.risk_score,
+            data_quality_score=row.data_quality_score,
+            relevance_score=row.relevance_score,
+            explanation=row.explanation,
+            calculation_version=row.calculation_version,
+            created_at=row.created_at,
+        )
+        for row in evaluation_rows
+    ]
+    feedback_rows = (
+        await session.execute(
+            select(UserFeedbackRow)
+            .where(UserFeedbackRow.listing_id == listing.id)
+            .order_by(desc(UserFeedbackRow.created_at))
+        )
+    ).scalars()
+    feedback = [
+        FeedbackResponse(
+            id=row.id,
+            feedback_type=row.feedback_type,
+            corrected_products=row.corrected_products,
+            corrected_attributes=row.corrected_attributes,
+            corrected_value=row.corrected_value,
+            note=row.note,
+            base_listing_version=row.base_listing_version,
+            created_at=row.created_at,
+        )
+        for row in feedback_rows
+    ]
+    seller_row = await session.get(SellerRow, listing.seller_id) if listing.seller_id is not None else None
+    seller = (
+        SellerResponse(
+            id=seller_row.id,
+            platform=seller_row.platform,
+            external_id=seller_row.external_id,
+            display_name=seller_row.display_name,
+            account_age_text=seller_row.account_age_text,
+            account_created_at=seller_row.account_created_at,
+            rating_text=seller_row.rating_text,
+            rating_score=seller_row.rating_score,
+            review_count=seller_row.review_count,
+            location=seller_row.location,
+            raw_data=seller_row.raw_data,
+            first_seen_at=seller_row.first_seen_at,
+            last_seen_at=seller_row.last_seen_at,
+        )
+        if seller_row is not None
+        else None
+    )
     return ListingDetail(
         **summary.model_dump(),
         description=listing.description,
@@ -118,7 +288,68 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         category_profile=listing.category_profile,
         current_snapshot_id=listing.current_snapshot_id,
         risk_signals=signals,
+        products=products,
+        snapshots=snapshots,
+        analysis_results=analysis_results,
+        evaluations=evaluations,
+        feedback=feedback,
+        seller=seller,
     )
+
+
+async def upsert_seller(
+    session: AsyncSession,
+    workspace_id: UUID,
+    platform: str,
+    payload: SellerInput | None,
+    observed_at: datetime,
+) -> SellerRow | None:
+    if payload is None:
+        return None
+    seller = (
+        await session.execute(
+            select(SellerRow).where(
+                SellerRow.workspace_id == workspace_id,
+                SellerRow.platform == platform,
+                SellerRow.external_id == payload.external_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if seller is None:
+        seller = SellerRow(
+            workspace_id=workspace_id,
+            platform=platform,
+            external_id=payload.external_id,
+            display_name=payload.display_name,
+            account_age_text=payload.account_age_text,
+            account_created_at=payload.account_created_at,
+            rating_text=payload.rating_text,
+            rating_score=payload.rating_score,
+            review_count=payload.review_count,
+            location=payload.location,
+            raw_data=payload.raw_data,
+            first_seen_at=observed_at,
+            last_seen_at=observed_at,
+        )
+        session.add(seller)
+        await session.flush()
+        return seller
+    for field in (
+        "display_name",
+        "account_age_text",
+        "account_created_at",
+        "rating_text",
+        "rating_score",
+        "review_count",
+        "location",
+    ):
+        value = getattr(payload, field)
+        if value is not None:
+            setattr(seller, field, value)
+    if payload.raw_data:
+        seller.raw_data = payload.raw_data
+    seller.last_seen_at = observed_at
+    return seller
 
 
 async def import_listing(
@@ -129,6 +360,7 @@ async def import_listing(
     validate_import_url(str(payload.url), payload.platform)
     digest = request_content_hash(payload)
     now = datetime.now(UTC)
+    seller = await upsert_seller(session, workspace_id, payload.platform, payload.seller, now)
     if payload.search_profile_id is not None:
         profile = (
             await session.execute(
@@ -152,6 +384,7 @@ async def import_listing(
         listing = ListingRow(
             workspace_id=workspace_id,
             search_profile_id=payload.search_profile_id,
+            seller_id=seller.id if seller is not None else None,
             platform=payload.platform,
             external_id=payload.external_id,
             url=str(payload.url),
@@ -185,6 +418,8 @@ async def import_listing(
             listing.last_seen_at = now
     else:
         listing.last_seen_at = now
+        if seller is not None:
+            listing.seller_id = seller.id
         if payload.search_profile_id is not None:
             listing.search_profile_id = payload.search_profile_id
 

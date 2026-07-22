@@ -113,6 +113,7 @@ class EbayProvider:
                 "limit": "50",
                 "offset": str(offset),
                 "fieldgroups": "EXTENDED",
+                "sort": "newlyListed",
                 **({"filter": ",".join(filters)} if filters else {}),
             },
         )
@@ -169,7 +170,11 @@ class EbayProvider:
             ),
             location=(item.get("itemLocation") or {}).get("city"),
             seller_external_id=(item.get("seller") or {}).get("username"),
-            published_at=None,
+            published_at=(
+                datetime.fromisoformat(item["itemCreationDate"].replace("Z", "+00:00"))
+                if item.get("itemCreationDate")
+                else None
+            ),
             raw_snapshot_hash=content_hash(snapshot.payload),
         )
 

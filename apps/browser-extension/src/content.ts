@@ -40,6 +40,14 @@ function imageUrls(root: ParentNode): string[] {
 function collectDetail(): VisibleListing[] {
   const title = text(document, ['h1', '[data-testid="ad-title"]']);
   if (!title) return [];
+  const sellerName = text(document, [
+    '[data-testid="user-profile-name"]',
+    '#viewad-contact .text-body-regular-strong',
+    '[class*="user"] [class*="name"]',
+  ]);
+  const sellerAge = text(document, ['[data-testid="user-profile-since"]', '[class*="user"] [class*="since"]']);
+  const sellerRating = text(document, ['[data-testid="user-profile-rating"]', '[class*="user"] [class*="rating"]']);
+  const listingLocation = text(document, ['#viewad-locality', '[data-testid="location"]']);
   return [{
     platform: 'kleinanzeigen',
     externalId: externalId(location.href),
@@ -48,7 +56,17 @@ function collectDetail(): VisibleListing[] {
     description: text(document, ['#viewad-description-text', '[data-testid="description"]']),
     price: price(text(document, ['#viewad-price', '[data-testid="price"]'])),
     currency: 'EUR',
-    location: text(document, ['#viewad-locality', '[data-testid="location"]']),
+    location: listingLocation,
+    ...(sellerName ? {
+      seller: {
+        externalId: `${sellerName}:${listingLocation}`.toLocaleLowerCase('de-DE').replace(/[^a-z0-9]+/g, '-'),
+        displayName: sellerName,
+        accountAgeText: sellerAge || undefined,
+        ratingText: sellerRating || undefined,
+        location: listingLocation || undefined,
+        rawData: { source: 'visibleBrowserPage' },
+      },
+    } : {}),
     categoryProfile: 'general',
     rawData: { source: 'visibleBrowserPage', capturedAt: new Date().toISOString(), imageUrls: imageUrls(document) },
     providerVersion: 'browser-extension-v1',

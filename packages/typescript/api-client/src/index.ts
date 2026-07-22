@@ -9,6 +9,8 @@ import type {
   Notification,
   ManualImport,
   ProductPage,
+  ProviderConfiguration,
+  ProviderConfigurationUpsert,
   ProviderSyncRunPage,
   PriceObservation,
   SearchProfile,
@@ -133,6 +135,10 @@ export class DealScannerClient {
     return this.request('/notifications');
   }
 
+  markNotificationDelivered(notificationId: string): Promise<void> {
+    return this.request(`/notifications/${encodeURIComponent(notificationId)}/delivered`, { method: 'POST' });
+  }
+
   products(): Promise<ProductPage> {
     return this.request('/products');
   }
@@ -145,6 +151,20 @@ export class DealScannerClient {
 
   providerSyncRuns(): Promise<ProviderSyncRunPage> {
     return this.request('/provider-sync-runs');
+  }
+
+  providerConfigurations(): Promise<ProviderConfiguration[]> {
+    return this.request('/provider-configurations');
+  }
+
+  configureProvider(
+    provider: 'ebay' | 'kleinanzeigenEmail' | 'browser' | 'manual',
+    configuration: ProviderConfigurationUpsert,
+  ): Promise<ProviderConfiguration> {
+    return this.request(`/provider-configurations/${encodeURIComponent(provider)}`, {
+      method: 'PUT',
+      body: JSON.stringify(configuration),
+    });
   }
 
   mailImports(): Promise<MailImport[]> {

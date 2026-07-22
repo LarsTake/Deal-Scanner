@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
@@ -56,10 +56,15 @@ class SearchProfile(CamelModel):
     enabled_platforms: list[str] = Field(default_factory=lambda: ["ebay"])
     minimum_price: Decimal | None = Field(default=None, ge=0)
     maximum_price: Decimal | None = Field(default=None, ge=0)
+    location: str | None = Field(default=None, max_length=255)
+    radius_km: int | None = Field(default=None, ge=0, le=1_000)
     required_terms: list[str] = Field(default_factory=list)
     excluded_terms: list[str] = Field(default_factory=list)
+    required_products: list[str] = Field(default_factory=list)
+    excluded_products: list[str] = Field(default_factory=list)
     minimum_deal_score: int = Field(default=75, ge=0, le=100)
     maximum_risk_score: int = Field(default=45, ge=0, le=100)
+    notification_settings: dict[str, Any] = Field(default_factory=dict)
     scan_interval_minutes: int = Field(default=15, ge=5, le=10_080)
     enabled: bool = True
 
@@ -107,12 +112,36 @@ class ProductDetection(CamelModel):
     evidence: str
 
 
+class DetectedAttribute(CamelModel):
+    name: str
+    value: str | int | float | bool
+    unit: str | None = None
+    confidence: float = Field(ge=0, le=1)
+    sources: list[str]
+    evidence: str
+
+
+class AiRiskSignal(CamelModel):
+    signal_type: str
+    severity: Literal["low", "medium", "high", "critical"]
+    confidence: float = Field(ge=0, le=1)
+    source: str
+    evidence: str
+
+
+class Contradiction(CamelModel):
+    statement: str
+    conflicting_statement: str
+    confidence: float = Field(ge=0, le=1)
+    evidence: str
+
+
 class TextAnalysisResult(CamelModel):
     category: str
     products: list[ProductDetection]
-    attributes: list[dict[str, Any]] = Field(default_factory=list)
-    risk_signals: list[dict[str, Any]] = Field(default_factory=list)
-    contradictions: list[dict[str, Any]] = Field(default_factory=list)
+    attributes: list[DetectedAttribute] = Field(default_factory=list)
+    risk_signals: list[AiRiskSignal] = Field(default_factory=list)
+    contradictions: list[Contradiction] = Field(default_factory=list)
     missing_information: list[str] = Field(default_factory=list)
     overall_confidence: float = Field(ge=0, le=1)
     schema_version: str = "1.0.0"

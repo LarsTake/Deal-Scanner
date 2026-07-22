@@ -312,6 +312,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/{notification_id}/delivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Desktop Notification Delivered */
+        post: operations["mark_desktop_notification_delivered_api_v1_notifications__notification_id__delivered_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/market-data/imports/csv": {
         parameters: {
             query?: never;
@@ -443,6 +460,40 @@ export interface paths {
         /** Products */
         get: operations["products_api_v1_products_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/provider-configurations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider Configurations */
+        get: operations["provider_configurations_api_v1_provider_configurations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/provider-configurations/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert Provider Configuration */
+        put: operations["upsert_provider_configuration_api_v1_provider_configurations__provider__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -643,6 +694,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AnalysisResultResponse */
+        AnalysisResultResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Analysistype */
+            analysisType: string;
+            /** Modelname */
+            modelName: string;
+            /** Modelversion */
+            modelVersion: string;
+            /** Promptversion */
+            promptVersion: string;
+            /** Resultschemaversion */
+            resultSchemaVersion: string;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            /** Confidence */
+            confidence: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
         /** AuthMeResponse */
         AuthMeResponse: {
             /**
@@ -660,12 +740,84 @@ export interface components {
             /** File */
             file: string;
         };
+        /** CorrectedAttributeInput */
+        CorrectedAttributeInput: {
+            /**
+             * Productindex
+             * @default 0
+             */
+            productIndex: number;
+            /** Key */
+            key: string;
+            /** Value */
+            value: string | number | boolean;
+            /** Unit */
+            unit?: string | null;
+        };
+        /** CorrectedProductInput */
+        CorrectedProductInput: {
+            /** Producttype */
+            productType: string;
+            /** Manufacturer */
+            manufacturer?: string | null;
+            /** Model */
+            model: string;
+            /** Variant */
+            variant?: string | null;
+            /**
+             * Quantity
+             * @default 1
+             */
+            quantity: number;
+            /**
+             * Evidence
+             * @default Manuelle Nutzerkorrektur
+             */
+            evidence: string;
+        };
         /** CsvImportResponse */
         CsvImportResponse: {
             /** Rowsimported */
             rowsImported: number;
             /** Filename */
             filename: string;
+        };
+        /** DealEvaluationHistoryResponse */
+        DealEvaluationHistoryResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Marketvalueminimum */
+            marketValueMinimum: string | null;
+            /** Marketvaluemedian */
+            marketValueMedian: string | null;
+            /** Marketvaluemaximum */
+            marketValueMaximum: string | null;
+            /** Expectedresalevalue */
+            expectedResaleValue: string | null;
+            /** Estimatedmargin */
+            estimatedMargin: string | null;
+            /** Dealscore */
+            dealScore: number | null;
+            /** Riskscore */
+            riskScore: number;
+            /** Dataqualityscore */
+            dataQualityScore: number;
+            /** Relevancescore */
+            relevanceScore: number;
+            /** Explanation */
+            explanation: {
+                [key: string]: unknown;
+            };
+            /** Calculationversion */
+            calculationVersion: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
         };
         /** ErpExportResponse */
         ErpExportResponse: {
@@ -695,19 +847,46 @@ export interface components {
             /** Baselistingversion */
             baseListingVersion: number;
             /** Correctedproducts */
-            correctedProducts?: {
-                [key: string]: unknown;
-            }[] | null;
+            correctedProducts?: components["schemas"]["CorrectedProductInput"][] | null;
             /** Correctedattributes */
-            correctedAttributes?: {
-                [key: string]: unknown;
-            }[] | null;
+            correctedAttributes?: components["schemas"]["CorrectedAttributeInput"][] | null;
             /** Correctedvalue */
             correctedValue?: {
                 [key: string]: unknown;
             } | null;
             /** Note */
             note?: string | null;
+        };
+        /** FeedbackResponse */
+        FeedbackResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Feedbacktype */
+            feedbackType: string;
+            /** Correctedproducts */
+            correctedProducts: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Correctedattributes */
+            correctedAttributes: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Correctedvalue */
+            correctedValue: {
+                [key: string]: unknown;
+            } | null;
+            /** Note */
+            note: string | null;
+            /** Baselistingversion */
+            baseListingVersion: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
         };
         /** ImageAccessResponse */
         ImageAccessResponse: {
@@ -869,6 +1048,17 @@ export interface components {
             currentSnapshotId: string | null;
             /** Risksignals */
             riskSignals?: components["schemas"]["RiskSignalResponse"][];
+            /** Products */
+            products?: components["schemas"]["ListingProductResponse"][];
+            /** Snapshots */
+            snapshots?: components["schemas"]["ListingSnapshotResponse"][];
+            /** Analysisresults */
+            analysisResults?: components["schemas"]["AnalysisResultResponse"][];
+            /** Evaluations */
+            evaluations?: components["schemas"]["DealEvaluationHistoryResponse"][];
+            /** Feedback */
+            feedback?: components["schemas"]["FeedbackResponse"][];
+            seller?: components["schemas"]["SellerResponse"] | null;
         };
         /** ListingEvaluationResponse */
         ListingEvaluationResponse: {
@@ -927,6 +1117,65 @@ export interface components {
             items: components["schemas"]["ListingSummary"][];
             /** Nextcursor */
             nextCursor?: string | null;
+        };
+        /** ListingProductResponse */
+        ListingProductResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Canonicalproductid */
+            canonicalProductId: string | null;
+            /** Producttype */
+            productType: string;
+            /** Manufacturer */
+            manufacturer: string | null;
+            /** Model */
+            model: string;
+            /** Variant */
+            variant: string | null;
+            /** Quantity */
+            quantity: number;
+            /** Confidence */
+            confidence: number;
+            /** Detectionsource */
+            detectionSource: string;
+            /** Evidence */
+            evidence: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Attributes */
+            attributes?: components["schemas"]["ProductAttributeResponse"][];
+        };
+        /** ListingSnapshotResponse */
+        ListingSnapshotResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Contenthash */
+            contentHash: string;
+            /** Rawdata */
+            rawData: {
+                [key: string]: unknown;
+            };
+            /** Providerversion */
+            providerVersion: string;
+            /**
+             * Fetchedat
+             * Format: date-time
+             */
+            fetchedAt: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
         };
         /** ListingSummary */
         ListingSummary: {
@@ -1100,6 +1349,7 @@ export interface components {
             providerVersion: string;
             /** Searchprofileid */
             searchProfileId?: string | null;
+            seller?: components["schemas"]["SellerInput"] | null;
         };
         /** MarketEstimateResponse */
         MarketEstimateResponse: {
@@ -1138,6 +1388,46 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+        };
+        /** NotificationSettings */
+        "NotificationSettings-Input": {
+            /**
+             * Minimummarketadvantagepercent
+             * @default 0
+             */
+            minimumMarketAdvantagePercent: number | string;
+            /** Maximumlistingagehours */
+            maximumListingAgeHours?: number | null;
+            /**
+             * Desktopenabled
+             * @default true
+             */
+            desktopEnabled: boolean;
+            /**
+             * Ntfyenabled
+             * @default false
+             */
+            ntfyEnabled: boolean;
+        };
+        /** NotificationSettings */
+        "NotificationSettings-Output": {
+            /**
+             * Minimummarketadvantagepercent
+             * @default 0
+             */
+            minimumMarketAdvantagePercent: string;
+            /** Maximumlistingagehours */
+            maximumListingAgeHours?: number | null;
+            /**
+             * Desktopenabled
+             * @default true
+             */
+            desktopEnabled: boolean;
+            /**
+             * Ntfyenabled
+             * @default false
+             */
+            ntfyEnabled: boolean;
         };
         /** PairingResponse */
         PairingResponse: {
@@ -1267,6 +1557,24 @@ export interface components {
                 [key: string]: unknown;
             }[] | null;
         };
+        /** ProductAttributeResponse */
+        ProductAttributeResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Attributekey */
+            attributeKey: string;
+            /** Value */
+            value: string | boolean;
+            /** Unit */
+            unit: string | null;
+            /** Confidence */
+            confidence: number;
+            /** Source */
+            source: string;
+        };
         /** ProductPage */
         ProductPage: {
             /** Items */
@@ -1301,6 +1609,55 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+        };
+        /** ProviderConfigurationResponse */
+        ProviderConfigurationResponse: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Settings */
+            settings?: {
+                [key: string]: unknown;
+            };
+            /** Secretreference */
+            secretReference?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Provider */
+            provider: string;
+            /** Lasthealthstatus */
+            lastHealthStatus: string | null;
+            /** Lasthealthcheckedat */
+            lastHealthCheckedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /** ProviderConfigurationUpsert */
+        ProviderConfigurationUpsert: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Settings */
+            settings?: {
+                [key: string]: unknown;
+            };
+            /** Secretreference */
+            secretReference?: string | null;
         };
         /** ProviderSyncRunCreate */
         ProviderSyncRunCreate: {
@@ -1403,10 +1760,18 @@ export interface components {
             minimumPrice?: number | string | null;
             /** Maximumprice */
             maximumPrice?: number | string | null;
+            /** Location */
+            location?: string | null;
+            /** Radiuskm */
+            radiusKm?: number | null;
             /** Requiredterms */
             requiredTerms?: string[];
             /** Excludedterms */
             excludedTerms?: string[];
+            /** Requiredproducts */
+            requiredProducts?: string[];
+            /** Excludedproducts */
+            excludedProducts?: string[];
             /**
              * Minimumdealscore
              * @default 75
@@ -1417,6 +1782,7 @@ export interface components {
              * @default 45
              */
             maximumRiskScore: number;
+            notificationSettings?: components["schemas"]["NotificationSettings-Input"];
             /**
              * Scanintervalminutes
              * @default 15
@@ -1446,10 +1812,18 @@ export interface components {
             minimumPrice?: string | null;
             /** Maximumprice */
             maximumPrice?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Radiuskm */
+            radiusKm?: number | null;
             /** Requiredterms */
             requiredTerms?: string[];
             /** Excludedterms */
             excludedTerms?: string[];
+            /** Requiredproducts */
+            requiredProducts?: string[];
+            /** Excludedproducts */
+            excludedProducts?: string[];
             /**
              * Minimumdealscore
              * @default 75
@@ -1460,6 +1834,7 @@ export interface components {
              * @default 45
              */
             maximumRiskScore: number;
+            notificationSettings?: components["schemas"]["NotificationSettings-Output"];
             /**
              * Scanintervalminutes
              * @default 15
@@ -1490,6 +1865,69 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+        };
+        /** SellerInput */
+        SellerInput: {
+            /** Externalid */
+            externalId: string;
+            /** Displayname */
+            displayName?: string | null;
+            /** Accountagetext */
+            accountAgeText?: string | null;
+            /** Accountcreatedat */
+            accountCreatedAt?: string | null;
+            /** Ratingtext */
+            ratingText?: string | null;
+            /** Ratingscore */
+            ratingScore?: number | string | null;
+            /** Reviewcount */
+            reviewCount?: number | null;
+            /** Location */
+            location?: string | null;
+            /** Rawdata */
+            rawData?: {
+                [key: string]: unknown;
+            };
+        };
+        /** SellerResponse */
+        SellerResponse: {
+            /** Externalid */
+            externalId: string;
+            /** Displayname */
+            displayName?: string | null;
+            /** Accountagetext */
+            accountAgeText?: string | null;
+            /** Accountcreatedat */
+            accountCreatedAt?: string | null;
+            /** Ratingtext */
+            ratingText?: string | null;
+            /** Ratingscore */
+            ratingScore?: string | null;
+            /** Reviewcount */
+            reviewCount?: number | null;
+            /** Location */
+            location?: string | null;
+            /** Rawdata */
+            rawData?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Platform */
+            platform: string;
+            /**
+             * Firstseenat
+             * Format: date-time
+             */
+            firstSeenAt: string;
+            /**
+             * Lastseenat
+             * Format: date-time
+             */
+            lastSeenAt: string;
         };
         /** WorkerHeartbeat */
         WorkerHeartbeat: {
@@ -3695,6 +4133,109 @@ export interface operations {
             };
         };
     };
+    mark_desktop_notification_delivered_api_v1_notifications__notification_id__delivered_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-development-user"?: string | null;
+            };
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     import_csv_api_v1_market_data_imports_csv_post: {
         parameters: {
             query?: never;
@@ -4659,6 +5200,218 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    provider_configurations_api_v1_provider_configurations_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-development-user"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderConfigurationResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    upsert_provider_configuration_api_v1_provider_configurations__provider__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-development-user"?: string | null;
+            };
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderConfigurationUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderConfigurationResponse"];
                 };
             };
             /** @description Bad Request */

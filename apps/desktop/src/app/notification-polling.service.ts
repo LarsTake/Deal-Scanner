@@ -28,6 +28,7 @@ export class NotificationPollingService {
         const deal = notification.reason['dealScore'];
         const risk = notification.reason['riskScore'];
         await this.desktop.send(title, `Deal ${String(deal)} · Risiko ${String(risk)}`);
+        await this.api.markNotificationDelivered(notification.id);
         seen.add(notification.id);
       }
       localStorage.setItem('deal-scanner-seen-notifications', JSON.stringify([...seen].slice(-500)));

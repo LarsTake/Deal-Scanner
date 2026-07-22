@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
-import httpx
+from deal_scanner_core.ports import NotificationAdapter
 from deal_scanner_scoring import (
     DealScoreEngine,
     DealScoreInput,
@@ -21,12 +22,11 @@ from .db_models import (
     ListingProductRow,
     ListingRow,
     MarketValueEstimateRow,
-    NotificationDeliveryRow,
     NotificationRow,
     PriceObservationRow,
     SearchProfileRow,
 )
-from .settings import get_settings
+from .notification_service import DesktopNotificationAdapter, NtfyNotificationAdapter
 
 
 @dataclass(frozen=True)
@@ -161,12 +161,51 @@ async def evaluate_listing_record(
     await session.flush()
 
     minimum_deal, maximum_risk = 75, 45
+    minimum_advantage = Decimal("0")
+    maximum_age_hours: int | None = None
+    desktop_enabled = True
+    ntfy_enabled = False
     if listing.search_profile_id is not None:
         profile = await session.get(SearchProfileRow, listing.search_profile_id)
         if profile is not None and profile.workspace_id == workspace_id:
             minimum_deal, maximum_risk = profile.minimum_deal_score, profile.maximum_risk_score
+            settings = profile.notification_settings or {}
+            try:
+                minimum_advantage = max(
+                    Decimal("0"),
+                    Decimal(str(settings.get("minimum_market_advantage_percent", 0))),
+                )
+            except InvalidOperation:
+                minimum_advantage = Decimal("0")
+            raw_maximum_age = settings.get("maximum_listing_age_hours")
+            if isinstance(raw_maximum_age, int) and not isinstance(raw_maximum_age, bool) and raw_maximum_age > 0:
+                maximum_age_hours = raw_maximum_age
+            desktop_enabled = settings.get("desktop_enabled", True) is True
+            ntfy_enabled = settings.get("ntfy_enabled", False) is True
+    total_cost = listing.price + listing.shipping_cost
+    advantage_percent = (
+        ((estimate.median - total_cost) / estimate.median * Decimal("100"))
+        if estimate.median is not None and estimate.median > 0
+        else None
+    )
+    published_at = listing.published_at
+    if published_at is not None and published_at.tzinfo is None:
+        published_at = published_at.replace(tzinfo=UTC)
+    age_hours = (
+        Decimal(str((evaluated_at - published_at).total_seconds())) / Decimal("3600")
+        if published_at is not None
+        else None
+    )
+    advantage_qualifies = advantage_percent is not None and advantage_percent >= minimum_advantage
+    age_qualifies = maximum_age_hours is None or (age_hours is not None and age_hours <= maximum_age_hours)
     qualifies = (
-        allow_notification and deal.score is not None and deal.score >= minimum_deal and risk_score <= maximum_risk
+        allow_notification
+        and deal.score is not None
+        and deal.score >= minimum_deal
+        and risk_score <= maximum_risk
+        and advantage_qualifies
+        and age_qualifies
+        and (desktop_enabled or ntfy_enabled)
     )
     notification_created = False
     signature = {
@@ -175,6 +214,10 @@ async def evaluate_listing_record(
         "riskScore": risk_score,
         "marketMedian": str(estimate.median) if estimate.median is not None else None,
         "observationCount": estimate.observation_count,
+        "marketAdvantagePercent": str(advantage_percent.quantize(Decimal("0.1")))
+        if advantage_percent is not None
+        else None,
+        "listingAgeHours": str(age_hours.quantize(Decimal("0.1"))) if age_hours is not None else None,
     }
     previous_notification = (
         await session.execute(
@@ -196,6 +239,8 @@ async def evaluate_listing_record(
             **signature,
             "minimumDealScore": minimum_deal,
             "maximumRiskScore": maximum_risk,
+            "minimumMarketAdvantagePercent": str(minimum_advantage),
+            "maximumListingAgeHours": maximum_age_hours,
             "title": listing.title,
         }
         notification = NotificationRow(
@@ -207,15 +252,14 @@ async def evaluate_listing_record(
         )
         session.add(notification)
         await session.flush()
-        session.add(
-            NotificationDeliveryRow(
-                workspace_id=workspace_id,
-                notification_id=notification.id,
-                channel="desktop",
-                status="PENDING",
-            )
-        )
-        await _send_ntfy(session, workspace_id, notification.id, listing.title, deal.score, risk_score)
+        body = f"{listing.title}: Deal {deal.score}, Risiko {risk_score}"
+        adapters: list[NotificationAdapter] = []
+        if desktop_enabled:
+            adapters.append(DesktopNotificationAdapter(session, workspace_id))
+        if ntfy_enabled:
+            adapters.append(NtfyNotificationAdapter(session, workspace_id))
+        for adapter in adapters:
+            await adapter.deliver(notification.id, "Deal Scanner", body)
         notification_created = True
 
     listing.status = "READY" if estimate.status == "ready" else "PRICE_EVALUATED"
@@ -226,37 +270,3 @@ async def evaluate_listing_record(
         risk_score=risk_score,
         notification_created=notification_created,
     )
-
-
-async def _send_ntfy(
-    session: AsyncSession,
-    workspace_id: UUID,
-    notification_id: UUID,
-    title: str,
-    deal_score: int,
-    risk_score: int,
-) -> None:
-    ntfy_url = get_settings().ntfy_url
-    if not ntfy_url:
-        return
-    delivery = NotificationDeliveryRow(
-        workspace_id=workspace_id,
-        notification_id=notification_id,
-        channel="ntfy",
-        status="PENDING",
-        attempts=1,
-    )
-    session.add(delivery)
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(
-                ntfy_url,
-                content=f"{title}: Deal {deal_score}, Risiko {risk_score}",
-                headers={"Title": "Deal Scanner", "Tags": "moneybag"},
-            )
-            response.raise_for_status()
-        delivery.status = "DELIVERED"
-        delivery.delivered_at = datetime.now(UTC)
-    except httpx.HTTPError as exc:
-        delivery.status = "FAILED"
-        delivery.last_error = str(exc)[:1000]

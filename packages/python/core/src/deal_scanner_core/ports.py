@@ -36,3 +36,9 @@ class AiModelProvider(Protocol):
 
 class ErpIntegrationAdapter(Protocol):
     async def export_listing_as_purchase(self, listing_id: UUID) -> dict[str, Any]: ...
+
+
+class NotificationAdapter(Protocol):
+    channel: str
+
+    async def deliver(self, notification_id: UUID, title: str, body: str) -> bool: ...

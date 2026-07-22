@@ -1,7 +1,11 @@
+import { JsonPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute } from '@angular/router';
 import type { FeedbackCreate, ListingDetail, ListingImage } from '@deal-scanner/contracts';
@@ -10,7 +14,16 @@ import { ApiService } from './api.service';
 
 @Component({
   standalone: true,
-  imports: [MatButtonModule, MatCardModule, MatChipsModule, MatProgressSpinnerModule],
+  imports: [
+    JsonPipe,
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    ReactiveFormsModule,
+  ],
   template: `
     @if (loading()) { <mat-spinner diameter="36" /> }
     @if (error()) { <div class="notice error">{{ error() }}</div> }
@@ -32,12 +45,52 @@ import { ApiService } from './api.service';
       <mat-card class="form-card">
         <h2>Beschreibung</h2>
         <p class="description">{{ item.description || 'Keine Beschreibung vorhanden.' }}</p>
+        @if (item.seller; as seller) {
+          <h3>Verkäufer</h3>
+          <p>{{ seller.displayName ?? seller.externalId }} · {{ seller.location ?? 'Ort unbekannt' }}</p>
+          <small>{{ seller.accountAgeText ?? 'Accountalter unbekannt' }} · {{ seller.ratingText ?? 'Keine sichtbare Bewertung' }} · {{ seller.reviewCount ?? '–' }} Bewertungen</small>
+        } @else {
+          <p><small>Keine Verkäuferdaten verfügbar – dies erhöht den Risiko-Score nicht automatisch.</small></p>
+        }
         <div class="row actions">
           <button mat-stroked-button (click)="toggleFavorite(item)">{{ item.isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern' }}</button>
           <button mat-stroked-button (click)="toggleHidden(item)">{{ item.isHidden ? 'Wieder einblenden' : 'Ausblenden' }}</button>
           <button mat-stroked-button (click)="reanalyze()">Neu analysieren</button>
           <button mat-flat-button (click)="evaluate()">Neu bewerten</button>
         </div>
+      </mat-card>
+      <section class="section-head"><div><p class="eyebrow">Struktur</p><h2>Erkannte Produkte und Attribute</h2></div></section>
+      <div class="listing-grid">
+        @for (product of item.products; track product.id) {
+          <mat-card class="listing-card">
+            <div class="row"><mat-chip>{{ product.productType }}</mat-chip><span>{{ product.detectionSource }}</span></div>
+            <h3>{{ product.manufacturer ?? '' }} {{ product.model }} {{ product.variant ?? '' }}</h3>
+            <p>{{ product.evidence }}</p>
+            <small>Menge {{ product.quantity }} · Konfidenz {{ product.confidence }}</small>
+            @for (attribute of product.attributes; track attribute.id) {
+              <p><b>{{ attribute.attributeKey }}:</b> {{ attribute.value }} {{ attribute.unit ?? '' }}</p>
+            }
+          </mat-card>
+        } @empty { <div class="empty">Noch keine Produkte erkannt.</div> }
+      </div>
+      <mat-card class="form-card">
+        <h2>Produkterkennung korrigieren</h2>
+        <form [formGroup]="correctionForm" (ngSubmit)="submitCorrection(item)">
+          <div class="form-row">
+            <mat-form-field><mat-label>Produkttyp</mat-label><input matInput formControlName="productType" /></mat-form-field>
+            <mat-form-field><mat-label>Hersteller</mat-label><input matInput formControlName="manufacturer" /></mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field><mat-label>Exaktes Modell</mat-label><input matInput formControlName="model" /></mat-form-field>
+            <mat-form-field><mat-label>Variante</mat-label><input matInput formControlName="variant" /></mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field><mat-label>Attribut</mat-label><input matInput formControlName="attributeKey" /></mat-form-field>
+            <mat-form-field><mat-label>Wert</mat-label><input matInput formControlName="attributeValue" /></mat-form-field>
+          </div>
+          <mat-form-field><mat-label>Begründung / Evidenz</mat-label><textarea matInput formControlName="evidence"></textarea></mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="correctionForm.invalid || savingCorrection()">Korrektur speichern</button>
+        </form>
       </mat-card>
       <section class="section-head"><div><p class="eyebrow">Medien</p><h2>Bilder und OCR</h2></div></section>
       <div class="listing-grid">
@@ -60,9 +113,38 @@ import { ApiService } from './api.service';
           </mat-card>
         } @empty { <div class="empty">Keine Risikosignale erkannt.</div> }
       </div>
+      <section class="section-head"><div><p class="eyebrow">Bewertung</p><h2>Marktwert- und Analysehistorie</h2></div></section>
+      <div class="listing-grid">
+        @for (evaluation of item.evaluations; track evaluation.id) {
+          <mat-card class="listing-card">
+            <div class="row"><mat-chip>{{ evaluation.calculationVersion }}</mat-chip><span>Datenqualität {{ evaluation.dataQualityScore }}</span></div>
+            <h3>{{ evaluation.marketValueMedian ?? 'Keine belastbare Schätzung' }} {{ item.currency }}</h3>
+            <p>Spanne {{ evaluation.marketValueMinimum ?? '–' }} bis {{ evaluation.marketValueMaximum ?? '–' }} · Marge {{ evaluation.estimatedMargin ?? '–' }}</p>
+            <small>Deal {{ evaluation.dealScore ?? '–' }} · Risiko {{ evaluation.riskScore }}</small>
+          </mat-card>
+        } @empty { <div class="empty">Noch keine Bewertungshistorie.</div> }
+      </div>
+      <div class="listing-grid">
+        @for (analysis of item.analysisResults; track analysis.id) {
+          <mat-card class="listing-card">
+            <div class="row"><mat-chip>{{ analysis.analysisType }}</mat-chip><span>{{ analysis.modelName }} {{ analysis.modelVersion }}</span></div>
+            <p>Prompt {{ analysis.promptVersion }} · Schema {{ analysis.resultSchemaVersion }}</p>
+            <details><summary>Strukturiertes Ergebnis</summary><pre>{{ analysis.result | json }}</pre></details>
+          </mat-card>
+        } @empty { <div class="empty">Noch keine Modell- oder Nutzeranalyse.</div> }
+      </div>
+      <section class="section-head"><div><p class="eyebrow">Revision</p><h2>Rohdaten und Feedback</h2></div></section>
+      @for (snapshot of item.snapshots; track snapshot.id) {
+        <mat-card class="form-card">
+          <details><summary>{{ snapshot.providerVersion }} · {{ snapshot.fetchedAt }}</summary><pre>{{ snapshot.rawData | json }}</pre></details>
+        </mat-card>
+      }
+      @for (entry of item.feedback; track entry.id) {
+        <mat-card class="form-card"><b>{{ entry.feedbackType }}</b><span> · Basisversion {{ entry.baseListingVersion }}</span><p>{{ entry.note ?? '' }}</p></mat-card>
+      }
     }
   `,
-  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: #07120f; margin-bottom: 14px; }`,
+  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: #07120f; margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
 })
 export class ListingDetailPage implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
@@ -72,6 +154,16 @@ export class ListingDetailPage implements OnInit, OnDestroy {
   readonly imageUrls = signal<Record<string, string>>({});
   readonly loading = signal(false);
   readonly error = signal('');
+  readonly savingCorrection = signal(false);
+  readonly correctionForm = new FormGroup({
+    productType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    manufacturer: new FormControl('', { nonNullable: true }),
+    model: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    variant: new FormControl('', { nonNullable: true }),
+    attributeKey: new FormControl('', { nonNullable: true }),
+    attributeValue: new FormControl('', { nonNullable: true }),
+    evidence: new FormControl('Manuell am Angebot geprüft', { nonNullable: true, validators: [Validators.required] }),
+  });
 
   async ngOnInit(): Promise<void> {
     await this.reload();
@@ -95,6 +187,39 @@ export class ListingDetailPage implements OnInit, OnDestroy {
 
   async toggleHidden(item: ListingDetail): Promise<void> {
     await this.feedback(item, item.isHidden ? 'unhide' : 'hide');
+  }
+
+  async submitCorrection(item: ListingDetail): Promise<void> {
+    if (this.correctionForm.invalid) return;
+    const value = this.correctionForm.getRawValue();
+    this.savingCorrection.set(true);
+    try {
+      const payload: FeedbackCreate = {
+        feedbackType: 'correctedComponents',
+        baseListingVersion: item.version,
+        correctedProducts: [
+          {
+            productType: value.productType,
+            manufacturer: value.manufacturer || null,
+            model: value.model,
+            variant: value.variant || null,
+            quantity: 1,
+            evidence: value.evidence,
+          },
+        ],
+        correctedAttributes:
+          value.attributeKey && value.attributeValue
+            ? [{ productIndex: 0, key: value.attributeKey, value: value.attributeValue, unit: null }]
+            : null,
+      };
+      await this.api.createFeedback(item.id, payload);
+      this.correctionForm.patchValue({ model: '', variant: '', attributeKey: '', attributeValue: '' });
+      await this.reload();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Korrektur konnte nicht gespeichert werden');
+    } finally {
+      this.savingCorrection.set(false);
+    }
   }
 
   private async feedback(item: ListingDetail, feedbackType: FeedbackCreate['feedbackType']): Promise<void> {

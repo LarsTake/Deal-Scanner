@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     ebay_client_id: str = ""
     ebay_client_secret: str = ""
     image_storage_dir: str = ".data/images"
+    rate_limit_per_minute: int = Field(default=240, ge=10, le=10_000)
+    sensitive_rate_limit_per_minute: int = Field(default=60, ge=5, le=1_000)
 
     @property
     def allowed_origins(self) -> list[str]:

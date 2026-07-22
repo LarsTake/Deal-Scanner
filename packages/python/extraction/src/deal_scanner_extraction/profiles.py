@@ -10,7 +10,11 @@ class CategoryProfile(BaseModel):
     id: str = Field(pattern=r"^[a-z][a-z0-9_-]+$")
     version: str
     product_types: list[str]
+    aliases: dict[str, list[str]]
+    extraction_rules: list[str]
+    market_rules: dict[str, float]
     completeness_fields: list[str]
+    scoring_weights: dict[str, float]
     risk_weights: dict[str, int]
 
 

@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ..context import BrowserContext, Context
 from ..db_models import IdempotencyKeyRow, ListingRow
-from ..schemas import ImportResponse, ManualImportRequest
+from ..schemas import ImportResponse, ManualImportRequest, SellerInput
 from ..services import import_listing, listing_detail, request_content_hash
 from ..settings import get_settings
 
@@ -40,6 +40,18 @@ async def _resolve_manual_ebay(payload: ManualImportRequest) -> ManualImportRequ
         normalized = await provider.normalize(snapshot)
     finally:
         await provider.close()
+    seller_data = snapshot.payload.get("seller")
+    seller = (
+        SellerInput(
+            external_id=normalized.seller_external_id,
+            display_name=seller_data.get("username"),
+            rating_score=seller_data.get("feedbackPercentage"),
+            review_count=seller_data.get("feedbackScore"),
+            raw_data=seller_data,
+        )
+        if normalized.seller_external_id and isinstance(seller_data, dict)
+        else None
+    )
     return payload.model_copy(
         update={
             "external_id": legacy_id,
@@ -52,6 +64,7 @@ async def _resolve_manual_ebay(payload: ManualImportRequest) -> ManualImportRequ
             "location": normalized.location,
             "raw_data": snapshot.payload,
             "provider_version": snapshot.provider_version,
+            "seller": seller,
         }
     )
 

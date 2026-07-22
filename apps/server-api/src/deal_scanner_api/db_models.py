@@ -60,12 +60,37 @@ class SearchProfileRow(Base, TimestampMixin):
     enabled_platforms: Mapped[list[str]] = mapped_column(JSON, default=list)
     minimum_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     maximum_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    location: Mapped[str | None] = mapped_column(String(255))
+    radius_km: Mapped[int | None] = mapped_column(Integer)
     required_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
     excluded_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    required_products: Mapped[list[str]] = mapped_column(JSON, default=list)
+    excluded_products: Mapped[list[str]] = mapped_column(JSON, default=list)
     minimum_deal_score: Mapped[int] = mapped_column(Integer, default=75)
     maximum_risk_score: Mapped[int] = mapped_column(Integer, default=45)
+    notification_settings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     scan_interval_minutes: Mapped[int] = mapped_column(Integer, default=15)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class SellerRow(Base):
+    __tablename__ = "sellers"
+    __table_args__ = (UniqueConstraint("workspace_id", "platform", "external_id"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    platform: Mapped[str] = mapped_column(String(32))
+    external_id: Mapped[str] = mapped_column(String(255))
+    display_name: Mapped[str | None] = mapped_column(String(255))
+    account_age_text: Mapped[str | None] = mapped_column(String(255))
+    account_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rating_text: Mapped[str | None] = mapped_column(String(255))
+    rating_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    review_count: Mapped[int | None] = mapped_column(Integer)
+    location: Mapped[str | None] = mapped_column(String(255))
+    raw_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ListingRow(Base, TimestampMixin):
@@ -77,6 +102,7 @@ class ListingRow(Base, TimestampMixin):
     search_profile_id: Mapped[UUID | None] = mapped_column(
         Uuid, ForeignKey("search_profiles.id", ondelete="SET NULL"), index=True
     )
+    seller_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("sellers.id", ondelete="SET NULL"), index=True)
     platform: Mapped[str] = mapped_column(String(32))
     external_id: Mapped[str] = mapped_column(String(255))
     url: Mapped[str] = mapped_column(Text)
@@ -363,6 +389,20 @@ class UserFeedbackRow(Base):
     corrected_value: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProviderConfigurationRow(Base, TimestampMixin):
+    __tablename__ = "provider_configurations"
+    __table_args__ = (UniqueConstraint("workspace_id", "provider"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    provider: Mapped[str] = mapped_column(String(32))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    settings_json: Mapped[dict[str, Any]] = mapped_column("settings", JSON, default=dict)
+    secret_reference: Mapped[str | None] = mapped_column(String(255))
+    last_health_status: Mapped[str | None] = mapped_column(String(32))
+    last_health_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class ProviderSyncRunRow(Base):

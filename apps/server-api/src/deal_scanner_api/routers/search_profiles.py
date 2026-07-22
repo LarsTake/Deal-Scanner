@@ -20,10 +20,15 @@ def _response(row: SearchProfileRow) -> SearchProfileResponse:
         enabled_platforms=row.enabled_platforms,
         minimum_price=row.minimum_price,
         maximum_price=row.maximum_price,
+        location=row.location,
+        radius_km=row.radius_km,
         required_terms=row.required_terms,
         excluded_terms=row.excluded_terms,
+        required_products=row.required_products,
+        excluded_products=row.excluded_products,
         minimum_deal_score=row.minimum_deal_score,
         maximum_risk_score=row.maximum_risk_score,
+        notification_settings=row.notification_settings,
         scan_interval_minutes=row.scan_interval_minutes,
         enabled=row.enabled,
         created_at=row.created_at,
@@ -43,7 +48,10 @@ async def list_profiles(context: Context) -> list[SearchProfileResponse]:
 
 @router.post("", response_model=SearchProfileResponse, status_code=status.HTTP_201_CREATED)
 async def create_profile(payload: SearchProfileCreate, context: Context) -> SearchProfileResponse:
-    row = SearchProfileRow(workspace_id=context.workspace_id, **payload.model_dump(by_alias=False))
+    row = SearchProfileRow(
+        workspace_id=context.workspace_id,
+        **payload.model_dump(mode="json", by_alias=False),
+    )
     context.session.add(row)
     await context.session.commit()
     await context.session.refresh(row)
@@ -61,7 +69,7 @@ async def update_profile(profile_id: UUID, payload: SearchProfileCreate, context
     row = result.scalar_one_or_none()
     if row is None:
         raise HTTPException(status_code=404, detail="search profile not found")
-    for field, value in payload.model_dump(by_alias=False).items():
+    for field, value in payload.model_dump(mode="json", by_alias=False).items():
         setattr(row, field, value)
     await context.session.commit()
     await context.session.refresh(row)

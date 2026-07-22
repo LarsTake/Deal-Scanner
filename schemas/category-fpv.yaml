@@ -1,7 +1,14 @@
 id: fpv
 version: 1.0.0
 product_types: [copter, frame, flight_controller, esc, stack, motor, vtx, camera, receiver, radio, goggles, antenna, battery, charger, gps, bundle]
+aliases:
+  dji_o3: [DJI O3, O3 Air Unit]
+  dji_vista: [Caddx Vista, DJI Vista, Vista]
+  elrs: [ELRS, ExpressLRS]
+extraction_rules: [model_alias_first, radio_protocol, battery_specification]
+market_rules: {condition_similarity: 0.85, bundle_discount: 0.85}
 completeness_fields: [video_system, receiver, battery_voltage, condition, binding_status]
+scoring_weights: {condition: 0.2, completeness: 0.2, resale: 0.1, relevance: 0.1}
 risk_weights:
   swollen_battery: 35
   bound_dji_device: 20

@@ -39,3 +39,7 @@ Die Architektur, Sicherheitsgrenzen und Live-Konfiguration sind in [docs/archite
 und [docs/security.md](docs/security.md) beschrieben. Die klare Trennung zwischen lokal
 verifizierter Abnahme und credential-abhängigen Live-Smokes steht in
 [docs/acceptance.md](docs/acceptance.md).
+
+Provider-, Supabase-, Worker-, ERP- und Erweiterungs-Setup samt Fehlerdiagnose steht in
+[docs/setup-and-integrations.md](docs/setup-and-integrations.md). Die Abdeckung des vollständigen
+MVP ist in [docs/mvp-audit.md](docs/mvp-audit.md) den Implementierungs- und Testnachweisen zugeordnet.

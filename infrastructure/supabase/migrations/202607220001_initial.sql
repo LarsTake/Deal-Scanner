@@ -56,6 +56,8 @@ create table deal_scanner.search_profiles (
   radius_km integer,
   required_terms jsonb not null default '[]',
   excluded_terms jsonb not null default '[]',
+  required_products jsonb not null default '[]',
+  excluded_products jsonb not null default '[]',
   minimum_deal_score smallint not null default 75 check (minimum_deal_score between 0 and 100),
   maximum_risk_score smallint not null default 45 check (maximum_risk_score between 0 and 100),
   notification_settings jsonb not null default '{}',
@@ -340,6 +342,20 @@ create table deal_scanner.user_feedback (
   created_at timestamptz not null default now()
 );
 
+create table deal_scanner.provider_configurations (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references deal_scanner.workspaces(id) on delete cascade,
+  provider text not null,
+  enabled boolean not null default true,
+  settings jsonb not null default '{}',
+  secret_reference text,
+  last_health_status text,
+  last_health_checked_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (workspace_id, provider)
+);
+
 create table deal_scanner.provider_sync_runs (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references deal_scanner.workspaces(id) on delete cascade,
@@ -530,7 +546,7 @@ begin
     'canonical_products', 'product_aliases', 'listing_products', 'product_attributes',
     'price_observations', 'market_value_estimates', 'workers', 'analysis_jobs',
     'analysis_results', 'risk_signals', 'deal_evaluations', 'user_feedback',
-    'provider_sync_runs', 'mail_imports', 'notifications', 'notification_deliveries',
+    'provider_configurations', 'provider_sync_runs', 'mail_imports', 'notifications', 'notification_deliveries',
     'extension_pairings', 'idempotency_keys', 'audit_events'
   ] loop
     execute format('alter table deal_scanner.%I enable row level security', table_name);

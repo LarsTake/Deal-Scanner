@@ -25,9 +25,51 @@
         }
       }
     },
-    "attributes": { "type": "array", "items": { "type": "object" } },
-    "riskSignals": { "type": "array", "items": { "type": "object" } },
-    "contradictions": { "type": "array", "items": { "type": "object" } },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "confidence", "sources", "evidence"],
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": ["string", "integer", "number", "boolean"] },
+          "unit": { "type": ["string", "null"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "sources": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "riskSignals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["signalType", "severity", "confidence", "source", "evidence"],
+        "properties": {
+          "signalType": { "type": "string" },
+          "severity": { "enum": ["low", "medium", "high", "critical"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["statement", "conflictingStatement", "confidence", "evidence"],
+        "properties": {
+          "statement": { "type": "string" },
+          "conflictingStatement": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
     "missingInformation": { "type": "array", "items": { "type": "string" } },
     "overallConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
     "schemaVersion": { "const": "1.0.0" }

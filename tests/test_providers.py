@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import pytest
+from deal_scanner_core.models import SearchProfile
 from deal_scanner_email import KleinanzeigenMailParser
 from deal_scanner_manual import extract_ebay_legacy_id
+from deal_scanner_scheduler.main import Scheduler
 
 
 def test_ebay_id_is_extracted_only_from_allowed_https_url() -> None:
@@ -37,3 +39,16 @@ def test_sender_domain_substring_does_not_bypass_allowlist() -> None:
     )
     with pytest.raises(ValueError, match="sender"):
         KleinanzeigenMailParser({"kleinanzeigen.de"}).parse(raw)
+
+
+def test_scheduler_applies_required_and_excluded_profile_filters() -> None:
+    profile = SearchProfile(
+        name="Filtered",
+        query="Simracing",
+        required_terms=["boost kit"],
+        excluded_terms=["defekt"],
+        required_products=["QR2"],
+    )
+    assert Scheduler._matches_profile(profile, "Fanatec QR2 Bundle", "Mit Boost Kit")
+    assert not Scheduler._matches_profile(profile, "Fanatec QR2 Bundle", "Ohne Boost Kit, defekt")
+    assert not Scheduler._matches_profile(profile, "Fanatec QR1 Bundle", "Mit Boost Kit")

@@ -35,7 +35,14 @@ import { ApiService } from './api.service';
             <mat-option value="fpv">FPV & Drohnen</mat-option><mat-option value="general">Allgemein</mat-option>
           </mat-select></mat-form-field>
           <div class="form-row"><mat-form-field><mat-label>Preis min.</mat-label><input matInput type="number" formControlName="minimumPrice" /></mat-form-field><mat-form-field><mat-label>Preis max.</mat-label><input matInput type="number" formControlName="maximumPrice" /></mat-form-field></div>
+          <div class="form-row"><mat-form-field><mat-label>Standort</mat-label><input matInput formControlName="location" /></mat-form-field><mat-form-field><mat-label>Radius (km)</mat-label><input matInput type="number" formControlName="radiusKm" /></mat-form-field></div>
+          <mat-form-field><mat-label>Erforderliche Begriffe (Komma)</mat-label><input matInput formControlName="requiredTerms" /></mat-form-field>
+          <mat-form-field><mat-label>Ausgeschlossene Begriffe (Komma)</mat-label><input matInput formControlName="excludedTerms" /></mat-form-field>
+          <mat-form-field><mat-label>Erforderliche Produkte (Komma)</mat-label><input matInput formControlName="requiredProducts" /></mat-form-field>
+          <mat-form-field><mat-label>Ausgeschlossene Produkte (Komma)</mat-label><input matInput formControlName="excludedProducts" /></mat-form-field>
           <div class="form-row"><mat-form-field><mat-label>Deal mindestens</mat-label><input matInput type="number" formControlName="minimumDealScore" /></mat-form-field><mat-form-field><mat-label>Risiko maximal</mat-label><input matInput type="number" formControlName="maximumRiskScore" /></mat-form-field></div>
+          <div class="form-row"><mat-form-field><mat-label>Marktvorteil mindestens (%)</mat-label><input matInput type="number" formControlName="minimumMarketAdvantagePercent" /></mat-form-field><mat-form-field><mat-label>Anzeige maximal (Stunden)</mat-label><input matInput type="number" formControlName="maximumListingAgeHours" /></mat-form-field></div>
+          <div class="row"><mat-slide-toggle formControlName="desktopEnabled">Desktop</mat-slide-toggle><mat-slide-toggle formControlName="ntfyEnabled">ntfy</mat-slide-toggle></div>
           <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Speichert…' : 'Suchauftrag speichern' }}</button>
         </form>
       </mat-card>
@@ -43,6 +50,7 @@ import { ApiService } from './api.service';
         @for (profile of profiles(); track profile.id) {
           <mat-card><div class="row"><div><h3>{{ profile.name }}</h3><p>{{ profile.query }}</p></div><span class="tag">{{ profile.categoryProfile }}</span></div>
             <small>Deal ≥ {{ profile.minimumDealScore }} · Risiko ≤ {{ profile.maximumRiskScore }} · alle {{ profile.scanIntervalMinutes }} Min.</small>
+            <p>{{ profile.location ?? 'ohne Ortsfilter' }}{{ profile.radiusKm ? ' · ' + profile.radiusKm + ' km' : '' }}</p>
           </mat-card>
         } @empty { <div class="empty">Noch keine Suchaufträge.</div> }
       </div>
@@ -60,8 +68,18 @@ export class SearchProfilesPage implements OnInit {
     categoryProfile: new FormControl<'computer' | 'simracing' | 'fpv' | 'general'>('computer', { nonNullable: true }),
     minimumPrice: new FormControl<number | null>(null),
     maximumPrice: new FormControl<number | null>(null),
+    location: new FormControl('', { nonNullable: true }),
+    radiusKm: new FormControl<number | null>(null),
+    requiredTerms: new FormControl('', { nonNullable: true }),
+    excludedTerms: new FormControl('', { nonNullable: true }),
+    requiredProducts: new FormControl('', { nonNullable: true }),
+    excludedProducts: new FormControl('', { nonNullable: true }),
     minimumDealScore: new FormControl(75, { nonNullable: true }),
     maximumRiskScore: new FormControl(45, { nonNullable: true }),
+    minimumMarketAdvantagePercent: new FormControl(15, { nonNullable: true }),
+    maximumListingAgeHours: new FormControl<number | null>(24),
+    desktopEnabled: new FormControl(true, { nonNullable: true }),
+    ntfyEnabled: new FormControl(false, { nonNullable: true }),
   });
 
   async ngOnInit(): Promise<void> {
@@ -73,10 +91,27 @@ export class SearchProfilesPage implements OnInit {
     this.saving.set(true);
     const value = this.form.getRawValue();
     try {
+      const split = (input: string) => input.split(',').map((item) => item.trim()).filter(Boolean);
       const profile = await this.api.createSearchProfile({
-        ...value,
+        name: value.name,
+        query: value.query,
+        categoryProfile: value.categoryProfile,
         minimumPrice: value.minimumPrice?.toString() ?? null,
         maximumPrice: value.maximumPrice?.toString() ?? null,
+        location: value.location || null,
+        radiusKm: value.radiusKm,
+        requiredTerms: split(value.requiredTerms),
+        excludedTerms: split(value.excludedTerms),
+        requiredProducts: split(value.requiredProducts),
+        excludedProducts: split(value.excludedProducts),
+        minimumDealScore: value.minimumDealScore,
+        maximumRiskScore: value.maximumRiskScore,
+        notificationSettings: {
+          minimumMarketAdvantagePercent: value.minimumMarketAdvantagePercent.toString(),
+          maximumListingAgeHours: value.maximumListingAgeHours,
+          desktopEnabled: value.desktopEnabled,
+          ntfyEnabled: value.ntfyEnabled,
+        },
         enabledPlatforms: ['ebay'],
         scanIntervalMinutes: 15,
         enabled: true,

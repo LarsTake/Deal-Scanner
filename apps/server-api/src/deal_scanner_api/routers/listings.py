@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID, uuid4
 
+from deal_scanner_core.models import ProductDetection
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import and_, desc, or_, select
 
@@ -20,6 +21,7 @@ from ..db_models import (
     ListingSnapshotRow,
     UserFeedbackRow,
 )
+from ..product_service import persist_listing_products
 from ..schemas import FeedbackCreate, JobResponse, ListingDetail, ListingPage
 from ..services import listing_detail, listing_summary
 
@@ -147,7 +149,9 @@ async def create_feedback(listing_id: UUID, payload: FeedbackCreate, context: Co
         **payload.model_dump(by_alias=False),
     )
     context.session.add(feedback)
+    await context.session.flush()
     base_version = listing.version
+    listing_changed = False
     state_updates = {
         "favorite": ("is_favorite", True),
         "unfavorite": ("is_favorite", False),
@@ -159,10 +163,14 @@ async def create_feedback(listing_id: UUID, payload: FeedbackCreate, context: Co
         field, value = state_update
         if getattr(listing, field) != value:
             setattr(listing, field, value)
-            listing.version += 1
+            listing_changed = True
     corrections = {
-        "products": payload.corrected_products,
-        "attributes": payload.corrected_attributes,
+        "products": [item.model_dump(mode="json", by_alias=True) for item in payload.corrected_products]
+        if payload.corrected_products is not None
+        else None,
+        "attributes": [item.model_dump(mode="json", by_alias=True) for item in payload.corrected_attributes]
+        if payload.corrected_attributes is not None
+        else None,
         "value": payload.corrected_value,
         "note": payload.note,
         "feedbackType": payload.feedback_type,
@@ -178,6 +186,31 @@ async def create_feedback(listing_id: UUID, payload: FeedbackCreate, context: Co
         correction_hash = hashlib.sha256(
             json.dumps(corrections, ensure_ascii=False, sort_keys=True).encode()
         ).hexdigest()
+        if payload.corrected_products is not None:
+            detections = [
+                ProductDetection(
+                    product_type=item.product_type,
+                    manufacturer=item.manufacturer,
+                    model=item.model,
+                    variant=item.variant,
+                    quantity=item.quantity,
+                    confidence=1,
+                    sources=["userFeedback"],
+                    evidence=item.evidence,
+                )
+                for item in payload.corrected_products
+            ]
+            await persist_listing_products(
+                context.session,
+                context.workspace_id,
+                listing.id,
+                listing.category_profile,
+                detections,
+                source=f"user-correction:{feedback.id}",
+                attributes=[item.model_dump(mode="json", by_alias=True) for item in payload.corrected_attributes]
+                if payload.corrected_attributes is not None
+                else None,
+            )
         context.session.add(
             AnalysisResultRow(
                 workspace_id=context.workspace_id,
@@ -193,6 +226,9 @@ async def create_feedback(listing_id: UUID, payload: FeedbackCreate, context: Co
                 confidence=Decimal("1"),
             )
         )
+        listing_changed = True
+    if listing_changed:
+        listing.version += 1
     context.session.add(
         AuditEventRow(
             workspace_id=context.workspace_id,

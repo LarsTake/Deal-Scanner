@@ -30,6 +30,13 @@ class AuthMeResponse(CamelModel):
     workspaces: list[WorkspaceResponse]
 
 
+class NotificationSettings(CamelModel):
+    minimum_market_advantage_percent: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    maximum_listing_age_hours: int | None = Field(default=None, ge=1, le=8_760)
+    desktop_enabled: bool = True
+    ntfy_enabled: bool = False
+
+
 class SearchProfileCreate(CamelModel):
     name: str = Field(min_length=1, max_length=120)
     query: str = Field(min_length=1, max_length=100)
@@ -37,10 +44,15 @@ class SearchProfileCreate(CamelModel):
     enabled_platforms: list[str] = Field(default_factory=lambda: ["ebay"])
     minimum_price: Decimal | None = Field(default=None, ge=0)
     maximum_price: Decimal | None = Field(default=None, ge=0)
+    location: str | None = Field(default=None, max_length=255)
+    radius_km: int | None = Field(default=None, ge=0, le=1_000)
     required_terms: list[str] = Field(default_factory=list)
     excluded_terms: list[str] = Field(default_factory=list)
+    required_products: list[str] = Field(default_factory=list)
+    excluded_products: list[str] = Field(default_factory=list)
     minimum_deal_score: int = Field(default=75, ge=0, le=100)
     maximum_risk_score: int = Field(default=45, ge=0, le=100)
+    notification_settings: NotificationSettings = Field(default_factory=NotificationSettings)
     scan_interval_minutes: int = Field(default=15, ge=5, le=10_080)
     enabled: bool = True
 
@@ -66,6 +78,29 @@ class SearchProfileResponse(SearchProfileCreate):
         return format(value, "f") if value is not None else None
 
 
+class SellerInput(CamelModel):
+    external_id: str = Field(min_length=1, max_length=255)
+    display_name: str | None = Field(default=None, max_length=255)
+    account_age_text: str | None = Field(default=None, max_length=255)
+    account_created_at: datetime | None = None
+    rating_text: str | None = Field(default=None, max_length=255)
+    rating_score: Decimal | None = Field(default=None, ge=0, le=100)
+    review_count: int | None = Field(default=None, ge=0)
+    location: str | None = Field(default=None, max_length=255)
+    raw_data: dict[str, Any] = Field(default_factory=dict)
+
+    @field_serializer("rating_score")
+    def serialize_rating(self, value: Decimal | None) -> str | None:
+        return format(value, "f") if value is not None else None
+
+
+class SellerResponse(SellerInput):
+    id: UUID
+    platform: str
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+
 class ManualImportRequest(CamelModel):
     platform: Literal["ebay", "kleinanzeigen", "manual"]
     external_id: str = Field(min_length=1, max_length=255)
@@ -81,6 +116,7 @@ class ManualImportRequest(CamelModel):
     raw_data: dict[str, Any] = Field(default_factory=dict)
     provider_version: str = "manual-v1"
     search_profile_id: UUID | None = None
+    seller: SellerInput | None = None
 
 
 class RiskSignalResponse(CamelModel):
@@ -90,6 +126,88 @@ class RiskSignalResponse(CamelModel):
     positive: bool
     source: str
     evidence: str
+
+
+class ProductAttributeResponse(CamelModel):
+    id: UUID
+    attribute_key: str
+    value: str | Decimal | bool
+    unit: str | None
+    confidence: float
+    source: str
+
+
+class ListingProductResponse(CamelModel):
+    id: UUID
+    canonical_product_id: UUID | None
+    product_type: str
+    manufacturer: str | None
+    model: str
+    variant: str | None
+    quantity: int
+    confidence: float
+    detection_source: str
+    evidence: str
+    created_at: datetime
+    attributes: list[ProductAttributeResponse] = Field(default_factory=list)
+
+
+class ListingSnapshotResponse(CamelModel):
+    id: UUID
+    content_hash: str
+    raw_data: dict[str, Any]
+    provider_version: str
+    fetched_at: datetime
+    created_at: datetime
+
+
+class AnalysisResultResponse(CamelModel):
+    id: UUID
+    analysis_type: str
+    model_name: str
+    model_version: str
+    prompt_version: str
+    result_schema_version: str
+    result: dict[str, Any]
+    confidence: float
+    created_at: datetime
+
+
+class DealEvaluationHistoryResponse(CamelModel):
+    id: UUID
+    market_value_minimum: Decimal | None
+    market_value_median: Decimal | None
+    market_value_maximum: Decimal | None
+    expected_resale_value: Decimal | None
+    estimated_margin: Decimal | None
+    deal_score: int | None
+    risk_score: int
+    data_quality_score: int
+    relevance_score: int
+    explanation: dict[str, Any]
+    calculation_version: str
+    created_at: datetime
+
+    @field_serializer(
+        "market_value_minimum",
+        "market_value_median",
+        "market_value_maximum",
+        "expected_resale_value",
+        "estimated_margin",
+    )
+    def serialize_history_decimal(self, value: Decimal | None) -> str | None:
+        return format(value, "f") if value is not None else None
+
+
+class FeedbackResponse(CamelModel):
+    id: UUID
+    feedback_type: str
+    corrected_products: list[dict[str, Any]] | None
+    corrected_attributes: list[dict[str, Any]] | None
+    corrected_value: dict[str, Any] | None
+    note: str | None
+    base_listing_version: int
+    created_at: datetime
 
 
 class ListingSummary(CamelModel):
@@ -122,6 +240,28 @@ class ListingDetail(ListingSummary):
     category_profile: str
     current_snapshot_id: UUID | None
     risk_signals: list[RiskSignalResponse] = Field(default_factory=list)
+    products: list[ListingProductResponse] = Field(default_factory=list)
+    snapshots: list[ListingSnapshotResponse] = Field(default_factory=list)
+    analysis_results: list[AnalysisResultResponse] = Field(default_factory=list)
+    evaluations: list[DealEvaluationHistoryResponse] = Field(default_factory=list)
+    feedback: list[FeedbackResponse] = Field(default_factory=list)
+    seller: SellerResponse | None = None
+
+
+class CorrectedProductInput(CamelModel):
+    product_type: str = Field(min_length=1, max_length=100)
+    manufacturer: str | None = Field(default=None, max_length=120)
+    model: str = Field(min_length=1, max_length=255)
+    variant: str | None = Field(default=None, max_length=255)
+    quantity: int = Field(default=1, ge=1, le=100)
+    evidence: str = Field(default="Manuelle Nutzerkorrektur", min_length=1, max_length=2_000)
+
+
+class CorrectedAttributeInput(CamelModel):
+    product_index: int = Field(default=0, ge=0, le=99)
+    key: str = Field(min_length=1, max_length=255)
+    value: str | Decimal | bool
+    unit: str | None = Field(default=None, max_length=64)
 
 
 class ImportResponse(CamelModel):
@@ -147,8 +287,8 @@ class FeedbackCreate(CamelModel):
         "unhide",
     ]
     base_listing_version: int = Field(ge=1)
-    corrected_products: list[dict[str, Any]] | None = None
-    corrected_attributes: list[dict[str, Any]] | None = None
+    corrected_products: list[CorrectedProductInput] | None = Field(default=None, max_length=100)
+    corrected_attributes: list[CorrectedAttributeInput] | None = Field(default=None, max_length=500)
     corrected_value: dict[str, Any] | None = None
     note: str | None = Field(default=None, max_length=2_000)
 
@@ -266,6 +406,38 @@ class ProductPage(CamelModel):
 
 class ListingImageImport(CamelModel):
     source_urls: list[HttpUrl] = Field(min_length=1, max_length=10)
+
+
+class ProviderConfigurationUpsert(CamelModel):
+    enabled: bool = True
+    settings: dict[str, Any] = Field(default_factory=dict)
+    secret_reference: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_./:-]{1,255}$")
+
+    @model_validator(mode="after")
+    def reject_embedded_secrets(self) -> ProviderConfigurationUpsert:
+        forbidden = ("secret", "password", "token", "api_key", "apikey")
+
+        def visit(value: Any) -> None:
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if any(part in key.casefold() for part in forbidden):
+                        raise ValueError("provider settings may reference secrets but must not contain them")
+                    visit(child)
+            elif isinstance(value, list):
+                for child in value:
+                    visit(child)
+
+        visit(self.settings)
+        return self
+
+
+class ProviderConfigurationResponse(ProviderConfigurationUpsert):
+    id: UUID
+    provider: str
+    last_health_status: str | None
+    last_health_checked_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class ListingImageResponse(CamelModel):

@@ -16,6 +16,7 @@ import httpx
 from deal_scanner_core.models import SearchProfile
 from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_email import KleinanzeigenMailParser
+from deal_scanner_extraction import RuleExtractor
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -55,6 +56,15 @@ class Scheduler:
     async def sync_ebay(self) -> int:
         if not self.settings.ebay_client_id or not self.settings.ebay_client_secret:
             return 0
+        configuration_response = await self.client.get("/api/v1/provider-configurations")
+        configuration_response.raise_for_status()
+        ebay_configuration = next(
+            (item for item in configuration_response.json() if item["provider"] == "ebay"),
+            None,
+        )
+        if ebay_configuration is not None and not ebay_configuration["enabled"]:
+            return 0
+        provider_settings = ebay_configuration["settings"] if ebay_configuration is not None else {}
         response = await self.client.get("/api/v1/search-profiles")
         response.raise_for_status()
         imported = 0
@@ -62,7 +72,8 @@ class Scheduler:
             EbaySettings(
                 client_id=self.settings.ebay_client_id,
                 client_secret=self.settings.ebay_client_secret,
-                environment=self.settings.ebay_environment,
+                environment=str(provider_settings.get("environment", self.settings.ebay_environment)),
+                marketplace_id=str(provider_settings.get("marketplaceId", "EBAY_DE")),
             )
         )
         try:
@@ -114,10 +125,15 @@ class Scheduler:
                             "enabledPlatforms",
                             "minimumPrice",
                             "maximumPrice",
+                            "location",
+                            "radiusKm",
                             "requiredTerms",
                             "excludedTerms",
+                            "requiredProducts",
+                            "excludedProducts",
                             "minimumDealScore",
                             "maximumRiskScore",
+                            "notificationSettings",
                             "scanIntervalMinutes",
                             "enabled",
                         }
@@ -127,6 +143,8 @@ class Scheduler:
                     async for snapshot in provider.discover(profile, cursor):
                         discovered += 1
                         normalized = await provider.normalize(snapshot)
+                        if not self._matches_profile(profile, normalized.title, normalized.description):
+                            continue
                         payload: dict[str, Any] = {
                             "platform": "ebay",
                             "externalId": normalized.external_id,
@@ -144,6 +162,15 @@ class Scheduler:
                             "providerVersion": snapshot.provider_version,
                             "searchProfileId": item["id"],
                         }
+                        seller_data = snapshot.payload.get("seller")
+                        if normalized.seller_external_id and isinstance(seller_data, dict):
+                            payload["seller"] = {
+                                "externalId": normalized.seller_external_id,
+                                "displayName": seller_data.get("username"),
+                                "ratingScore": seller_data.get("feedbackPercentage"),
+                                "reviewCount": seller_data.get("feedbackScore"),
+                                "rawData": seller_data,
+                            }
                         result = await self.client.post(
                             "/api/v1/imports/manual",
                             json=payload,
@@ -187,6 +214,21 @@ class Scheduler:
         finally:
             await provider.close()
         return imported
+
+    @staticmethod
+    def _matches_profile(profile: SearchProfile, title: str, description: str) -> bool:
+        text = f"{title}\n{description}".casefold()
+        if any(term.casefold() not in text for term in profile.required_terms if term.strip()):
+            return False
+        if any(term.casefold() in text for term in profile.excluded_terms if term.strip()):
+            return False
+        detected = RuleExtractor().analyze(title, description).products
+        product_text = " ".join(
+            f"{item.product_type} {item.manufacturer or ''} {item.model} {item.variant or ''}" for item in detected
+        ).casefold()
+        if any(product.casefold() not in product_text for product in profile.required_products if product.strip()):
+            return False
+        return not any(product.casefold() in product_text for product in profile.excluded_products if product.strip())
 
     @staticmethod
     def _ebay_image_urls(payload: dict[str, Any]) -> list[str]:

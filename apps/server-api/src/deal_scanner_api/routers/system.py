@@ -16,10 +16,12 @@ from ..db_models import (
     ListingRow,
     MailImportRow,
     ProductAliasRow,
+    ProviderConfigurationRow,
     ProviderSyncRunRow,
     SearchProfileRow,
     WorkerRow,
 )
+from ..erp_service import MockErpIntegrationAdapter
 from ..schemas import (
     ErpExportResponse,
     MailImportCreate,
@@ -27,6 +29,8 @@ from ..schemas import (
     PairingResponse,
     ProductPage,
     ProductResponse,
+    ProviderConfigurationResponse,
+    ProviderConfigurationUpsert,
     ProviderSyncRunCreate,
     ProviderSyncRunPage,
     ProviderSyncRunResponse,
@@ -34,6 +38,7 @@ from ..schemas import (
 )
 
 router = APIRouter(tags=["system"])
+SUPPORTED_PROVIDERS = {"ebay", "kleinanzeigenEmail", "browser", "manual"}
 
 
 @router.get("/system/status")
@@ -93,21 +98,16 @@ async def revoke_pairing(pairing_id: UUID, context: Context) -> None:
 
 @router.post("/erp/exports/{listing_id}", response_model=ErpExportResponse)
 async def mock_erp_export(listing_id: UUID, context: Context) -> ErpExportResponse:
-    result = await context.session.execute(
-        select(ListingRow).where(ListingRow.id == listing_id, ListingRow.workspace_id == context.workspace_id)
-    )
-    listing = result.scalar_one_or_none()
-    if listing is None:
-        raise HTTPException(status_code=404, detail="listing not found")
+    try:
+        purchase_payload = await MockErpIntegrationAdapter(
+            context.session,
+            context.workspace_id,
+        ).export_listing_as_purchase(listing_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="listing not found") from exc
     return ErpExportResponse(
-        listing_id=listing.id,
-        purchase_payload={
-            "externalReference": f"deal-scanner:{listing.id}",
-            "title": listing.title,
-            "purchasePrice": str(listing.price),
-            "currency": listing.currency,
-            "sourceUrl": listing.url,
-        },
+        listing_id=listing_id,
+        purchase_payload=purchase_payload,
     )
 
 
@@ -148,6 +148,66 @@ async def products(context: Context) -> ProductPage:
             for row in rows
         ]
     )
+
+
+def _provider_configuration_response(row: ProviderConfigurationRow) -> ProviderConfigurationResponse:
+    return ProviderConfigurationResponse(
+        id=row.id,
+        provider=row.provider,
+        enabled=row.enabled,
+        settings=row.settings_json,
+        secret_reference=row.secret_reference,
+        last_health_status=row.last_health_status,
+        last_health_checked_at=row.last_health_checked_at,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
+@router.get("/provider-configurations", response_model=list[ProviderConfigurationResponse])
+async def provider_configurations(context: Context) -> list[ProviderConfigurationResponse]:
+    rows = (
+        await context.session.execute(
+            select(ProviderConfigurationRow)
+            .where(ProviderConfigurationRow.workspace_id == context.workspace_id)
+            .order_by(ProviderConfigurationRow.provider)
+        )
+    ).scalars()
+    return [_provider_configuration_response(row) for row in rows]
+
+
+@router.put("/provider-configurations/{provider}", response_model=ProviderConfigurationResponse)
+async def upsert_provider_configuration(
+    provider: str,
+    payload: ProviderConfigurationUpsert,
+    context: Context,
+) -> ProviderConfigurationResponse:
+    if provider not in SUPPORTED_PROVIDERS:
+        raise HTTPException(status_code=422, detail="unsupported provider")
+    row = (
+        await context.session.execute(
+            select(ProviderConfigurationRow).where(
+                ProviderConfigurationRow.workspace_id == context.workspace_id,
+                ProviderConfigurationRow.provider == provider,
+            )
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        row = ProviderConfigurationRow(
+            workspace_id=context.workspace_id,
+            provider=provider,
+            enabled=payload.enabled,
+            settings_json=payload.settings,
+            secret_reference=payload.secret_reference,
+        )
+        context.session.add(row)
+    else:
+        row.enabled = payload.enabled
+        row.settings_json = payload.settings
+        row.secret_reference = payload.secret_reference
+    await context.session.commit()
+    await context.session.refresh(row)
+    return _provider_configuration_response(row)
 
 
 def _sync_response(row: ProviderSyncRunRow) -> ProviderSyncRunResponse:

@@ -13,7 +13,7 @@
     "lint": "pnpm -r --if-present lint",
     "pretypecheck": "pnpm --filter @deal-scanner/contracts build && pnpm --filter @deal-scanner/api-client build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "openapi:export": "uv run --package deal-scanner-api python infrastructure/scripts/export_openapi.py",
+    "openapi:export": "uv --system-certs run --package deal-scanner-api python infrastructure/scripts/export_openapi.py",
     "contracts:generate": "openapi-typescript schemas/openapi.json -o packages/typescript/contracts/src/generated.ts",
     "api:dev": "uv run --package deal-scanner-api uvicorn deal_scanner_api.main:app --reload --port 8000",
     "api:test": "uv run pytest",
@@ -22,5 +22,10 @@
   },
   "devDependencies": {
     "openapi-typescript": "^7.10.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml": "^4.3.0"
+    }
   }
 }

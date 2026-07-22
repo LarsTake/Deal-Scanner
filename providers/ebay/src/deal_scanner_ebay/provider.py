@@ -195,7 +195,10 @@ class EbayProvider:
 
     async def health_check(self) -> dict[str, Any]:
         try:
-            await self._token()
+            await self._get(
+                "/buy/browse/v1/item_summary/search",
+                {"q": "test", "limit": "1", "sort": "newlyListed"},
+            )
             return {"available": True, "environment": self.settings.environment}
         except ProviderError as exc:
             return {"available": False, "detail": str(exc)}

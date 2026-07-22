@@ -100,3 +100,21 @@ async def test_ebay_delta_cursor_uses_overlap_and_stops_at_known_items() -> None
     ]
     await client.aclose()
     assert [snapshot.external_id for snapshot in discovered] == ["111111111111"]
+
+
+@pytest.mark.asyncio
+async def test_ebay_health_check_reaches_read_only_browse_endpoint() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/buy/browse/v1/item_summary/search"
+        assert request.url.params["q"] == "test"
+        assert request.url.params["limit"] == "1"
+        return httpx.Response(200, json={"itemSummaries": []})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = EbayProvider(EbaySettings(client_id="id", client_secret="fixture"), client)  # noqa: S106
+    provider._access_token = "fixture"  # noqa: S105
+    provider._token_expires_at = datetime.now(UTC) + timedelta(hours=1)
+    status = await provider.health_check()
+    await client.aclose()
+
+    assert status == {"available": True, "environment": "sandbox"}

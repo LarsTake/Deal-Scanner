@@ -40,7 +40,10 @@ Die wichtigsten Bereiche sind:
 Im laufenden Entwicklungsserver sind Swagger UI unter `/docs`, ReDoc unter `/redoc` und der
 OpenAPI-Vertrag unter `/openapi.json` erreichbar. Die versionierte Kopie liegt in
 `schemas/openapi.json`. `pnpm openapi:export` und `pnpm contracts:generate` erzeugen daraus Client
-und Wire-Typen; `pnpm contracts:check` schlägt bei Drift fehl.
+und Wire-Typen. `createGeneratedDealScannerClient` stellt alle Operationen über die generierte
+`paths`-Schnittstelle bereit; die Angular-Fassade ergänzt nur sprechende Methoden. Dadurch werden
+HTTP-Verb, Route, Parameter, Body und Response beim Typecheck gegen OpenAPI geprüft. Der CI-Drift-
+Check schlägt fehl, wenn Vertrag und eingecheckte Generierung auseinanderlaufen.
 
 ## Authentifizierung und Rollen
 

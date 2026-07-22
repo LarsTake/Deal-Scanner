@@ -29,6 +29,8 @@ Implementierungs- und Prüfnachweis zu. Ein grüner lokaler Nachweis ersetzt nic
 
 Zusätzliche Plananforderungen wie private Bildablage, SHA-256/pHash, OCR-Vertrag,
 Desktop-Benachrichtigungen, ntfy-Adapter, ERP-Mock, Offline-Outbox, OpenAPI-generierter Client,
-strukturierte Logs, Secret-Scan und Audit-Ereignisse sind ebenfalls implementiert. Die genaue
-Trennung zwischen lokal reproduzierbarer Abnahme und externen Voraussetzungen steht in
-`acceptance.md`.
+strukturierte Logs, Secret-Scan und Audit-Ereignisse sind ebenfalls implementiert. Der generierte
+Client prüft Verb, Route, Parameter, Body und Response statisch gegen OpenAPI. Compose enthält
+mtime-basierte Healthchecks für Scheduler und Worker; die Workflows prüfen Compose, bauen alle
+drei Container und werden zusätzlich mit YAML-Lint und Zizmor validiert. Die genaue Trennung
+zwischen lokal reproduzierbarer Abnahme und externen Voraussetzungen steht in `acceptance.md`.

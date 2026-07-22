@@ -15,6 +15,8 @@ dev = [
   "types-pyyaml>=6.0.12,<7",
   "types-psutil>=7.0.0,<8",
   "pip-audit>=2.10.1",
+  "yamllint>=1.38,<2",
+  "zizmor>=1.28,<2",
 ]
 
 [tool.uv.workspace]

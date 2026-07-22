@@ -14,7 +14,12 @@ Ein Projekt wird ausschließlich über die SQL-Dateien in
 `infrastructure/supabase/migrations` migriert. In Produktion müssen Auth-Modus, Projekt-URL,
 JWKS-Audience, PostgreSQL-Verbindung und die eingeschränkte Datenbankrolle gesetzt werden.
 Die Publishable-Konfiguration darf in Web/desktop stehen; Service-Role-Key und DB-Passwort nur
-im Server-Secret-Store. Die Buckets `listing-images` und `raw-emails` bleiben privat.
+im Server-Secret-Store. Die Buckets `listing-images` und `mail-archive` bleiben privat.
+
+Scheduler und Analyse-Worker authentifizieren sich ebenfalls an der API. Im Entwicklungsmodus
+kann dafür `DEAL_SCANNER_DEVELOPMENT_USER_ID` verwendet werden. In Produktion ist ein gültiges,
+eng begrenztes Benutzer-JWT als `DEAL_SCANNER_API_TOKEN` Pflicht; Prozesse verweigern ohne Token
+den Start, statt unbemerkt in einer 401-Retry-Schleife zu laufen.
 
 ## eBay
 
@@ -67,3 +72,21 @@ uv run pytest tests/live -m live -ra
 
 Fehlende Integrationen werden einzeln übersprungen. Die eBay-Prüfungen beziehen ausschließlich
 OAuth-Tokens, IMAP führt nur Login/NOOP aus und Ollama/Supabase werden nur über Health-/Tags-Endpunkte gelesen.
+`DEAL_SCANNER_SUPABASE_DB_URL` aktiviert zusätzlich die read-only Prüfung der migrierten
+Kerntabellen, aktivierten RLS-Flags und privaten Storage-Buckets. Der eBay-Smoke ruft nach OAuth
+eine einzelne read-only Browse-Suche mit `limit=1` auf.
+
+## Desktop-Signierung und Notarisierung
+
+Der Desktop-Workflow erzeugt ohne Zertifikate weiterhin unsignierte Installationsartefakte. Für
+einen signierten und notarisierten Apple-Silicon-Build werden folgende GitHub-Secrets hinterlegt:
+
+- `APPLE_CERTIFICATE`: base64-kodiertes Developer-ID-`.p12`
+- `APPLE_CERTIFICATE_PASSWORD` und `KEYCHAIN_PASSWORD`
+- `APPLE_ID`, `APPLE_PASSWORD` (app-spezifisch) und `APPLE_TEAM_ID`
+
+Der Workflow importiert das Zertifikat nur, wenn es vorhanden ist. Tauri übernimmt anschließend
+Codesign und Notarisierung. Windows-Code-Signing benötigt bewusst eine konkrete Zertifikatswahl
+(beispielsweise Azure Artifact Signing oder einen eigenen `signCommand`) und wird erst zusammen
+mit den zugehörigen Azure-/Zertifikats-Secrets aktiviert; die unsignierten MSI-/NSIS-Artefakte
+bleiben unabhängig davon reproduzierbar.

@@ -5,6 +5,7 @@ import imaplib
 import os
 
 import httpx
+import psycopg
 import pytest
 from deal_scanner_ebay import EbayProvider, EbaySettings
 
@@ -30,6 +31,40 @@ async def test_supabase_auth_health_is_reachable() -> None:
     async with httpx.AsyncClient(timeout=15) as client:
         response = await client.get(f"{url}/auth/v1/health")
     assert response.status_code == 200
+
+
+def test_supabase_schema_rls_and_private_buckets_read_only() -> None:
+    database_url = required("DEAL_SCANNER_SUPABASE_DB_URL")
+    expected_tables = {
+        "listings",
+        "listing_snapshots",
+        "analysis_jobs",
+        "analysis_results",
+        "audit_events",
+    }
+    with psycopg.connect(database_url, connect_timeout=15) as connection:
+        rows = connection.execute(
+            """
+            select c.relname, c.relrowsecurity
+            from pg_catalog.pg_class c
+            join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'deal_scanner' and c.relname = any(%s)
+            """,
+            (list(expected_tables),),
+        ).fetchall()
+        buckets = connection.execute(
+            """
+            select id, public from storage.buckets
+            where id in ('listing-images', 'mail-archive')
+            """
+        ).fetchall()
+
+    assert {str(name) for name, _ in rows} == expected_tables
+    assert all(bool(rls_enabled) for _, rls_enabled in rows)
+    assert {(str(bucket_id), bool(public)) for bucket_id, public in buckets} == {
+        ("listing-images", False),
+        ("mail-archive", False),
+    }
 
 
 @pytest.mark.parametrize("environment", ["sandbox", "production"])

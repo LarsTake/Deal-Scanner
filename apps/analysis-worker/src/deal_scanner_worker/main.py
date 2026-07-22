@@ -6,13 +6,14 @@ import shutil
 import socket
 from contextlib import suppress
 from io import BytesIO
+from pathlib import Path
 from time import perf_counter
 from typing import Any
 from uuid import UUID
 
 import httpx
 import psutil
-import pytesseract  # type: ignore[import-not-found]
+import pytesseract  # type: ignore[import-untyped]
 import structlog
 from deal_scanner_core.models import ImageOcrResult, TextAnalysisRequest
 from PIL import Image
@@ -26,6 +27,7 @@ logger = structlog.get_logger("deal_scanner_worker")
 class WorkerSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DEAL_SCANNER_", env_file=".env", extra="ignore")
 
+    environment: str = "development"
     api_url: str = "http://127.0.0.1:8000"
     api_token: str | None = None
     development_user_id: str | None = None
@@ -36,6 +38,7 @@ class WorkerSettings(BaseSettings):
     worker_renew_seconds: float = 90.0
     tesseract_command: str = "tesseract"
     ocr_language: str = "deu+eng"
+    health_file: str = ""
 
 
 class WorkerAgent:
@@ -175,6 +178,7 @@ class WorkerAgent:
                 json={"workerId": str(self.worker_id)},
             )
             response.raise_for_status()
+            self._mark_healthy()
 
     async def _analyze(self, job: dict[str, Any]) -> tuple[dict[str, Any], str, str, float]:
         payload = job["payload"]
@@ -221,10 +225,12 @@ class WorkerAgent:
 
     async def run_forever(self) -> None:
         await self.register()
+        self._mark_healthy()
         heartbeat_counter = 0
         try:
             while True:
                 worked = await self.process_one()
+                self._mark_healthy()
                 heartbeat_counter += 1
                 if heartbeat_counter >= 6:
                     await self.heartbeat()
@@ -234,7 +240,14 @@ class WorkerAgent:
         finally:
             await self.client.aclose()
 
+    def _mark_healthy(self) -> None:
+        if self.settings.health_file:
+            Path(self.settings.health_file).touch()
+
 
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
-    asyncio.run(WorkerAgent(WorkerSettings()).run_forever())
+    settings = WorkerSettings()
+    if settings.environment == "production" and not settings.api_token:
+        raise RuntimeError("production analysis worker requires an API token")
+    asyncio.run(WorkerAgent(settings).run_forever())

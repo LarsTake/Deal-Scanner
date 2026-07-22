@@ -6,18 +6,20 @@ import type {
   ListingImage,
   ListingPage,
   MailImport,
-  Notification,
   ManualImport,
+  Notification,
+  paths,
+  PriceObservation,
   ProductPage,
   ProviderConfiguration,
   ProviderConfigurationUpsert,
   ProviderSyncRunPage,
-  PriceObservation,
   SearchProfile,
   SearchProfileCreate,
   SystemStatus,
   Worker,
 } from '@deal-scanner/contracts';
+import createClient, { type Client } from 'openapi-fetch';
 
 export interface ClientOptions {
   baseUrl: string;
@@ -36,58 +38,106 @@ export class ApiProblemError extends Error {
   }
 }
 
+type ApiResult<T> = {
+  data?: T;
+  error?: unknown;
+  response: Response;
+};
+
+export type GeneratedDealScannerClient = Client<paths>;
+
+/** Full generated transport for endpoints that do not need an ergonomic facade method. */
+export function createGeneratedDealScannerClient(
+  options: ClientOptions,
+): GeneratedDealScannerClient {
+  const client = createClient<paths>({
+    baseUrl: options.baseUrl.replace(/\/$/, ''),
+  });
+  client.use({
+    onRequest: async ({ request }) => {
+      const token = await options.token?.();
+      if (token) request.headers.set('Authorization', `Bearer ${token}`);
+      if (options.developmentUserId) {
+        request.headers.set('X-Development-User', options.developmentUserId);
+      }
+      return request;
+    },
+  });
+  return client;
+}
+
+/**
+ * Ergonomic Angular-facing facade over the OpenAPI-generated `paths` contract.
+ * Every verb, route, parameter and body below is checked against generated.ts.
+ */
 export class DealScannerClient {
-  constructor(private readonly options: ClientOptions) {}
+  private readonly client: Client<paths>;
 
-  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const token = await this.options.token?.();
-    const response = await fetch(`${this.options.baseUrl.replace(/\/$/, '')}/api/v1${path}`, {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(this.options.developmentUserId
-          ? { 'X-Development-User': this.options.developmentUserId }
-          : {}),
-        ...init.headers,
-      },
-    });
-    if (!response.ok) {
-      const problem = (await response.json().catch(() => ({}))) as { detail?: unknown };
-      throw new ApiProblemError(
-        response.status,
-        problem,
-        typeof problem.detail === 'string' ? problem.detail : 'API request failed',
-      );
+  constructor(private readonly options: ClientOptions) {
+    this.client = createGeneratedDealScannerClient(options);
+  }
+
+  private unwrap<T>(result: ApiResult<T>): T {
+    if (result.error !== undefined || !result.response.ok || result.data === undefined) {
+      throw this.problem(result.response, result.error);
     }
-    if (response.status === 204) return undefined as T;
-    return (await response.json()) as T;
+    return result.data;
   }
 
-  systemStatus(): Promise<SystemStatus> {
-    return this.request('/system/status');
+  private unwrapVoid(result: ApiResult<unknown>): void {
+    if (result.error !== undefined || !result.response.ok) {
+      throw this.problem(result.response, result.error);
+    }
   }
 
-  listings(
+  private problem(response: Response, problem: unknown): ApiProblemError {
+    const detail =
+      typeof problem === 'object' && problem !== null && 'detail' in problem
+        ? (problem as { detail?: unknown }).detail
+        : undefined;
+    return new ApiProblemError(
+      response.status,
+      problem,
+      typeof detail === 'string' ? detail : 'API request failed',
+    );
+  }
+
+  async systemStatus(): Promise<SystemStatus> {
+    return this.unwrap(await this.client.GET('/api/v1/system/status'));
+  }
+
+  async listings(
     cursor?: string,
     view: 'all' | 'new' | 'favorites' | 'hidden' = 'all',
   ): Promise<ListingPage> {
-    const query = new URLSearchParams({ view });
-    if (cursor) query.set('cursor', cursor);
-    return this.request(`/listings?${query.toString()}`);
+    return this.unwrap(
+      await this.client.GET('/api/v1/listings', {
+        params: { query: { cursor, view } },
+      }),
+    );
   }
 
-  listing(listingId: string): Promise<ListingDetail> {
-    return this.request(`/listings/${encodeURIComponent(listingId)}`);
+  async listing(listingId: string): Promise<ListingDetail> {
+    return this.unwrap(
+      await this.client.GET('/api/v1/listings/{listing_id}', {
+        params: { path: { listing_id: listingId } },
+      }),
+    );
   }
 
-  listingImages(listingId: string): Promise<ListingImage[]> {
-    return this.request(`/listings/${encodeURIComponent(listingId)}/images`);
+  async listingImages(listingId: string): Promise<ListingImage[]> {
+    return this.unwrap(
+      await this.client.GET('/api/v1/listings/{listing_id}/images', {
+        params: { path: { listing_id: listingId } },
+      }),
+    );
   }
 
   async imageObjectUrl(imageId: string): Promise<string> {
-    const access = await this.request<{ url: string }>(
-      `/listing-images/${encodeURIComponent(imageId)}/access`,
+    const access = this.unwrap(
+      await this.client.GET('/api/v1/listing-images/{image_id}/access', {
+        params: { path: { image_id: imageId } },
+      }),
     );
     const token = await this.options.token?.();
     const url = access.url.startsWith('http')
@@ -107,97 +157,137 @@ export class DealScannerClient {
     return URL.createObjectURL(await response.blob());
   }
 
-  evaluateListing(listingId: string): Promise<ListingEvaluation> {
-    return this.request(`/listings/${encodeURIComponent(listingId)}/evaluate`, { method: 'POST' });
-  }
-
-  reanalyzeListing(listingId: string): Promise<AnalysisJob> {
-    return this.request(`/listings/${encodeURIComponent(listingId)}/reanalyze`, { method: 'POST' });
-  }
-
-  searchProfiles(): Promise<SearchProfile[]> {
-    return this.request('/search-profiles');
-  }
-
-  createSearchProfile(profile: SearchProfileCreate): Promise<SearchProfile> {
-    return this.request('/search-profiles', { method: 'POST', body: JSON.stringify(profile) });
-  }
-
-  updateSearchProfile(profileId: string, profile: SearchProfileCreate): Promise<SearchProfile> {
-    return this.request(`/search-profiles/${encodeURIComponent(profileId)}`, {
-      method: 'PUT',
-      body: JSON.stringify(profile),
-    });
-  }
-
-  deleteSearchProfile(profileId: string): Promise<void> {
-    return this.request(`/search-profiles/${encodeURIComponent(profileId)}`, { method: 'DELETE' });
-  }
-
-  workers(): Promise<Worker[]> {
-    return this.request('/workers');
-  }
-
-  jobs(status?: string): Promise<AnalysisJob[]> {
-    return this.request(`/jobs${status ? `?status=${encodeURIComponent(status)}` : ''}`);
-  }
-
-  notifications(): Promise<Notification[]> {
-    return this.request('/notifications');
-  }
-
-  markNotificationDelivered(notificationId: string): Promise<void> {
-    return this.request(`/notifications/${encodeURIComponent(notificationId)}/delivered`, { method: 'POST' });
-  }
-
-  products(): Promise<ProductPage> {
-    return this.request('/products');
-  }
-
-  priceObservations(canonicalProductId?: string): Promise<PriceObservation[]> {
-    return this.request(
-      `/price-observations${canonicalProductId ? `?canonicalProductId=${encodeURIComponent(canonicalProductId)}` : ''}`,
+  async evaluateListing(listingId: string): Promise<ListingEvaluation> {
+    return this.unwrap(
+      await this.client.POST('/api/v1/listings/{listing_id}/evaluate', {
+        params: { path: { listing_id: listingId } },
+      }),
     );
   }
 
-  providerSyncRuns(): Promise<ProviderSyncRunPage> {
-    return this.request('/provider-sync-runs');
+  async reanalyzeListing(listingId: string): Promise<AnalysisJob> {
+    return this.unwrap(
+      await this.client.POST('/api/v1/listings/{listing_id}/reanalyze', {
+        params: { path: { listing_id: listingId } },
+      }),
+    );
   }
 
-  providerConfigurations(): Promise<ProviderConfiguration[]> {
-    return this.request('/provider-configurations');
+  async searchProfiles(): Promise<SearchProfile[]> {
+    return this.unwrap(await this.client.GET('/api/v1/search-profiles'));
   }
 
-  configureProvider(
+  async createSearchProfile(profile: SearchProfileCreate): Promise<SearchProfile> {
+    return this.unwrap(
+      await this.client.POST('/api/v1/search-profiles', { body: profile }),
+    );
+  }
+
+  async updateSearchProfile(
+    profileId: string,
+    profile: SearchProfileCreate,
+  ): Promise<SearchProfile> {
+    return this.unwrap(
+      await this.client.PUT('/api/v1/search-profiles/{profile_id}', {
+        params: { path: { profile_id: profileId } },
+        body: profile,
+      }),
+    );
+  }
+
+  async deleteSearchProfile(profileId: string): Promise<void> {
+    this.unwrapVoid(
+      await this.client.DELETE('/api/v1/search-profiles/{profile_id}', {
+        params: { path: { profile_id: profileId } },
+      }),
+    );
+  }
+
+  async workers(): Promise<Worker[]> {
+    return this.unwrap(await this.client.GET('/api/v1/workers'));
+  }
+
+  async jobs(status?: string): Promise<AnalysisJob[]> {
+    return this.unwrap(
+      await this.client.GET('/api/v1/jobs', { params: { query: { status } } }),
+    );
+  }
+
+  async notifications(): Promise<Notification[]> {
+    return this.unwrap(await this.client.GET('/api/v1/notifications'));
+  }
+
+  async markNotificationDelivered(notificationId: string): Promise<void> {
+    this.unwrapVoid(
+      await this.client.POST('/api/v1/notifications/{notification_id}/delivered', {
+        params: { path: { notification_id: notificationId } },
+      }),
+    );
+  }
+
+  async products(): Promise<ProductPage> {
+    return this.unwrap(await this.client.GET('/api/v1/products'));
+  }
+
+  async priceObservations(canonicalProductId?: string): Promise<PriceObservation[]> {
+    return this.unwrap(
+      await this.client.GET('/api/v1/price-observations', {
+        params: { query: { canonicalProductId } },
+      }),
+    );
+  }
+
+  async providerSyncRuns(): Promise<ProviderSyncRunPage> {
+    return this.unwrap(await this.client.GET('/api/v1/provider-sync-runs'));
+  }
+
+  async providerConfigurations(): Promise<ProviderConfiguration[]> {
+    return this.unwrap(await this.client.GET('/api/v1/provider-configurations'));
+  }
+
+  async configureProvider(
     provider: 'ebay' | 'kleinanzeigenEmail' | 'browser' | 'manual',
     configuration: ProviderConfigurationUpsert,
   ): Promise<ProviderConfiguration> {
-    return this.request(`/provider-configurations/${encodeURIComponent(provider)}`, {
-      method: 'PUT',
-      body: JSON.stringify(configuration),
-    });
+    return this.unwrap(
+      await this.client.PUT('/api/v1/provider-configurations/{provider}', {
+        params: { path: { provider } },
+        body: configuration,
+      }),
+    );
   }
 
-  mailImports(): Promise<MailImport[]> {
-    return this.request('/mail-imports');
+  async mailImports(): Promise<MailImport[]> {
+    return this.unwrap(await this.client.GET('/api/v1/mail-imports'));
   }
 
-  importListing(listing: ManualImport, idempotencyKey: string = crypto.randomUUID()): Promise<unknown> {
-    return this.request('/imports/manual', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': idempotencyKey },
-      body: JSON.stringify(listing),
-    });
+  async importListing(
+    listing: ManualImport,
+    idempotencyKey: string = crypto.randomUUID(),
+  ): Promise<unknown> {
+    return this.unwrap(
+      await this.client.POST('/api/v1/imports/manual', {
+        params: { header: { 'Idempotency-Key': idempotencyKey } },
+        body: listing,
+      }),
+    );
   }
 
-  createFeedback(
+  async createFeedback(
     listingId: string,
     feedback: FeedbackCreate,
   ): Promise<{ id: string; status: string; version: number }> {
-    return this.request(`/listings/${encodeURIComponent(listingId)}/feedback`, {
-      method: 'POST',
-      body: JSON.stringify(feedback),
-    });
+    const result = this.unwrap(
+      await this.client.POST('/api/v1/listings/{listing_id}/feedback', {
+        params: { path: { listing_id: listingId } },
+        body: feedback,
+      }),
+    );
+    return {
+      id: String(result.id),
+      status: String(result.status),
+      version: Number(result.version),
+    };
   }
 }
 

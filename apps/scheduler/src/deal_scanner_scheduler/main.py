@@ -44,6 +44,7 @@ class SchedulerSettings(BaseSettings):
     mail_archive_dir: str = ".data/mail-archive"
     supabase_url: str = ""
     supabase_publishable_key: str = ""
+    health_file: str = ""
 
 
 class Scheduler:
@@ -440,11 +441,16 @@ class Scheduler:
             while True:
                 try:
                     await self._run_locked_cycle()
+                    self._mark_healthy()
                 except Exception as exc:
                     logger.error("scheduler_cycle_failed", error_type=type(exc).__name__)
                 await asyncio.sleep(self.settings.scheduler_interval_seconds)
         finally:
             await self.client.aclose()
+
+    def _mark_healthy(self) -> None:
+        if self.settings.health_file:
+            Path(self.settings.health_file).touch()
 
     async def _run_locked_cycle(self) -> None:
         started_at = perf_counter()

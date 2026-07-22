@@ -15,14 +15,18 @@ import { OfflineCacheService } from './offline-cache.service';
   standalone: true,
   imports: [MatButtonModule, MatCardModule, MatChipsModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule],
   template: `
-    <header class="page-header"><div><p class="eyebrow">Erfassung</p><h1>Manueller Import</h1><p>Es wird ausschließlich die angegebene Provider-URL gespeichert; kein beliebiges Server-Fetching.</p></div></header>
+    <header class="page-header"><div><p class="eyebrow">Erfassung</p><h1>Manueller Import</h1><p>eBay-Links werden ausschließlich über die offizielle Browse API aufgelöst; andere Plattformen benötigen die sichtbaren Angebotsdaten.</p></div></header>
     <mat-card class="form-card"><form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-form-field><mat-label>Plattform</mat-label><mat-select formControlName="platform"><mat-option value="ebay">eBay</mat-option><mat-option value="kleinanzeigen">Kleinanzeigen</mat-option></mat-select></mat-form-field>
-      <mat-form-field><mat-label>Externe ID</mat-label><input matInput formControlName="externalId" /></mat-form-field>
+      <mat-form-field><mat-label>Plattform</mat-label><mat-select formControlName="platform" (valueChange)="platformChanged($event)"><mat-option value="ebay">eBay</mat-option><mat-option value="kleinanzeigen">Kleinanzeigen</mat-option></mat-select></mat-form-field>
       <mat-form-field><mat-label>HTTPS-URL</mat-label><input matInput formControlName="url" /></mat-form-field>
-      <mat-form-field><mat-label>Titel</mat-label><input matInput formControlName="title" /></mat-form-field>
-      <mat-form-field><mat-label>Beschreibung</mat-label><textarea matInput rows="5" formControlName="description"></textarea></mat-form-field>
-      <div class="form-row"><mat-form-field><mat-label>Preis</mat-label><input matInput type="number" formControlName="price" /></mat-form-field><mat-form-field><mat-label>Versand</mat-label><input matInput type="number" formControlName="shippingCost" /></mat-form-field></div>
+      @if (form.controls.platform.value !== 'ebay') {
+        <mat-form-field><mat-label>Externe ID</mat-label><input matInput formControlName="externalId" /></mat-form-field>
+        <mat-form-field><mat-label>Titel</mat-label><input matInput formControlName="title" /></mat-form-field>
+        <mat-form-field><mat-label>Beschreibung</mat-label><textarea matInput rows="5" formControlName="description"></textarea></mat-form-field>
+        <div class="form-row"><mat-form-field><mat-label>Preis</mat-label><input matInput type="number" formControlName="price" /></mat-form-field><mat-form-field><mat-label>Versand</mat-label><input matInput type="number" formControlName="shippingCost" /></mat-form-field></div>
+      } @else {
+        <p class="notice">Externe ID, Titel, Beschreibung, Preis, Versand und Verkäufer werden nach dem Absenden aus der offiziellen eBay API übernommen.</p>
+      }
       <mat-form-field><mat-label>Kategorie</mat-label><mat-select formControlName="categoryProfile"><mat-option value="computer">Computer</mat-option><mat-option value="simracing">Simracing</mat-option><mat-option value="fpv">FPV</mat-option><mat-option value="general">Allgemein</mat-option></mat-select></mat-form-field>
       @if (message()) { <div class="notice">{{ message() }}</div> }
       <button mat-flat-button [disabled]="form.invalid || busy()">Importieren</button>
@@ -49,15 +53,31 @@ export class ManualImportPage implements OnInit {
   readonly syncRuns = signal<ProviderSyncRun[]>([]);
   readonly mailImports = signal<MailImport[]>([]);
   readonly form = new FormGroup({
-    platform: new FormControl<'ebay' | 'kleinanzeigen'>('kleinanzeigen', { nonNullable: true }),
-    externalId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    platform: new FormControl<'ebay' | 'kleinanzeigen'>('ebay', { nonNullable: true }),
+    externalId: new FormControl('resolve-from-url', { nonNullable: true, validators: [Validators.required] }),
     url: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    title: new FormControl('Wird über die offizielle eBay API geladen', { nonNullable: true, validators: [Validators.required] }),
     description: new FormControl('', { nonNullable: true }),
     price: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     shippingCost: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     categoryProfile: new FormControl<'computer' | 'simracing' | 'fpv' | 'general'>('general', { nonNullable: true }),
   });
+
+  platformChanged(platform: 'ebay' | 'kleinanzeigen'): void {
+    if (platform === 'ebay') {
+      this.form.patchValue({
+        externalId: 'resolve-from-url',
+        title: 'Wird über die offizielle eBay API geladen',
+        description: '',
+        price: 0,
+        shippingCost: 0,
+      });
+      return;
+    }
+    if (this.form.controls.externalId.value === 'resolve-from-url') {
+      this.form.patchValue({ externalId: '', title: '' });
+    }
+  }
 
   async ngOnInit(): Promise<void> {
     await this.loadHistory();

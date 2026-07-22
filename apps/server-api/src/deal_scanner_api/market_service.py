@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
@@ -24,6 +25,7 @@ from .db_models import (
     MarketValueEstimateRow,
     NotificationRow,
     PriceObservationRow,
+    ProductAttributeRow,
     SearchProfileRow,
 )
 from .notification_service import DesktopNotificationAdapter, NtfyNotificationAdapter
@@ -36,6 +38,60 @@ class EvaluationOutcome:
     deal_score: int | None
     risk_score: int
     notification_created: bool
+
+
+async def _deal_component_scores(
+    session: AsyncSession,
+    workspace_id: UUID,
+    listing: ListingRow,
+) -> tuple[int, int, int, int]:
+    text = f"{listing.title}\n{listing.description}".lower()
+    positive_condition = bool(re.search(r"\b(?:neuwertig|sehr gut|gepflegt|funktioniert|funktionstest)\b", text))
+    negative_condition = bool(re.search(r"\b(?:defekt|beschädigt|reparatur|ersatzteil|ungetestet)\b", text))
+    condition = 75 if positive_condition and not negative_condition else 25 if negative_condition else 50
+
+    product_rows = list(
+        (
+            await session.execute(
+                select(ListingProductRow).where(
+                    ListingProductRow.workspace_id == workspace_id,
+                    ListingProductRow.listing_id == listing.id,
+                )
+            )
+        ).scalars()
+    )
+    attribute_count = 0
+    if product_rows:
+        attribute_count = len(
+            list(
+                (
+                    await session.execute(
+                        select(ProductAttributeRow.id).where(
+                            ProductAttributeRow.workspace_id == workspace_id,
+                            ProductAttributeRow.listing_product_id.in_([row.id for row in product_rows]),
+                        )
+                    )
+                ).scalars()
+            )
+        )
+    completeness = min(100, 30 + len({row.model for row in product_rows}) * 15 + attribute_count * 5)
+    canonical_count = len({row.canonical_product_id for row in product_rows if row.canonical_product_id is not None})
+    resale = min(90, 40 + canonical_count * 20 + (10 if listing.platform == "ebay" else 0))
+
+    relevance = 50
+    if listing.search_profile_id is not None:
+        profile = await session.get(SearchProfileRow, listing.search_profile_id)
+        if profile is not None and profile.workspace_id == workspace_id:
+            searchable = text.casefold()
+            query_tokens = [token for token in re.split(r"\W+", profile.query.casefold()) if len(token) >= 3]
+            matched = sum(1 for token in query_tokens if token in searchable)
+            query_ratio = matched / len(query_tokens) if query_tokens else 0
+            required = [*profile.required_terms, *profile.required_products]
+            required_ratio = (
+                sum(1 for term in required if term.casefold() in searchable) / len(required) if required else 1
+            )
+            relevance = round(min(100, 40 + query_ratio * 35 + required_ratio * 25))
+    return condition, completeness, resale, relevance
 
 
 async def estimate_listing_market(
@@ -98,13 +154,21 @@ async def evaluate_listing_record(
     listing_id: UUID,
     *,
     allow_notification: bool = True,
+    risk_score_override: int | None = None,
 ) -> EvaluationOutcome:
     listing, estimate = await estimate_listing_market(session, workspace_id, listing_id)
     evaluated_at = datetime.now(UTC)
+    condition_score, completeness_score, resale_score, relevance_score = await _deal_component_scores(
+        session, workspace_id, listing
+    )
     deal = DealScoreEngine().score(
         DealScoreInput(
             total_cost=listing.price + listing.shipping_cost,
             market=estimate,
+            condition_score=condition_score,
+            completeness_score=completeness_score,
+            resale_score=resale_score,
+            relevance_score=relevance_score,
         )
     )
     previous = (
@@ -118,7 +182,7 @@ async def evaluate_listing_record(
             .limit(1)
         )
     ).scalar_one_or_none()
-    risk_score = previous.risk_score if previous else 0
+    risk_score = risk_score_override if risk_score_override is not None else previous.risk_score if previous else 0
 
     session.add(
         MarketValueEstimateRow(
@@ -148,7 +212,7 @@ async def evaluate_listing_record(
         deal_score=deal.score,
         risk_score=risk_score,
         data_quality_score=estimate.data_quality_score,
-        relevance_score=50,
+        relevance_score=relevance_score,
         explanation={
             "deal": deal.model_dump(mode="json"),
             "market": estimate.model_dump(mode="json"),

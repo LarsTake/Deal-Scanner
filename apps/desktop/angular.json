@@ -40,6 +40,15 @@
             "development": { "buildTarget": "desktop:build:development" }
           },
           "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "desktop:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "runner": "vitest",
+            "watch": false
+          }
         }
       }
     }

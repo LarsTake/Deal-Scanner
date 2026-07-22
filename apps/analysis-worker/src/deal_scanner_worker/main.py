@@ -6,17 +6,21 @@ import shutil
 import socket
 from contextlib import suppress
 from io import BytesIO
+from time import perf_counter
 from typing import Any
 from uuid import UUID
 
 import httpx
 import psutil
 import pytesseract  # type: ignore[import-not-found]
+import structlog
 from deal_scanner_core.models import ImageOcrResult, TextAnalysisRequest
 from PIL import Image
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .ollama import OllamaProvider
+
+logger = structlog.get_logger("deal_scanner_worker")
 
 
 class WorkerSettings(BaseSettings):
@@ -117,6 +121,8 @@ class WorkerAgent:
         job = response.json()
         if not job:
             return False
+        started_at = perf_counter()
+        logger.info("job_claimed", job_id=job["id"], job_type=job["jobType"], attempts=job["attempts"])
         renewal = asyncio.create_task(self._renew_while_running(job["id"]))
         try:
             result, analysis_type, model_name, confidence = await self._analyze(job)
@@ -135,12 +141,25 @@ class WorkerAgent:
                 },
             )
             completion.raise_for_status()
+            logger.info(
+                "job_completed",
+                job_id=job["id"],
+                job_type=job["jobType"],
+                duration_ms=round((perf_counter() - started_at) * 1000, 2),
+            )
         except Exception as exc:
             failure = await self.client.post(
                 f"/api/v1/jobs/{job['id']}/fail",
                 json={"workerId": str(self.worker_id), "error": str(exc)[:4000]},
             )
             failure.raise_for_status()
+            logger.error(
+                "job_failed",
+                job_id=job["id"],
+                job_type=job["jobType"],
+                error_type=type(exc).__name__,
+                duration_ms=round((perf_counter() - started_at) * 1000, 2),
+            )
         finally:
             renewal.cancel()
             with suppress(asyncio.CancelledError):
@@ -217,4 +236,5 @@ class WorkerAgent:
 
 
 def run() -> None:
+    structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
     asyncio.run(WorkerAgent(WorkerSettings()).run_forever())

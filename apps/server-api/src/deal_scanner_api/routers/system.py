@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import os
 import secrets
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import desc, func, select
 
+from ..audit import record_audit_event
 from ..context import Context
 from ..db_models import (
     AnalysisJobRow,
@@ -23,6 +27,7 @@ from ..db_models import (
 )
 from ..erp_service import MockErpIntegrationAdapter
 from ..schemas import (
+    ComponentHealth,
     ErpExportResponse,
     MailImportCreate,
     MailImportResponse,
@@ -35,14 +40,17 @@ from ..schemas import (
     ProviderSyncRunPage,
     ProviderSyncRunResponse,
     ProviderSyncRunUpdate,
+    SystemStatusResponse,
 )
+from ..settings import get_settings
 
 router = APIRouter(tags=["system"])
 SUPPORTED_PROVIDERS = {"ebay", "kleinanzeigenEmail", "browser", "manual"}
 
 
-@router.get("/system/status")
-async def system_status(context: Context) -> dict[str, int | str]:
+@router.get("/system/status", response_model=SystemStatusResponse)
+async def system_status(context: Context) -> SystemStatusResponse:
+    checked_at = datetime.now(UTC)
     listing_count = await context.session.scalar(
         select(func.count()).select_from(ListingRow).where(ListingRow.workspace_id == context.workspace_id)
     )
@@ -57,12 +65,107 @@ async def system_status(context: Context) -> dict[str, int | str]:
     workers = await context.session.scalar(
         select(func.count()).select_from(WorkerRow).where(WorkerRow.workspace_id == context.workspace_id)
     )
-    return {
-        "status": "ok",
-        "listings": listing_count or 0,
-        "openJobs": open_jobs or 0,
-        "workers": workers or 0,
+    configurations = list(
+        (
+            await context.session.execute(
+                select(ProviderConfigurationRow).where(ProviderConfigurationRow.workspace_id == context.workspace_id)
+            )
+        ).scalars()
+    )
+    configuration_by_provider = {row.provider: row for row in configurations}
+    latest_sync = (
+        await context.session.execute(
+            select(ProviderSyncRunRow)
+            .where(
+                ProviderSyncRunRow.workspace_id == context.workspace_id,
+                ProviderSyncRunRow.provider == "ebay",
+            )
+            .order_by(desc(ProviderSyncRunRow.started_at))
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    latest_mail = (
+        await context.session.execute(
+            select(MailImportRow)
+            .where(MailImportRow.workspace_id == context.workspace_id)
+            .order_by(desc(MailImportRow.created_at))
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    recent_worker_rows = list(
+        (
+            await context.session.execute(
+                select(WorkerRow).where(
+                    WorkerRow.workspace_id == context.workspace_id,
+                    WorkerRow.enabled.is_(True),
+                    WorkerRow.last_heartbeat_at >= checked_at - timedelta(minutes=10),
+                )
+            )
+        ).scalars()
+    )
+    active_workers = len(recent_worker_rows)
+    ollama_workers = sum(1 for worker in recent_worker_rows if "text-small" in worker.capabilities)
+    settings = get_settings()
+    storage_path = Path(settings.image_storage_dir)
+
+    def storage_is_writable() -> bool:
+        storage_parent = storage_path if storage_path.exists() else storage_path.parent
+        return storage_parent.exists() and os.access(storage_parent, os.W_OK)
+
+    storage_ok = await asyncio.to_thread(storage_is_writable)
+
+    def provider_health(provider: str, recent_status: str | None) -> ComponentHealth:
+        configuration = configuration_by_provider.get(provider)
+        if configuration is None or not configuration.enabled:
+            return ComponentHealth(status="disabled", detail="Provider ist nicht aktiviert.", checked_at=checked_at)
+        if recent_status == "FAILED":
+            return ComponentHealth(
+                status="degraded", detail="Der letzte Lauf ist fehlgeschlagen.", checked_at=checked_at
+            )
+        if recent_status:
+            return ComponentHealth(status="ok", detail=f"Letzter Lauf: {recent_status}.", checked_at=checked_at)
+        return ComponentHealth(
+            status="unknown", detail="Aktiviert, aber noch kein Lauf vorhanden.", checked_at=checked_at
+        )
+
+    ebay_status = latest_sync.status if latest_sync is not None else None
+    mail_status = latest_mail.status if latest_mail is not None else None
+    components = {
+        "api": ComponentHealth(status="ok", detail="FastAPI beantwortet Anfragen.", checked_at=checked_at),
+        "database": ComponentHealth(status="ok", detail="Datenbankabfrage erfolgreich.", checked_at=checked_at),
+        "supabase": ComponentHealth(
+            status="ok" if settings.auth_mode == "supabase" else "disabled",
+            detail="Supabase-Authentifizierung aktiv."
+            if settings.auth_mode == "supabase"
+            else "Lokaler Entwicklungsmodus.",
+            checked_at=checked_at,
+        ),
+        "ebay": provider_health("ebay", ebay_status),
+        "emailImporter": provider_health("kleinanzeigenEmail", mail_status),
+        "worker": ComponentHealth(
+            status="ok" if active_workers else "degraded",
+            detail=f"{active_workers or 0} Worker mit aktuellem Heartbeat.",
+            checked_at=checked_at,
+        ),
+        "ollama": ComponentHealth(
+            status="ok" if ollama_workers else "disabled",
+            detail=f"{ollama_workers or 0} aktiver Textmodell-Worker.",
+            checked_at=checked_at,
+        ),
+        "storage": ComponentHealth(
+            status="ok" if storage_ok else "degraded",
+            detail="Privater Bildspeicher ist beschreibbar." if storage_ok else "Bildspeicher ist nicht beschreibbar.",
+            checked_at=checked_at,
+        ),
     }
+    degraded = any(component.status == "degraded" for component in components.values())
+    return SystemStatusResponse(
+        status="degraded" if degraded else "ok",
+        listings=listing_count or 0,
+        open_jobs=open_jobs or 0,
+        workers=workers or 0,
+        components=components,
+    )
 
 
 @router.post("/extension/pairings", response_model=PairingResponse, status_code=201)
@@ -76,6 +179,8 @@ async def create_pairing(context: Context) -> PairingResponse:
         expires_at=expires_at,
     )
     context.session.add(row)
+    await context.session.flush()
+    record_audit_event(context, "extensionPairing.created", "extensionPairing", row.id)
     await context.session.commit()
     return PairingResponse(id=row.id, token=token, expires_at=expires_at)
 
@@ -93,6 +198,7 @@ async def revoke_pairing(pairing_id: UUID, context: Context) -> None:
     if pairing is None:
         raise HTTPException(status_code=404, detail="pairing not found")
     pairing.revoked_at = datetime.now(UTC)
+    record_audit_event(context, "extensionPairing.revoked", "extensionPairing", pairing.id)
     await context.session.commit()
 
 
@@ -105,6 +211,8 @@ async def mock_erp_export(listing_id: UUID, context: Context) -> ErpExportRespon
         ).export_listing_as_purchase(listing_id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail="listing not found") from exc
+    record_audit_event(context, "erp.purchaseExported", "listing", listing_id, {"adapter": "mock"})
+    await context.session.commit()
     return ErpExportResponse(
         listing_id=listing_id,
         purchase_payload=purchase_payload,
@@ -205,6 +313,14 @@ async def upsert_provider_configuration(
         row.enabled = payload.enabled
         row.settings_json = payload.settings
         row.secret_reference = payload.secret_reference
+    await context.session.flush()
+    record_audit_event(
+        context,
+        "providerConfiguration.updated",
+        "providerConfiguration",
+        row.id,
+        {"provider": provider, "enabled": payload.enabled},
+    )
     await context.session.commit()
     await context.session.refresh(row)
     return _provider_configuration_response(row)

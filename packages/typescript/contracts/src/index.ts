@@ -25,11 +25,6 @@ export type PriceObservation = components['schemas']['PriceObservationResponse']
 export type ListingImage = components['schemas']['ListingImageResponse'];
 export type ImageAccess = components['schemas']['ImageAccessResponse'];
 
-export interface SystemStatus {
-  status: string;
-  listings: number;
-  openJobs: number;
-  workers: number;
-}
+export type SystemStatus = components['schemas']['SystemStatusResponse'];
 
 export type { components, operations, paths } from './generated';

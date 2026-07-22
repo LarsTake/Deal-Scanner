@@ -226,12 +226,20 @@ class ListingSummary(CamelModel):
     is_hidden: bool
     version: int
     last_seen_at: datetime
+    published_at: datetime | None = None
+    location: str | None = None
+    distance_km: Decimal | None = None
+    market_value_median: Decimal | None = None
+    data_quality_score: int | None = None
+    main_image_id: UUID | None = None
+    detected_products: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     deal_score: int | None = None
     risk_score: int | None = None
 
-    @field_serializer("price", "shipping_cost")
-    def serialize_decimal(self, value: Decimal) -> str:
-        return format(value, "f")
+    @field_serializer("price", "shipping_cost", "distance_km", "market_value_median")
+    def serialize_decimal(self, value: Decimal | None) -> str | None:
+        return format(value, "f") if value is not None else None
 
 
 class ListingDetail(ListingSummary):
@@ -246,6 +254,7 @@ class ListingDetail(ListingSummary):
     evaluations: list[DealEvaluationHistoryResponse] = Field(default_factory=list)
     feedback: list[FeedbackResponse] = Field(default_factory=list)
     seller: SellerResponse | None = None
+    comparison_observations: list[PriceObservationResponse] = Field(default_factory=list)
 
 
 class CorrectedProductInput(CamelModel):
@@ -543,3 +552,17 @@ class ErpExportResponse(CamelModel):
     status: Literal["mocked"] = "mocked"
     listing_id: UUID
     purchase_payload: dict[str, Any]
+
+
+class ComponentHealth(CamelModel):
+    status: Literal["ok", "degraded", "disabled", "unknown"]
+    detail: str
+    checked_at: datetime
+
+
+class SystemStatusResponse(CamelModel):
+    status: Literal["ok", "degraded"]
+    listings: int
+    open_jobs: int
+    workers: int
+    components: dict[str, ComponentHealth]

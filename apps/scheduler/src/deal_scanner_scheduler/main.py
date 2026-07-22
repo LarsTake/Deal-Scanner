@@ -10,9 +10,11 @@ from email import policy
 from email.parser import BytesParser
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import httpx
+import structlog
 from deal_scanner_core.models import SearchProfile
 from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_email import KleinanzeigenMailParser
@@ -20,6 +22,8 @@ from deal_scanner_extraction import RuleExtractor
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
+logger = structlog.get_logger("deal_scanner_scheduler")
 
 
 class SchedulerSettings(BaseSettings):
@@ -104,6 +108,7 @@ class Scheduler:
                     )
                     interrupted.raise_for_status()
                 cursor = previous["cursor"] if previous and previous["cursor"] else "0"
+                delta_window_end = datetime.now(UTC)
                 run_response = await self.client.post(
                     "/api/v1/provider-sync-runs",
                     json={"searchProfileId": item["id"], "provider": "ebay", "cursor": cursor},
@@ -143,7 +148,13 @@ class Scheduler:
                     async for snapshot in provider.discover(profile, cursor):
                         discovered += 1
                         normalized = await provider.normalize(snapshot)
-                        if not self._matches_profile(profile, normalized.title, normalized.description):
+                        if not self._matches_profile(
+                            profile,
+                            normalized.title,
+                            normalized.description,
+                            normalized.location,
+                            snapshot.payload.get("distanceKm"),
+                        ):
                             continue
                         payload: dict[str, Any] = {
                             "platform": "ebay",
@@ -161,6 +172,7 @@ class Scheduler:
                             "rawData": snapshot.payload,
                             "providerVersion": snapshot.provider_version,
                             "searchProfileId": item["id"],
+                            "publishedAt": normalized.published_at.isoformat() if normalized.published_at else None,
                         }
                         seller_data = snapshot.payload.get("seller")
                         if normalized.seller_external_id and isinstance(seller_data, dict):
@@ -188,7 +200,7 @@ class Scheduler:
                                 json={"sourceUrls": image_urls},
                             )
                             image_result.raise_for_status()
-                    next_cursor = str(int(cursor) + discovered) if discovered >= 50 else "0"
+                    next_cursor = delta_window_end.isoformat().replace("+00:00", "Z")
                     completed = await self.client.patch(
                         f"/api/v1/provider-sync-runs/{run_id}",
                         json={
@@ -216,7 +228,13 @@ class Scheduler:
         return imported
 
     @staticmethod
-    def _matches_profile(profile: SearchProfile, title: str, description: str) -> bool:
+    def _matches_profile(
+        profile: SearchProfile,
+        title: str,
+        description: str,
+        location: str | None = None,
+        distance_km: object | None = None,
+    ) -> bool:
         text = f"{title}\n{description}".casefold()
         if any(term.casefold() not in text for term in profile.required_terms if term.strip()):
             return False
@@ -228,7 +246,17 @@ class Scheduler:
         ).casefold()
         if any(product.casefold() not in product_text for product in profile.required_products if product.strip()):
             return False
-        return not any(product.casefold() in product_text for product in profile.excluded_products if product.strip())
+        if any(product.casefold() in product_text for product in profile.excluded_products if product.strip()):
+            return False
+        if profile.location and (not location or profile.location.casefold() not in location.casefold()):
+            return False
+        if profile.radius_km is not None and distance_km is not None:
+            try:
+                if Decimal(str(distance_km)) > profile.radius_km:
+                    return False
+            except ArithmeticError:
+                return False
+        return True
 
     @staticmethod
     def _ebay_image_urls(payload: dict[str, Any]) -> list[str]:
@@ -410,14 +438,24 @@ class Scheduler:
     async def run_forever(self) -> None:
         try:
             while True:
-                await self._run_locked_cycle()
+                try:
+                    await self._run_locked_cycle()
+                except Exception as exc:
+                    logger.error("scheduler_cycle_failed", error_type=type(exc).__name__)
                 await asyncio.sleep(self.settings.scheduler_interval_seconds)
         finally:
             await self.client.aclose()
 
     async def _run_locked_cycle(self) -> None:
+        started_at = perf_counter()
         if not self.settings.database_url.startswith("postgresql"):
-            await asyncio.gather(self.sync_ebay(), self.poll_imap())
+            ebay_imports, email_imports = await asyncio.gather(self.sync_ebay(), self.poll_imap())
+            logger.info(
+                "scheduler_cycle_completed",
+                ebay_imports=ebay_imports,
+                email_imports=email_imports,
+                duration_ms=round((perf_counter() - started_at) * 1000, 2),
+            )
             return
         engine = create_async_engine(self.settings.database_url, pool_pre_ping=True)
         try:
@@ -426,9 +464,16 @@ class Scheduler:
                     text("select pg_try_advisory_lock(hashtext('deal-scanner-scheduler'))")
                 )
                 if not acquired:
+                    logger.info("scheduler_cycle_skipped", reason="advisory_lock_held")
                     return
                 try:
-                    await asyncio.gather(self.sync_ebay(), self.poll_imap())
+                    ebay_imports, email_imports = await asyncio.gather(self.sync_ebay(), self.poll_imap())
+                    logger.info(
+                        "scheduler_cycle_completed",
+                        ebay_imports=ebay_imports,
+                        email_imports=email_imports,
+                        duration_ms=round((perf_counter() - started_at) * 1000, 2),
+                    )
                 finally:
                     await connection.execute(text("select pg_advisory_unlock(hashtext('deal-scanner-scheduler'))"))
         finally:
@@ -436,6 +481,7 @@ class Scheduler:
 
 
 def run() -> None:
+    structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
     if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not os.getenv("DEAL_SCANNER_API_TOKEN"):
         raise RuntimeError("production scheduler requires an API token")
     asyncio.run(Scheduler(SchedulerSettings()).run_forever())

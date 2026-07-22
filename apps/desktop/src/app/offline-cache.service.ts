@@ -13,6 +13,27 @@ export interface OutboxItem {
   status: 'pending' | 'conflict';
 }
 
+export function isConflictError(error: unknown): boolean {
+  return error instanceof Error && /\b409\b|conflict/i.test(error.message);
+}
+
+export async function processOutboxItems(
+  items: OutboxItem[],
+  sender: (item: OutboxItem) => Promise<void>,
+  delivered: (item: OutboxItem) => Promise<void>,
+  conflicted: (item: OutboxItem) => Promise<void>,
+): Promise<void> {
+  for (const item of items) {
+    if (item.status !== 'pending') continue;
+    try {
+      await sender(item);
+      await delivered(item);
+    } catch (error) {
+      if (isConflictError(error)) await conflicted(item);
+    }
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class OfflineCacheService {
   private database: Database | null = null;
@@ -100,16 +121,11 @@ export class OfflineCacheService {
   }
 
   async synchronize(sender: (item: OutboxItem) => Promise<void>): Promise<void> {
-    for (const item of await this.pending()) {
-      if (item.status !== 'pending') continue;
-      try {
-        await sender(item);
-        await this.database?.execute('DELETE FROM outbox WHERE id = $1', [item.id]);
-      } catch (error) {
-        if (error instanceof Error && /\b409\b|conflict/i.test(error.message)) {
-          await this.markConflict(item.id);
-        }
-      }
-    }
+    await processOutboxItems(
+      await this.pending(),
+      sender,
+      async (item) => this.discard(item.id),
+      async (item) => this.markConflict(item.id),
+    );
   }
 }

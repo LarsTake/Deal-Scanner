@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
+from ..audit import record_audit_event
 from ..context import Context
 from ..db_models import SearchProfileRow
 from ..schemas import SearchProfileCreate, SearchProfileResponse
@@ -53,6 +54,8 @@ async def create_profile(payload: SearchProfileCreate, context: Context) -> Sear
         **payload.model_dump(mode="json", by_alias=False),
     )
     context.session.add(row)
+    await context.session.flush()
+    record_audit_event(context, "searchProfile.created", "searchProfile", row.id)
     await context.session.commit()
     await context.session.refresh(row)
     return _response(row)
@@ -71,6 +74,13 @@ async def update_profile(profile_id: UUID, payload: SearchProfileCreate, context
         raise HTTPException(status_code=404, detail="search profile not found")
     for field, value in payload.model_dump(mode="json", by_alias=False).items():
         setattr(row, field, value)
+    record_audit_event(
+        context,
+        "searchProfile.updated",
+        "searchProfile",
+        row.id,
+        {"enabled": payload.enabled},
+    )
     await context.session.commit()
     await context.session.refresh(row)
     return _response(row)
@@ -87,5 +97,6 @@ async def delete_profile(profile_id: UUID, context: Context) -> None:
     row = result.scalar_one_or_none()
     if row is None:
         raise HTTPException(status_code=404, detail="search profile not found")
+    record_audit_event(context, "searchProfile.deleted", "searchProfile", row.id)
     await context.session.delete(row)
     await context.session.commit()

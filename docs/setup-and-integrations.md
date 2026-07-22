@@ -54,3 +54,16 @@ Analysen und Audit-Ereignisse werden nie überschrieben.
 - `422`: RFC-9457-Details bzw. KI-Schemaverletzung lesen; fehlerhafte KI-Ausgaben werden verworfen.
 - Keine eBay-/IMAP-Daten: Provider aktiviert, Secret-Referenz und Prozess-Umgebung prüfen.
 - Desktop-Build: Plattformabhängige Tauri-Voraussetzungen und Signatur-Secrets prüfen.
+
+## Credential-gesteuerte Live-Abnahme
+
+Die externen Prüfungen sind strikt read-only und standardmäßig deaktiviert. Nach dem Setzen der
+in `.env.example` aufgeführten Supabase-, eBay-Sandbox-/Produktions-, IMAP- und Ollama-Werte:
+
+```powershell
+$env:DEAL_SCANNER_RUN_LIVE_TESTS='1'
+uv run pytest tests/live -m live -ra
+```
+
+Fehlende Integrationen werden einzeln übersprungen. Die eBay-Prüfungen beziehen ausschließlich
+OAuth-Tokens, IMAP führt nur Login/NOOP aus und Ollama/Supabase werden nur über Health-/Tags-Endpunkte gelesen.

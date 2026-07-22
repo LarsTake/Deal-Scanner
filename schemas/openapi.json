@@ -4084,18 +4084,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "integer"
-                      },
-                      {
-                        "type": "string"
-                      }
-                    ]
-                  },
-                  "title": "Response System Status Api V1 System Status Get"
+                  "$ref": "#/components/schemas/SystemStatusResponse"
                 }
               }
             }
@@ -7271,6 +7260,37 @@
         ],
         "title": "Body_import_csv_api_v1_market_data_imports_csv_post"
       },
+      "ComponentHealth": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded",
+              "disabled",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checkedat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "detail",
+          "checkedAt"
+        ],
+        "title": "ComponentHealth"
+      },
       "CorrectedAttributeInput": {
         "properties": {
           "productIndex": {
@@ -8017,11 +8037,25 @@
             "title": "Title"
           },
           "price": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Price"
           },
           "shippingCost": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Shippingcost"
           },
           "currency": {
@@ -8053,6 +8087,88 @@
             "format": "date-time",
             "title": "Lastseenat"
           },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "distanceKm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancekm"
+          },
+          "marketValueMedian": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvaluemedian"
+          },
+          "dataQualityScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataqualityscore"
+          },
+          "mainImageId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mainimageid"
+          },
+          "detectedProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Detectedproducts"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
           "dealScore": {
             "anyOf": [
               {
@@ -8078,17 +8194,6 @@
           "description": {
             "type": "string",
             "title": "Description"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
           },
           "categoryProfile": {
             "type": "string",
@@ -8157,6 +8262,13 @@
                 "type": "null"
               }
             ]
+          },
+          "comparisonObservations": {
+            "items": {
+              "$ref": "#/components/schemas/PriceObservationResponse"
+            },
+            "type": "array",
+            "title": "Comparisonobservations"
           }
         },
         "additionalProperties": false,
@@ -8177,8 +8289,8 @@
           "isHidden",
           "version",
           "lastSeenAt",
-          "description",
           "location",
+          "description",
           "categoryProfile",
           "currentSnapshotId"
         ],
@@ -8522,11 +8634,25 @@
             "title": "Title"
           },
           "price": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Price"
           },
           "shippingCost": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Shippingcost"
           },
           "currency": {
@@ -8557,6 +8683,88 @@
             "type": "string",
             "format": "date-time",
             "title": "Lastseenat"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "distanceKm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancekm"
+          },
+          "marketValueMedian": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvaluemedian"
+          },
+          "dataQualityScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataqualityscore"
+          },
+          "mainImageId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mainimageid"
+          },
+          "detectedProducts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Detectedproducts"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
           },
           "dealScore": {
             "anyOf": [
@@ -10496,6 +10704,47 @@
           "lastSeenAt"
         ],
         "title": "SellerResponse"
+      },
+      "SystemStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "listings": {
+            "type": "integer",
+            "title": "Listings"
+          },
+          "openJobs": {
+            "type": "integer",
+            "title": "Openjobs"
+          },
+          "workers": {
+            "type": "integer",
+            "title": "Workers"
+          },
+          "components": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ComponentHealth"
+            },
+            "type": "object",
+            "title": "Components"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "listings",
+          "openJobs",
+          "workers",
+          "components"
+        ],
+        "title": "SystemStatusResponse"
       },
       "WorkerHeartbeat": {
         "properties": {

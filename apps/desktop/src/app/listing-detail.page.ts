@@ -115,6 +115,16 @@ import { ApiService } from './api.service';
       </div>
       <section class="section-head"><div><p class="eyebrow">Bewertung</p><h2>Marktwert- und Analysehistorie</h2></div></section>
       <div class="listing-grid">
+        @for (observation of item.comparisonObservations; track observation.id) {
+          <mat-card class="listing-card">
+            <div class="row"><mat-chip>{{ observation.observationKind }}</mat-chip><span>{{ observation.platform }}</span></div>
+            <h3>{{ observation.observedPrice }} {{ observation.currency }}</h3>
+            <p>+ {{ observation.shippingCost }} Versand · {{ observation.condition ?? 'Zustand unbekannt' }}</p>
+            <small>{{ observation.region ?? 'Region unbekannt' }} · {{ observation.observedAt }}</small>
+          </mat-card>
+        } @empty { <div class="empty">Keine passenden Vergleichsangebote vorhanden.</div> }
+      </div>
+      <div class="listing-grid">
         @for (evaluation of item.evaluations; track evaluation.id) {
           <mat-card class="listing-card">
             <div class="row"><mat-chip>{{ evaluation.calculationVersion }}</mat-chip><span>Datenqualität {{ evaluation.dataQualityScore }}</span></div>
@@ -129,6 +139,8 @@ import { ApiService } from './api.service';
           <mat-card class="listing-card">
             <div class="row"><mat-chip>{{ analysis.analysisType }}</mat-chip><span>{{ analysis.modelName }} {{ analysis.modelVersion }}</span></div>
             <p>Prompt {{ analysis.promptVersion }} · Schema {{ analysis.resultSchemaVersion }}</p>
+            @if (analysis.result['contradictions']) { <p><b>Widersprüche:</b> {{ analysis.result['contradictions'] | json }}</p> }
+            @if (analysis.result['missingInformation']) { <p><b>Fehlende Angaben:</b> {{ analysis.result['missingInformation'] | json }}</p> }
             <details><summary>Strukturiertes Ergebnis</summary><pre>{{ analysis.result | json }}</pre></details>
           </mat-card>
         } @empty { <div class="empty">Noch keine Modell- oder Nutzeranalyse.</div> }

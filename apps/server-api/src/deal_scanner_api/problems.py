@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+import structlog
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = structlog.get_logger("deal_scanner_api.errors")
 
 
 def _problem(
@@ -32,6 +35,7 @@ def _problem(
 def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def http_exception(request: Request, exc: HTTPException) -> JSONResponse:
+        logger.warning("http_error", path=request.url.path, status_code=exc.status_code)
         return _problem(request, exc.status_code, "Request failed", str(exc.detail))
 
     @app.exception_handler(RequestValidationError)
@@ -52,4 +56,15 @@ def install_problem_handlers(app: FastAPI) -> None:
             "Validation failed",
             "Request validation failed",
             errors=safe_errors,
+        )
+
+    @app.exception_handler(Exception)
+    async def unexpected_exception(request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("unhandled_api_error", path=request.url.path, error_type=type(exc).__name__)
+        return _problem(
+            request,
+            500,
+            "Internal server error",
+            "The request could not be completed.",
+            "https://deal-scanner.local/problems/internal",
         )

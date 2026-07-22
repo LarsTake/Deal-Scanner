@@ -30,6 +30,7 @@ members = [
 addopts = "-q --strict-markers --disable-warnings"
 asyncio_mode = "auto"
 testpaths = ["tests", "packages", "apps", "providers"]
+markers = ["live: credential-gated read-only checks against external services"]
 
 [tool.ruff]
 line-length = 120

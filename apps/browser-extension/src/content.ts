@@ -8,12 +8,12 @@ function text(root: ParentNode, selectors: string[]): string {
   return '';
 }
 
-function price(value: string): string {
+export function price(value: string): string {
   const match = value.match(/(\d{1,3}(?:[. ]\d{3})*(?:,\d{2})?)/);
   return match ? match[1].replace(/[. ]/g, '').replace(',', '.') : '0.00';
 }
 
-function externalId(url: string): string {
+export function externalId(url: string): string {
   return url.match(/\/(\d+)-\d+-\d+(?:[/?#]|$)/)?.[1] ?? crypto.randomUUID();
 }
 
@@ -37,7 +37,7 @@ function imageUrls(root: ParentNode): string[] {
   return [...new Set(urls)].slice(0, 10);
 }
 
-function collectDetail(): VisibleListing[] {
+export function collectDetail(): VisibleListing[] {
   const title = text(document, ['h1', '[data-testid="ad-title"]']);
   if (!title) return [];
   const sellerName = text(document, [
@@ -73,7 +73,7 @@ function collectDetail(): VisibleListing[] {
   }];
 }
 
-function collectCards(): VisibleListing[] {
+export function collectCards(): VisibleListing[] {
   const listings: VisibleListing[] = [];
   const seen = new Set<string>();
   for (const card of document.querySelectorAll('article, li.ad-listitem')) {

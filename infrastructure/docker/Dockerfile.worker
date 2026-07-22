@@ -4,5 +4,8 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PATH="/app/.venv/bin:$PATH"
 COPY . .
 RUN uv sync --frozen --package deal-scanner-worker --no-dev
+RUN groupadd --system deal-scanner && useradd --system --gid deal-scanner --home-dir /app deal-scanner \
+    && mkdir -p /app/.data && chown -R deal-scanner:deal-scanner /app/.data
 
+USER deal-scanner
 CMD ["deal-scanner-worker"]

@@ -1,9 +1,14 @@
+import asyncio
 import os
+from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 os.environ["DEAL_SCANNER_DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["DEAL_SCANNER_AUTO_CREATE_DB"] = "true"
 os.environ["DEAL_SCANNER_AUTH_MODE"] = "development"
 
+from deal_scanner_api.database import session_factory
+from deal_scanner_api.db_models import AnalysisJobRow
 from deal_scanner_api.main import app
 from fastapi.testclient import TestClient
 
@@ -21,6 +26,20 @@ def payload(description: str = "Abholung möglich") -> dict[str, object]:
         "categoryProfile": "computer",
         "rawData": {"fixture": True},
     }
+
+
+def set_job_times(job_id: str, *, expire_lease: bool = False, make_available: bool = False) -> None:
+    async def update() -> None:
+        async with session_factory() as session:
+            job = await session.get(AnalysisJobRow, UUID(job_id))
+            assert job is not None
+            if expire_lease:
+                job.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+            if make_available:
+                job.available_at = datetime.now(UTC) - timedelta(seconds=1)
+            await session.commit()
+
+    asyncio.run(update())
 
 
 def test_end_to_end_import_feedback_and_worker_lease() -> None:
@@ -94,6 +113,109 @@ def test_end_to_end_import_feedback_and_worker_lease() -> None:
         assert rejected.status_code == 422
 
 
+def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> None:
+    headers = {"X-Development-User": "00000000-0000-4000-8000-000000000909"}
+    target = payload()
+    target["externalId"] = "lease-lifecycle"
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", headers=headers, json=target)
+        assert imported.status_code == 201, imported.text
+        first_worker = client.post(
+            "/api/v1/workers/register",
+            headers=headers,
+            json={
+                "name": "lease-one",
+                "operatingSystem": "test",
+                "hostname": "lease-one",
+                "capabilities": ["text-small"],
+            },
+        ).json()
+        second_worker = client.post(
+            "/api/v1/workers/register",
+            headers=headers,
+            json={
+                "name": "lease-two",
+                "operatingSystem": "test",
+                "hostname": "lease-two",
+                "capabilities": ["text-small"],
+            },
+        ).json()
+        claimed = client.post(
+            "/api/v1/jobs/claim",
+            headers=headers,
+            json={"workerId": first_worker["id"], "capabilities": ["text-small"]},
+        ).json()
+        original_expiry = claimed["leaseExpiresAt"]
+        renewed = client.post(
+            f"/api/v1/jobs/{claimed['id']}/renew",
+            headers=headers,
+            json={"workerId": first_worker["id"]},
+        )
+        assert renewed.status_code == 200, renewed.text
+        assert renewed.json()["leaseExpiresAt"] >= original_expiry
+
+        set_job_times(claimed["id"], expire_lease=True)
+        recovery = client.post(
+            "/api/v1/jobs/claim",
+            headers=headers,
+            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+        )
+        assert recovery.status_code == 200
+        assert recovery.json() is None
+        retry_job = next(
+            item
+            for item in client.get("/api/v1/jobs?status=RETRY", headers=headers).json()
+            if item["id"] == claimed["id"]
+        )
+        assert retry_job["attempts"] == 1
+
+        set_job_times(claimed["id"], make_available=True)
+        second_claim = client.post(
+            "/api/v1/jobs/claim",
+            headers=headers,
+            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+        ).json()
+        assert second_claim["id"] == claimed["id"]
+        late = client.post(
+            f"/api/v1/jobs/{claimed['id']}/complete",
+            headers=headers,
+            json={
+                "workerId": first_worker["id"],
+                "analysisType": "text",
+                "modelName": "late",
+                "modelVersion": "1",
+                "promptVersion": "1",
+                "resultSchemaVersion": "1.0.0",
+                "inputHash": claimed["inputHash"],
+                "result": {},
+                "confidence": 0,
+            },
+        )
+        assert late.status_code == 409
+
+        failed = client.post(
+            f"/api/v1/jobs/{claimed['id']}/fail",
+            headers=headers,
+            json={"workerId": second_worker["id"], "error": "simulated crash"},
+        )
+        assert failed.status_code == 200
+        assert failed.json()["status"] == "RETRY"
+        set_job_times(claimed["id"], make_available=True)
+        third_claim = client.post(
+            "/api/v1/jobs/claim",
+            headers=headers,
+            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+        ).json()
+        assert third_claim["attempts"] == 3
+        dead = client.post(
+            f"/api/v1/jobs/{claimed['id']}/fail",
+            headers=headers,
+            json={"workerId": second_worker["id"], "error": "third failure"},
+        )
+        assert dead.status_code == 200
+        assert dead.json()["status"] == "DEAD"
+
+
 def test_idempotency_and_extension_pairing() -> None:
     with TestClient(app) as client:
         request_payload = payload()
@@ -161,6 +283,26 @@ def test_workspace_isolation_at_api_boundary() -> None:
         assert all(item["externalId"] != "workspace-one-only" for item in second_list["items"])
 
 
+def test_system_status_reports_all_required_components_without_secrets() -> None:
+    with TestClient(app) as client:
+        response = client.get("/api/v1/system/status")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert set(body["components"]) == {
+            "api",
+            "database",
+            "supabase",
+            "emailImporter",
+            "ebay",
+            "worker",
+            "ollama",
+            "storage",
+        }
+        serialized = response.text.lower()
+        assert "secret" not in serialized
+        assert "token" not in serialized
+
+
 def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
     evaluation_payload = payload("Abholung und Test möglich")
     evaluation_payload["externalId"] = "evaluation-listing"
@@ -189,6 +331,11 @@ def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
         notification = next(item for item in notifications.json() if item["listingId"] == listing_id)
         delivered = client.post(f"/api/v1/notifications/{notification['id']}/delivered")
         assert delivered.status_code == 204, delivered.text
+        summary = next(item for item in client.get("/api/v1/listings").json()["items"] if item["id"] == listing_id)
+        assert summary["marketValueMedian"] == "1000.00"
+        assert summary["dataQualityScore"] > 0
+        assert isinstance(summary["detectedProducts"], list)
+        assert isinstance(summary["warnings"], list)
 
 
 def test_erp_mock_uses_stable_purchase_contract() -> None:
@@ -272,7 +419,15 @@ def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -
                         }
                     ],
                     "attributes": [],
-                    "riskSignals": [],
+                    "riskSignals": [
+                        {
+                            "signalType": "external_payment_link",
+                            "severity": "high",
+                            "confidence": 0.99,
+                            "source": "description",
+                            "evidence": "externer Zahlungslink",
+                        }
+                    ],
                     "contradictions": [],
                     "missingInformation": [],
                     "overallConfidence": 0.99,
@@ -288,6 +443,11 @@ def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -
         assert detail.status_code == 200, detail.text
         assert detail.json()["analysisStatus"] == "COMPLETE"
         assert detail.json()["dealScore"] >= 75
+        assert detail.json()["riskScore"] > 0
+        assert any(signal["type"] == "external_payment_link" for signal in detail.json()["riskSignals"])
+        components = detail.json()["evaluations"][0]["explanation"]["deal"]["components"]
+        assert components["condition"] != 50
+        assert components["completeness"] != 50
         notifications = client.get("/api/v1/notifications").json()
         assert any(item["listingId"] == listing_id for item in notifications)
 

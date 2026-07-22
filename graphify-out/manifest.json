@@ -1,7 +1,7 @@
 {
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\main.py": {
-    "mtime": 1784741738.9971027,
-    "hash": "c3aee78623795d0007918330161606b2"
+    "mtime": 1784746107.8811529,
+    "hash": "55cdd2de0ace7e1b9d773d8f38a87c8a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\ollama.py": {
     "mtime": 1784736883.6218317,
@@ -12,16 +12,20 @@
     "hash": "4867131295172353fe6c2295851defc7"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\vite.config.ts": {
-    "mtime": 1784742709.2615857,
-    "hash": "fdb70687cc4a49c330a2bd3a81a9cecf"
+    "mtime": 1784745113.098024,
+    "hash": "dbe15c0ac3d123f6cccdc0bf0994a180"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\background.ts": {
     "mtime": 1784741716.5527983,
     "hash": "72524e34c0a84e21d346c27ea8196788"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\content.test.ts": {
+    "mtime": 1784745113.0990267,
+    "hash": "19e1e31e62cdcb2dca2bd943fdff66b0"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\content.ts": {
-    "mtime": 1784743515.0293632,
-    "hash": "63b76d7c0b4c0ab0171a7cf37fecdf82"
+    "mtime": 1784745104.7278545,
+    "hash": "b16de5bde824c4154068361d3715a0e0"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\src\\popup.ts": {
     "mtime": 1784737862.1677032,
@@ -72,12 +76,12 @@
     "hash": "28878bfbb1c920156e1605bf824eb335"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\listing-detail.page.ts": {
-    "mtime": 1784743521.39304,
-    "hash": "ad804eec67d79d09086b4de0273b9742"
+    "mtime": 1784745470.8916476,
+    "hash": "872eb81b660c33c916277c940ac4a8bf"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\listings.page.ts": {
-    "mtime": 1784740833.1413448,
-    "hash": "7b0121075ce3f93517234d4dc80fd62c"
+    "mtime": 1784746410.4079483,
+    "hash": "cc402edfb5806e7838e896f2afcd5c71"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\login.page.ts": {
     "mtime": 1784737790.1659083,
@@ -91,9 +95,13 @@
     "mtime": 1784744143.3848321,
     "hash": "111f43adaa19b809957954fbd63e79de"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\offline-cache.service.spec.ts": {
+    "mtime": 1784745919.964362,
+    "hash": "11ac615c09d2c5f2a893cf8c57aac123"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\offline-cache.service.ts": {
-    "mtime": 1784741051.7401938,
-    "hash": "2fdb43c1ddc44fcda2100ad245fd75fb"
+    "mtime": 1784745919.9633553,
+    "hash": "f1dd64f1797bc8b341a0cde2a6f62ae8"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\outbox-sync.service.ts": {
     "mtime": 1784741051.741204,
@@ -108,16 +116,16 @@
     "hash": "6dabeaea5099a0329e660f21340eb37e"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\search-profiles.page.ts": {
-    "mtime": 1784743313.3170185,
-    "hash": "d48f27a96c452fea735adcb1914d5000"
+    "mtime": 1784745843.7796886,
+    "hash": "39ce3d5528f034cf767246edaf8e68f4"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\settings.page.ts": {
     "mtime": 1784744042.4836893,
     "hash": "7ed5a8735f3560e937acb4b1da82a80b"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\system.page.ts": {
-    "mtime": 1784737790.1669195,
-    "hash": "36330dc96cd17ea68460d33a12479e7a"
+    "mtime": 1784744983.9857316,
+    "hash": "bf4c8461adbf37cee62c9f239ff006d8"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src\\app\\workers.page.ts": {
     "mtime": 1784742709.262596,
@@ -136,12 +144,16 @@
     "hash": "00c5effad808c81f0cb3bfccbd1b2aea"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\scheduler\\src\\deal_scanner_scheduler\\main.py": {
-    "mtime": 1784743719.6813116,
-    "hash": "fea2a8bf695917883a5e74087b7cd74f"
+    "mtime": 1784746107.8811529,
+    "hash": "beb04a009391b5daf11d18397df90f2e"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\scheduler\\src\\deal_scanner_scheduler\\__init__.py": {
     "mtime": 1784735621.582106,
     "hash": "4867131295172353fe6c2295851defc7"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\audit.py": {
+    "mtime": 1784746082.7976787,
+    "hash": "2a3d9683368312a8a980329557204920"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\auth.py": {
     "mtime": 1784736883.6218317,
@@ -172,16 +184,16 @@
     "hash": "4957fbedd171e55a3633654a20c89522"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\market_service.py": {
-    "mtime": 1784744322.8027868,
-    "hash": "7a8e1acd5a6612be2146b377d6b7cdf9"
+    "mtime": 1784745746.4552262,
+    "hash": "d16c33c90a455c3aaa8afa2aff7018bd"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\notification_service.py": {
     "mtime": 1784744301.3589978,
     "hash": "239a5de9501d2142bcd0a5a15b1678ba"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\problems.py": {
-    "mtime": 1784743760.252529,
-    "hash": "bca0e8f549a23397a2388dd88b99f0db"
+    "mtime": 1784746031.4453936,
+    "hash": "1f3185f41becc62b00a90a56bc4125a4"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\product_service.py": {
     "mtime": 1784740221.4504128,
@@ -192,12 +204,12 @@
     "hash": "4f9937ae0df5fe100ef5d0c1559fc40f"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\schemas.py": {
-    "mtime": 1784743665.4288394,
-    "hash": "a9f48ea8cb765669ee3a5f274cac2750"
+    "mtime": 1784745452.7097054,
+    "hash": "4acd9ceb65a76ee87cbd96c4eac94c71"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\services.py": {
-    "mtime": 1784743492.5772958,
-    "hash": "06fcad39d0634e675b8930cd985ae62a"
+    "mtime": 1784745746.4552262,
+    "hash": "dfc4892a946aab5109f580bd0b4d4151"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\settings.py": {
     "mtime": 1784743856.3393247,
@@ -232,16 +244,16 @@
     "hash": "2b46893d1420ff7752a70b1f37282c1a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\search_profiles.py": {
-    "mtime": 1784743390.7309353,
-    "hash": "927ff3d1ef2e1f2e42ed489cca4cceed"
+    "mtime": 1784746082.7987816,
+    "hash": "7a8f599b6c812741c84f8111c6625a15"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\system.py": {
-    "mtime": 1784743703.1124592,
-    "hash": "bb31cb14bd3f43b890e31ed2bc00ce67"
+    "mtime": 1784746082.79989,
+    "hash": "bf47f4526b5c9678802146d6c7088ff7"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\workers.py": {
-    "mtime": 1784744542.4048722,
-    "hash": "51ecdb8af7cbb92e57aa5616c3d7dada"
+    "mtime": 1784745332.7186582,
+    "hash": "81792907a0780f8d1057cafbb82a1908"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\server-api\\src\\deal_scanner_api\\routers\\__init__.py": {
     "mtime": 1784735621.5797758,
@@ -308,20 +320,20 @@
     "hash": "a5942845dbd28c525aa9e7ad7a8c3410"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\api-client\\src\\index.ts": {
-    "mtime": 1784744139.7626565,
-    "hash": "f234f363e7ac347a57ecbc557c2a74e5"
+    "mtime": 1784745504.7118766,
+    "hash": "4fed2b5bbea5c49ddc8da7da5a2c85b4"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\generated.ts": {
-    "mtime": 1784744520.6866837,
-    "hash": "6a83a2308e24e4b421e14fdfcfa90a4b"
+    "mtime": 1784746366.5390549,
+    "hash": "97fc34ed0a7a5ff8395a06d20999c21c"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\index.ts": {
-    "mtime": 1784743788.5640345,
-    "hash": "a6f5aab3bd2a136f654c41344ead6d2d"
+    "mtime": 1784744977.7714672,
+    "hash": "4a39db8f83cb3939f8ed803ed651dff3"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\providers\\ebay\\src\\deal_scanner_ebay\\provider.py": {
-    "mtime": 1784744493.7198434,
-    "hash": "0f0b78655227e75b185315169058168d"
+    "mtime": 1784745625.835726,
+    "hash": "07e18dc1dae1e74acc4b7e10b4894d73"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\providers\\ebay\\src\\deal_scanner_ebay\\__init__.py": {
     "mtime": 1784735621.5797758,
@@ -348,8 +360,8 @@
     "hash": "12a916a711682240c24629bfc274ad6a"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_api.py": {
-    "mtime": 1784744169.4569664,
-    "hash": "54289df1e41a6bfc39dcfae18194860c"
+    "mtime": 1784745677.3779483,
+    "hash": "b37a4a49f462a44a5b99a89d28db97ca"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_category_profiles.py": {
     "mtime": 1784744225.56278,
@@ -364,12 +376,12 @@
     "hash": "27bcbc28dcae43c4c468dda0e10388d3"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_postgres_rls.py": {
-    "mtime": 1784742491.3632789,
-    "hash": "4022372cec78e7eb1454cf441b86f34d"
+    "mtime": 1784745296.1424255,
+    "hash": "2c350c6eccb875041e3e2b8729fe8026"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_providers.py": {
-    "mtime": 1784743351.0007975,
-    "hash": "1c6eeb9dd64c070d88de0bf098195557"
+    "mtime": 1784745751.5689936,
+    "hash": "510a117936c2b292465d645318ba1fab"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_scoring.py": {
     "mtime": 1784736883.6232367,
@@ -379,21 +391,25 @@
     "mtime": 1784744010.2928183,
     "hash": "8b154fc37e7feeefe24a28ef9d214e71"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\live\\test_external_smoke.py": {
+    "mtime": 1784745729.17175,
+    "hash": "021b5d969e7b44103fde5cdf6515d482"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\postgres\\bootstrap.sql": {
     "mtime": 1784742465.206226,
     "hash": "b55fb5fecb7decf439424349b84c7264"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\compose.yaml": {
-    "mtime": 1784738299.2972438,
-    "hash": "07adc81c187f652981738fd9b9b22c88"
+    "mtime": 1784745988.985935,
+    "hash": "dceec7c69ec02fe2e48ed6027c8fd258"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\pnpm-workspace.yaml": {
     "mtime": 1784742709.2700613,
     "hash": "46237d3deebbfd6e8749c8182d613bc5"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\README.md": {
-    "mtime": 1784744286.9131331,
-    "hash": "0ed3dbce79dad41e0a1995681db23762"
+    "mtime": 1784746350.6684084,
+    "hash": "6e1b76ef870a8ddd94f1eb0aced893e0"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\browser-extension\\popup.html": {
     "mtime": 1784742709.2605698,
@@ -411,9 +427,17 @@
     "mtime": 1784742709.2666507,
     "hash": "fd2dd16c30eddfc73edfed4cd1127a97"
   },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\data-model-and-api.md": {
+    "mtime": 1784746340.4974844,
+    "hash": "91b0ccaea2f07bd39bf894d84a84837d"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\docs\\extending.md": {
+    "mtime": 1784746340.4974844,
+    "hash": "192a5c3db071e7504f5c6980e3b88942"
+  },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\mvp-audit.md": {
-    "mtime": 1784744286.9121323,
-    "hash": "575ae7036b9448b198b9bed65e1b8801"
+    "mtime": 1784746309.9020817,
+    "hash": "ea5f634e77e60371dbffc7514f880216"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\operations.md": {
     "mtime": 1784736797.5417185,
@@ -424,8 +448,8 @@
     "hash": "b89670b5fa43cd5e1d28ea60ea48c757"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\setup-and-integrations.md": {
-    "mtime": 1784744286.9111314,
-    "hash": "1c8973e90876ac15f9b19c7cb8faa00c"
+    "mtime": 1784745736.9349885,
+    "hash": "258a3cd315e1435e2736eba8eb01aedc"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\docs\\adr\\0001-modular-monorepo.md": {
     "mtime": 1784742709.2666507,
@@ -450,6 +474,10 @@
   "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_170654_trace_the_existing_end_to_end_flow_from_listing_im.md": {
     "mtime": 1784740014.4561553,
     "hash": "7b5dd5141d4c17109fc92e199a42876c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\graphify-out\\memory\\query_20260722_182754_which_explicit_deal_scanner_requirements_in_the_sp.md": {
+    "mtime": 1784744874.3795564,
+    "hash": "b1d75ab1918d432c03e2e30bf749608d"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\desktop\\src-tauri\\icons\\128x128.png": {
     "mtime": 1784737196.5386457,

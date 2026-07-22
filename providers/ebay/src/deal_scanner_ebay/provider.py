@@ -100,34 +100,49 @@ class EbayProvider:
         raise ProviderError("eBay Browse request exhausted retries")
 
     async def discover(self, profile: SearchProfile, cursor: str | None = None) -> AsyncIterator[RawListingSnapshot]:
-        offset = int(cursor or "0")
+        since: datetime | None = None
+        if cursor and cursor != "0" and not cursor.isdigit():
+            try:
+                since = datetime.fromisoformat(cursor.replace("Z", "+00:00")) - timedelta(minutes=5)
+            except ValueError as exc:
+                raise ProviderError("invalid eBay delta cursor") from exc
         filters: list[str] = []
         if profile.minimum_price is not None or profile.maximum_price is not None:
             lower = str(profile.minimum_price or "")
             upper = str(profile.maximum_price or "")
             filters.extend([f"price:[{lower}..{upper}]", "priceCurrency:EUR"])
-        payload = await self._get(
-            "/buy/browse/v1/item_summary/search",
-            {
-                "q": profile.query,
-                "limit": "50",
-                "offset": str(offset),
-                "fieldgroups": "EXTENDED",
-                "sort": "newlyListed",
-                **({"filter": ",".join(filters)} if filters else {}),
-            },
-        )
-        fetched_at = datetime.now(UTC)
-        for item in payload.get("itemSummaries", []):
-            external_id = item.get("legacyItemId") or item["itemId"]
-            yield RawListingSnapshot(
-                platform=self.platform,
-                external_id=str(external_id),
-                source_url=item["itemWebUrl"],
-                fetched_at=fetched_at,
-                payload=item,
-                provider_version=self.provider_version,
+        offset = 0
+        maximum_pages = 20 if since is not None else 1
+        for _ in range(maximum_pages):
+            payload = await self._get(
+                "/buy/browse/v1/item_summary/search",
+                {
+                    "q": profile.query,
+                    "limit": "50",
+                    "offset": str(offset),
+                    "fieldgroups": "EXTENDED",
+                    "sort": "newlyListed",
+                    **({"filter": ",".join(filters)} if filters else {}),
+                },
             )
+            items = payload.get("itemSummaries", [])
+            fetched_at = datetime.now(UTC)
+            for item in items:
+                created_at = datetime.fromisoformat(item["itemCreationDate"].replace("Z", "+00:00"))
+                if since is not None and created_at <= since:
+                    return
+                external_id = item.get("legacyItemId") or item["itemId"]
+                yield RawListingSnapshot(
+                    platform=self.platform,
+                    external_id=str(external_id),
+                    source_url=item["itemWebUrl"],
+                    fetched_at=fetched_at,
+                    payload=item,
+                    provider_version=self.provider_version,
+                )
+            if len(items) < 50:
+                return
+            offset += 50
 
     async def fetch_details(self, external_id: str) -> RawListingSnapshot | None:
         try:

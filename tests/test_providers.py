@@ -1,7 +1,10 @@
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import httpx
 import pytest
 from deal_scanner_core.models import SearchProfile
+from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_email import KleinanzeigenMailParser
 from deal_scanner_manual import extract_ebay_legacy_id
 from deal_scanner_scheduler.main import Scheduler
@@ -52,3 +55,48 @@ def test_scheduler_applies_required_and_excluded_profile_filters() -> None:
     assert Scheduler._matches_profile(profile, "Fanatec QR2 Bundle", "Mit Boost Kit")
     assert not Scheduler._matches_profile(profile, "Fanatec QR2 Bundle", "Ohne Boost Kit, defekt")
     assert not Scheduler._matches_profile(profile, "Fanatec QR1 Bundle", "Mit Boost Kit")
+
+    local_profile = profile.model_copy(update={"location": "Hamburg", "radius_km": 25})
+    assert Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Hamburg", 12)
+    assert not Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Berlin", 12)
+    assert not Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Hamburg", 40)
+
+
+@pytest.mark.asyncio
+async def test_ebay_delta_cursor_uses_overlap_and_stops_at_known_items() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.params["sort"] == "newlyListed"
+        assert request.url.params["offset"] == "0"
+        return httpx.Response(
+            200,
+            json={
+                "itemSummaries": [
+                    {
+                        "itemId": "v1|new|0",
+                        "legacyItemId": "111111111111",
+                        "itemWebUrl": "https://www.ebay.de/itm/111111111111",
+                        "itemCreationDate": "2026-07-22T12:01:00.000Z",
+                    },
+                    {
+                        "itemId": "v1|known|0",
+                        "legacyItemId": "222222222222",
+                        "itemWebUrl": "https://www.ebay.de/itm/222222222222",
+                        "itemCreationDate": "2026-07-22T11:50:00.000Z",
+                    },
+                ]
+            },
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = EbayProvider(EbaySettings(client_id="id", client_secret="fixture"), client)  # noqa: S106
+    provider._access_token = "fixture"  # noqa: S105
+    provider._token_expires_at = datetime.now(UTC) + timedelta(hours=1)
+    discovered = [
+        snapshot
+        async for snapshot in provider.discover(
+            SearchProfile(name="GPU", query="RTX 4070 Super"),
+            "2026-07-22T12:00:00Z",
+        )
+    ]
+    await client.aclose()
+    assert [snapshot.external_id for snapshot in discovered] == ["111111111111"]

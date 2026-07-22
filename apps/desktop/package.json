@@ -6,7 +6,7 @@
     "start": "ng serve --host 127.0.0.1 --port 4200",
     "build": "ng build",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "test": "ng test --watch=false",
+    "test": "ng test",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -35,6 +35,7 @@
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
     "@tauri-apps/cli": "^2.8.0",
-    "typescript": "~6.0.0"
+    "typescript": "~6.0.0",
+    "vitest": "^4.0.8"
   }
 }

@@ -123,6 +123,17 @@ export class DealScannerClient {
     return this.request('/search-profiles', { method: 'POST', body: JSON.stringify(profile) });
   }
 
+  updateSearchProfile(profileId: string, profile: SearchProfileCreate): Promise<SearchProfile> {
+    return this.request(`/search-profiles/${encodeURIComponent(profileId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(profile),
+    });
+  }
+
+  deleteSearchProfile(profileId: string): Promise<void> {
+    return this.request(`/search-profiles/${encodeURIComponent(profileId)}`, { method: 'DELETE' });
+  }
+
   workers(): Promise<Worker[]> {
     return this.request('/workers');
   }

@@ -5,6 +5,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from deal_scanner_core.models import ImageOcrResult, TextAnalysisResult
+from deal_scanner_extraction import RuleExtractor
+from deal_scanner_scoring import RiskScoreEngine, RiskSignal
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -16,6 +18,7 @@ from ..db_models import (
     ListingImageRow,
     ListingRow,
     ListingSnapshotRow,
+    RiskSignalRow,
     WorkerRow,
 )
 from ..market_service import evaluate_listing_record
@@ -142,6 +145,27 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
     now = datetime.now(UTC)
     settings = get_settings()
     async with context.session.begin_nested():
+        expired_jobs = (
+            await context.session.execute(
+                select(AnalysisJobRow)
+                .where(
+                    AnalysisJobRow.workspace_id == context.workspace_id,
+                    AnalysisJobRow.status == "LEASED",
+                    AnalysisJobRow.lease_expires_at <= now,
+                )
+                .with_for_update(skip_locked=True)
+            )
+        ).scalars()
+        retry_delays = [30, 120, 600]
+        for expired in expired_jobs:
+            expired.assigned_worker_id = None
+            expired.lease_expires_at = None
+            expired.last_error = "worker lease expired"
+            if expired.attempts >= 3:
+                expired.status = "DEAD"
+            else:
+                expired.status = "RETRY"
+                expired.available_at = now + timedelta(seconds=retry_delays[expired.attempts - 1])
         result = await context.session.execute(
             select(AnalysisJobRow)
             .where(
@@ -271,11 +295,38 @@ async def complete_job(job_id: UUID, payload: JobCompleteRequest, context: Conte
                 source=f"analysis-result:{result.id}",
                 attributes=[attribute.model_dump(by_alias=True) for attribute in text_result.attributes],
             )
+            severity_weights = {"low": 10, "medium": 20, "high": 35, "critical": 50}
+            ai_risk_signals = [
+                RiskSignal(
+                    type=signal.signal_type,
+                    weight=severity_weights[signal.severity],
+                    confidence=signal.confidence,
+                    evidence=signal.evidence,
+                    source=f"ai:{result.id}:{signal.source}",
+                )
+                for signal in text_result.risk_signals
+            ]
+            for signal in ai_risk_signals:
+                context.session.add(
+                    RiskSignalRow(
+                        workspace_id=context.workspace_id,
+                        listing_id=listing.id,
+                        type=signal.type,
+                        severity=signal.weight,
+                        confidence=Decimal(str(signal.confidence)),
+                        positive=False,
+                        source=signal.source,
+                        evidence=signal.evidence,
+                    )
+                )
+            rule_signals = RuleExtractor().analyze(listing.title, listing.description).risk_signals
+            combined_risk = RiskScoreEngine().score([*rule_signals, *ai_risk_signals])
             await evaluate_listing_record(
                 context.session,
                 context.workspace_id,
                 listing.id,
                 allow_notification=True,
+                risk_score_override=combined_risk.score,
             )
         elif image_result is not None:
             image = (

@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 
 export default defineConfig({
+  test: {
+    environmentOptions: { jsdom: { url: 'https://www.kleinanzeigen.de/' } },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

@@ -4,6 +4,9 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PATH="/app/.venv/bin:$PATH"
 COPY . .
 RUN uv sync --frozen --package deal-scanner-api --no-dev
+RUN groupadd --system deal-scanner && useradd --system --gid deal-scanner --home-dir /app deal-scanner \
+    && mkdir -p /app/.data && chown -R deal-scanner:deal-scanner /app/.data
 
 EXPOSE 8000
+USER deal-scanner
 CMD ["uvicorn", "deal_scanner_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

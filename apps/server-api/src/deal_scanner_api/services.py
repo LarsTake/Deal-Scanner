@@ -10,7 +10,7 @@ from uuid import UUID
 from deal_scanner_extraction import RuleExtractor
 from deal_scanner_scoring import RiskScoreEngine
 from fastapi import HTTPException
-from sqlalchemy import desc, select
+from sqlalchemy import desc, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,7 @@ from .db_models import (
     AnalysisResultRow,
     AuditEventRow,
     DealEvaluationRow,
+    ListingImageRow,
     ListingProductRow,
     ListingRow,
     ListingSnapshotRow,
@@ -40,6 +41,7 @@ from .schemas import (
     ListingSnapshotResponse,
     ListingSummary,
     ManualImportRequest,
+    PriceObservationResponse,
     ProductAttributeResponse,
     RiskSignalResponse,
     SellerInput,
@@ -87,6 +89,40 @@ async def latest_evaluation(session: AsyncSession, listing_id: UUID) -> DealEval
 
 async def listing_summary(session: AsyncSession, listing: ListingRow) -> ListingSummary:
     evaluation = await latest_evaluation(session, listing.id)
+    product_models = list(
+        (
+            await session.execute(
+                select(ListingProductRow.model).where(ListingProductRow.listing_id == listing.id).distinct().limit(6)
+            )
+        ).scalars()
+    )
+    warning_types = list(
+        (
+            await session.execute(
+                select(RiskSignalRow.type)
+                .where(
+                    RiskSignalRow.listing_id == listing.id,
+                    RiskSignalRow.positive.is_(False),
+                )
+                .distinct()
+                .limit(6)
+            )
+        ).scalars()
+    )
+    main_image_id = await session.scalar(
+        select(ListingImageRow.id)
+        .where(ListingImageRow.listing_id == listing.id)
+        .order_by(ListingImageRow.created_at, ListingImageRow.id)
+        .limit(1)
+    )
+    distance_km: Decimal | None = None
+    if listing.current_snapshot_id is not None:
+        snapshot = await session.get(ListingSnapshotRow, listing.current_snapshot_id)
+        raw_distance = snapshot.raw_data.get("distanceKm") if snapshot is not None else None
+        try:
+            distance_km = Decimal(str(raw_distance)) if raw_distance is not None else None
+        except (ValueError, ArithmeticError):
+            distance_km = None
     return ListingSummary(
         id=listing.id,
         workspace_id=listing.workspace_id,
@@ -103,6 +139,14 @@ async def listing_summary(session: AsyncSession, listing: ListingRow) -> Listing
         is_hidden=listing.is_hidden,
         version=listing.version,
         last_seen_at=listing.last_seen_at,
+        published_at=listing.published_at,
+        location=listing.location,
+        distance_km=distance_km,
+        market_value_median=evaluation.estimated_market_value_median if evaluation else None,
+        data_quality_score=evaluation.data_quality_score if evaluation else None,
+        main_image_id=main_image_id,
+        detected_products=product_models,
+        warnings=warning_types,
         deal_score=evaluation.deal_score if evaluation else None,
         risk_score=evaluation.risk_score if evaluation else None,
     )
@@ -176,6 +220,40 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
             attributes=attributes_by_product[row.id],
         )
         for row in product_rows
+    ]
+    canonical_ids = {row.canonical_product_id for row in product_rows if row.canonical_product_id is not None}
+    observation_scope = PriceObservationRow.listing_id == listing.id
+    if canonical_ids:
+        observation_scope = or_(observation_scope, PriceObservationRow.canonical_product_id.in_(canonical_ids))
+    observation_rows = (
+        await session.execute(
+            select(PriceObservationRow)
+            .where(
+                PriceObservationRow.workspace_id == listing.workspace_id,
+                PriceObservationRow.currency == listing.currency,
+                observation_scope,
+            )
+            .order_by(desc(PriceObservationRow.observed_at))
+            .limit(100)
+        )
+    ).scalars()
+    comparison_observations = [
+        PriceObservationResponse(
+            id=row.id,
+            canonical_product_id=row.canonical_product_id,
+            listing_id=row.listing_id,
+            platform=row.platform,
+            observed_price=row.observed_price,
+            shipping_cost=row.shipping_cost,
+            currency=row.currency,
+            condition=row.condition,
+            observation_kind=row.observation_kind,
+            region=row.region,
+            observed_at=row.observed_at,
+            source_quality=float(row.source_quality),
+            metadata=row.metadata_json,
+        )
+        for row in observation_rows
     ]
     snapshot_rows = (
         await session.execute(
@@ -284,7 +362,6 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
     return ListingDetail(
         **summary.model_dump(),
         description=listing.description,
-        location=listing.location,
         category_profile=listing.category_profile,
         current_snapshot_id=listing.current_snapshot_id,
         risk_signals=signals,
@@ -294,6 +371,7 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         evaluations=evaluations,
         feedback=feedback,
         seller=seller,
+        comparison_observations=comparison_observations,
     )
 
 

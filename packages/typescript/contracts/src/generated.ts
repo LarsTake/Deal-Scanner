@@ -740,6 +740,21 @@ export interface components {
             /** File */
             file: string;
         };
+        /** ComponentHealth */
+        ComponentHealth: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "disabled" | "unknown";
+            /** Detail */
+            detail: string;
+            /**
+             * Checkedat
+             * Format: date-time
+             */
+            checkedAt: string;
+        };
         /** CorrectedAttributeInput */
         CorrectedAttributeInput: {
             /**
@@ -1014,9 +1029,9 @@ export interface components {
             /** Title */
             title: string;
             /** Price */
-            price: string;
+            price: string | null;
             /** Shippingcost */
-            shippingCost: string;
+            shippingCost: string | null;
             /** Currency */
             currency: string;
             /** Status */
@@ -1034,14 +1049,28 @@ export interface components {
              * Format: date-time
              */
             lastSeenAt: string;
+            /** Publishedat */
+            publishedAt?: string | null;
+            /** Location */
+            location: string | null;
+            /** Distancekm */
+            distanceKm?: string | null;
+            /** Marketvaluemedian */
+            marketValueMedian?: string | null;
+            /** Dataqualityscore */
+            dataQualityScore?: number | null;
+            /** Mainimageid */
+            mainImageId?: string | null;
+            /** Detectedproducts */
+            detectedProducts?: string[];
+            /** Warnings */
+            warnings?: string[];
             /** Dealscore */
             dealScore?: number | null;
             /** Riskscore */
             riskScore?: number | null;
             /** Description */
             description: string;
-            /** Location */
-            location: string | null;
             /** Categoryprofile */
             categoryProfile: string;
             /** Currentsnapshotid */
@@ -1059,6 +1088,8 @@ export interface components {
             /** Feedback */
             feedback?: components["schemas"]["FeedbackResponse"][];
             seller?: components["schemas"]["SellerResponse"] | null;
+            /** Comparisonobservations */
+            comparisonObservations?: components["schemas"]["PriceObservationResponse"][];
         };
         /** ListingEvaluationResponse */
         ListingEvaluationResponse: {
@@ -1198,9 +1229,9 @@ export interface components {
             /** Title */
             title: string;
             /** Price */
-            price: string;
+            price: string | null;
             /** Shippingcost */
-            shippingCost: string;
+            shippingCost: string | null;
             /** Currency */
             currency: string;
             /** Status */
@@ -1218,6 +1249,22 @@ export interface components {
              * Format: date-time
              */
             lastSeenAt: string;
+            /** Publishedat */
+            publishedAt?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Distancekm */
+            distanceKm?: string | null;
+            /** Marketvaluemedian */
+            marketValueMedian?: string | null;
+            /** Dataqualityscore */
+            dataQualityScore?: number | null;
+            /** Mainimageid */
+            mainImageId?: string | null;
+            /** Detectedproducts */
+            detectedProducts?: string[];
+            /** Warnings */
+            warnings?: string[];
             /** Dealscore */
             dealScore?: number | null;
             /** Riskscore */
@@ -1928,6 +1975,24 @@ export interface components {
              * Format: date-time
              */
             lastSeenAt: string;
+        };
+        /** SystemStatusResponse */
+        SystemStatusResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded";
+            /** Listings */
+            listings: number;
+            /** Openjobs */
+            openJobs: number;
+            /** Workers */
+            workers: number;
+            /** Components */
+            components: {
+                [key: string]: components["schemas"]["ComponentHealth"];
+            };
         };
         /** WorkerHeartbeat */
         WorkerHeartbeat: {
@@ -4783,9 +4848,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: number | string;
-                    };
+                    "application/json": components["schemas"]["SystemStatusResponse"];
                 };
             };
             /** @description Bad Request */

@@ -2,12 +2,13 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
+
+import { NavIconComponent, type NavIconName } from './nav-icon.component';
 
 @Component({
   selector: 'ds-root',
@@ -15,10 +16,10 @@ import { map } from 'rxjs';
   imports: [
     AsyncPipe,
     MatButtonModule,
-    MatIconModule,
     MatListModule,
     MatSidenavModule,
     MatToolbarModule,
+    NavIconComponent,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -30,7 +31,7 @@ import { map } from 'rxjs';
         <mat-nav-list>
           @for (item of navigation; track item.path) {
             <a mat-list-item [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/' }">
-              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <ds-nav-icon matListItemIcon [name]="item.icon" />
               <span matListItemTitle>{{ item.label }}</span>
             </a>
           }
@@ -39,7 +40,7 @@ import { map } from 'rxjs';
       <mat-sidenav-content>
         <mat-toolbar>
           @if (isHandset$ | async) {
-            <button mat-icon-button (click)="drawer.toggle()" aria-label="Navigation öffnen"><mat-icon>menu</mat-icon></button>
+            <button mat-icon-button (click)="drawer.toggle()" aria-label="Navigation öffnen"><ds-nav-icon name="menu" /></button>
           }
           <span class="spacer"></span>
           <span class="connection"><i></i> Lokaler Modus</span>
@@ -65,7 +66,7 @@ import { map } from 'rxjs';
 export class AppComponent {
   private readonly breakpoints = inject(BreakpointObserver);
   readonly isHandset$ = this.breakpoints.observe(Breakpoints.Handset).pipe(map((result) => result.matches));
-  readonly navigation = [
+  readonly navigation: ReadonlyArray<{ path: string; label: string; icon: NavIconName }> = [
     { path: '/', label: 'Dashboard', icon: 'dashboard' },
     { path: '/search-profiles', label: 'Suchaufträge', icon: 'manage_search' },
     { path: '/new-listings', label: 'Neue Angebote', icon: 'new_releases' },

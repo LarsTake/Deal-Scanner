@@ -19,3 +19,5 @@ coverage/
 apps/desktop/src-tauri/gen/
 graphify-out/.graphify_*
 graphify-out/cache/
+graphify-out/memory/
+**/supabase/.temp/

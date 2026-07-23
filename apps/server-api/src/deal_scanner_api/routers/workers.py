@@ -9,7 +9,7 @@ from deal_scanner_extraction import RuleExtractor
 from deal_scanner_scoring import RiskScoreEngine, RiskSignal
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 
 from ..context import Context
 from ..db_models import (
@@ -166,13 +166,24 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
             else:
                 expired.status = "RETRY"
                 expired.available_at = now + timedelta(seconds=retry_delays[expired.attempts - 1])
+        capability_filter = (
+            or_(
+                AnalysisJobRow.required_capability.in_(payload.capabilities),
+                and_(
+                    AnalysisJobRow.job_type == "text_analysis",
+                    AnalysisJobRow.required_capability == "text-small",
+                ),
+            )
+            if "rules" in payload.capabilities
+            else AnalysisJobRow.required_capability.in_(payload.capabilities)
+        )
         result = await context.session.execute(
             select(AnalysisJobRow)
             .where(
                 AnalysisJobRow.workspace_id == context.workspace_id,
                 AnalysisJobRow.status.in_(["PENDING", "RETRY"]),
                 AnalysisJobRow.available_at <= now,
-                AnalysisJobRow.required_capability.in_(payload.capabilities),
+                capability_filter,
             )
             .order_by(AnalysisJobRow.priority.desc(), AnalysisJobRow.created_at)
             .with_for_update(skip_locked=True)

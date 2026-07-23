@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 
 import { SecureTokenStore } from './secure-token.store';
 
+const DEFAULT_DEVELOPMENT_USER_ID = '00000000-0000-4000-8000-000000000001';
+
+export function resolveDevelopmentUserId(): string {
+  return localStorage.getItem('deal-scanner-development-user') ?? DEFAULT_DEVELOPMENT_USER_ID;
+}
+
 export interface LoopbackPairing {
   apiUrl: string;
   pairingToken: string;
@@ -26,7 +32,7 @@ export class ExtensionLoopbackService {
       import('@tauri-apps/api/core'),
       this.tokens.getAccessToken(),
     ]);
-    const developmentUserId = localStorage.getItem('deal-scanner-development-user');
+    const developmentUserId = resolveDevelopmentUserId();
     return invoke<LoopbackPairing>('start_extension_loopback', {
       request: {
         apiUrl: apiUrl.replace(/\/$/, ''),

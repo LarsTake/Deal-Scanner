@@ -15,6 +15,7 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
       return;
     }
     let imported = 0;
+    let imageFailures = 0;
     const results: ImportOutcome[] = [];
     for (const listing of message.listings) {
       const response = await fetch(`${config.apiUrl.replace(/\/$/, '')}/api/v1/imports/browser`, {
@@ -47,6 +48,7 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
         riskScore: result.listing.riskScore,
         dataQualityScore: result.listing.dataQualityScore,
       });
+      imported += 1;
       const imageUrls = listing.rawData.imageUrls ?? [];
       if (result.snapshotCreated && imageUrls.length) {
         const imageResponse = await fetch(
@@ -61,18 +63,11 @@ chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendRespo
           },
         );
         if (!imageResponse.ok) {
-          const body = await imageResponse.text();
-          sendResponse({
-            imported: imported + 1,
-            results,
-            error: `Angebot importiert, Bildimport fehlgeschlagen: ${body.slice(0, 120)}`,
-          } satisfies ImportResponseMessage);
-          return;
+          imageFailures += 1;
         }
       }
-      imported += 1;
     }
-    sendResponse({ imported, results } satisfies ImportResponseMessage);
+    sendResponse({ imported, results, imageFailures } satisfies ImportResponseMessage);
   })();
   return true;
 });

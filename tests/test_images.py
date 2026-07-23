@@ -1,9 +1,10 @@
+import ssl
 from io import BytesIO
 from unittest.mock import AsyncMock
 
 import httpx
 import pytest
-from deal_scanner_api.image_service import download_provider_image, validate_image_url
+from deal_scanner_api.image_service import download_provider_image, system_ssl_context, validate_image_url
 from deal_scanner_api.main import app
 from deal_scanner_extraction import fingerprint_image, perceptually_similar
 from fastapi import HTTPException
@@ -31,6 +32,10 @@ def test_exact_and_perceptual_image_duplicates() -> None:
     assert original.sha256 != changed.sha256
     assert perceptually_similar(original.perceptual_hash, changed.perceptual_hash)
     assert original.mime_type == "image/png"
+
+
+def test_provider_download_uses_the_system_certificate_store() -> None:
+    assert isinstance(system_ssl_context(), ssl.SSLContext)
 
 
 @pytest.mark.asyncio

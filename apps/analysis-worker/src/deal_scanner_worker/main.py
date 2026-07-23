@@ -15,7 +15,8 @@ import httpx
 import psutil
 import pytesseract  # type: ignore[import-untyped]
 import structlog
-from deal_scanner_core.models import ImageOcrResult, TextAnalysisRequest
+from deal_scanner_core.models import ImageOcrResult, TextAnalysisRequest, TextAnalysisResult
+from deal_scanner_extraction import RuleExtractor
 from PIL import Image
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -210,11 +211,27 @@ class WorkerAgent:
             description=payload["description"],
             category_profile=payload["categoryProfile"],
         )
-        text_result = await self.ollama.analyze_text(request)
+        if self.settings.ollama_text_model:
+            text_result = await self.ollama.analyze_text(request)
+            model_name = self.settings.ollama_text_model
+        else:
+            rule_analysis = RuleExtractor().analyze(request.title, request.description)
+            product_confidences = [product.confidence for product in rule_analysis.products]
+            text_result = TextAnalysisResult(
+                category=request.category_profile,
+                products=rule_analysis.products,
+                overall_confidence=(
+                    sum(product_confidences) / len(product_confidences) if product_confidences else 0.5
+                ),
+                missing_information=[
+                    "Kein lokales Textmodell konfiguriert; Ergebnis basiert ausschließlich auf Regeln."
+                ],
+            )
+            model_name = "rules-v1"
         return (
             text_result.model_dump(mode="json", by_alias=True),
             "text",
-            self.settings.ollama_text_model,
+            model_name,
             text_result.overall_confidence,
         )
 
@@ -224,18 +241,25 @@ class WorkerAgent:
             return str(pytesseract.image_to_string(image, lang=self.settings.ocr_language))
 
     async def run_forever(self) -> None:
-        await self.register()
-        self._mark_healthy()
         heartbeat_counter = 0
         try:
             while True:
-                worked = await self.process_one()
-                self._mark_healthy()
-                heartbeat_counter += 1
-                if heartbeat_counter >= 6:
-                    await self.heartbeat()
+                try:
+                    if self.worker_id is None:
+                        await self.register()
+                        self._mark_healthy()
+                    worked = await self.process_one()
+                    self._mark_healthy()
+                    heartbeat_counter += 1
+                    if heartbeat_counter >= 6:
+                        await self.heartbeat()
+                        heartbeat_counter = 0
+                    if not worked:
+                        await asyncio.sleep(self.settings.worker_poll_seconds)
+                except httpx.HTTPError as exc:
+                    logger.warning("api_unavailable", error_type=type(exc).__name__, detail=str(exc))
+                    self.worker_id = None
                     heartbeat_counter = 0
-                if not worked:
                     await asyncio.sleep(self.settings.worker_poll_seconds)
         finally:
             await self.client.aclose()

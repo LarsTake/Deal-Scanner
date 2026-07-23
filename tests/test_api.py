@@ -765,3 +765,32 @@ def test_provider_configuration_references_but_never_accepts_secrets() -> None:
             json={"enabled": True},
         )
         assert unsupported.status_code == 422
+
+
+def test_rule_only_worker_can_claim_text_analysis_job() -> None:
+    headers = {"X-Development-User": "00000000-0000-4000-8000-000000000919"}
+    target = payload()
+    target["externalId"] = "rule-only-worker"
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", headers=headers, json=target)
+        assert imported.status_code == 201, imported.text
+        worker = client.post(
+            "/api/v1/workers/register",
+            headers=headers,
+            json={
+                "name": "rule-only-worker",
+                "operatingSystem": "test",
+                "hostname": "rule-only-host",
+                "capabilities": ["rules"],
+            },
+        )
+        assert worker.status_code == 201, worker.text
+        job = client.post(
+            "/api/v1/jobs/claim",
+            headers=headers,
+            json={"workerId": worker.json()["id"], "capabilities": ["rules"]},
+        )
+        assert job.status_code == 200, job.text
+        assert job.json()["jobType"] == "text_analysis"
+        assert job.json()["requiredCapability"] == "text-small"
+        assert job.json()["status"] == "LEASED"

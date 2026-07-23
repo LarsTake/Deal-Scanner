@@ -13,6 +13,11 @@ export function price(value: string): string {
   return match ? match[1].replace(/[. ]/g, '').replace(',', '.') : '0.00';
 }
 
+export function euroPrice(value: string): string {
+  const match = value.match(/(\d{1,3}(?:[. ]\d{3})*(?:,\d{2})?)\s*€/);
+  return match ? match[1].replace(/[. ]/g, '').replace(',', '.') : '0.00';
+}
+
 export function externalId(url: string): string {
   return url.match(/\/(\d+)-\d+-\d+(?:[/?#]|$)/)?.[1] ?? crypto.randomUUID();
 }
@@ -21,6 +26,45 @@ function visible(element: Element): boolean {
   const box = element.getBoundingClientRect();
   const style = getComputedStyle(element);
   return box.width > 0 && box.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+function listingUrl(element: Element): string | null {
+  const value = element instanceof HTMLAnchorElement
+    ? element.href
+    : element.getAttribute('data-href') ?? element.getAttribute('href');
+  if (!value) return null;
+  try {
+    const url = new URL(value, location.href);
+    return url.hostname.endsWith('kleinanzeigen.de') && url.pathname.includes('/s-anzeige/')
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function resultCard(candidate: Element): Element {
+  let current: Element | null = candidate;
+  let structuralFallback: Element | null = null;
+  for (let depth = 0; current && depth < 8; depth += 1) {
+    if (!structuralFallback && current.matches('article, li.ad-listitem, [data-adid], [data-testid*="ad"]')) {
+      structuralFallback = current;
+    }
+    const hasListingTarget = listingUrl(current) !== null
+      || current.querySelector('a[href*="/s-anzeige/"], [data-href*="/s-anzeige/"]') !== null;
+    if (hasListingTarget && euroPrice(current.textContent ?? '') !== '0.00') return current;
+    current = current.parentElement;
+  }
+  return structuralFallback ?? candidate;
+}
+
+function titleFromUrl(value: string): string {
+  try {
+    const slug = new URL(value).pathname.split('/s-anzeige/')[1]?.split('/')[0] ?? '';
+    return decodeURIComponent(slug).replace(/[-_]+/g, ' ').trim();
+  } catch {
+    return '';
+  }
 }
 
 function imageUrls(root: ParentNode): string[] {
@@ -76,25 +120,50 @@ export function collectDetail(): VisibleListing[] {
 export function collectCards(): VisibleListing[] {
   const listings: VisibleListing[] = [];
   const seen = new Set<string>();
-  for (const card of document.querySelectorAll('article, li.ad-listitem')) {
-    if (!visible(card)) continue;
-    const anchor = card.querySelector<HTMLAnchorElement>('a[href*="/s-anzeige/"]');
-    if (!anchor) continue;
-    const url = new URL(anchor.href, location.href).href;
+  const candidates = document.querySelectorAll<HTMLAnchorElement | HTMLElement>('a[href], [data-href]');
+  for (const candidate of candidates) {
+    const url = listingUrl(candidate);
+    if (!url) continue;
+    const card = resultCard(candidate);
     const id = externalId(url);
     if (seen.has(id)) continue;
+    const title = text(card, ['h2', 'h3', '[data-testid*="title"]', '.ellipsis'])
+      || candidate.getAttribute('aria-label')?.trim()
+      || candidate.getAttribute('title')?.trim()
+      || candidate.textContent?.trim()
+      || titleFromUrl(url);
+    const selectedPrice = text(card, [
+      '.aditem-main--middle--price-shipping--price',
+      '[data-testid*="price"]',
+      '[class*="price"]',
+    ]);
+    const listingPrice = euroPrice(selectedPrice) !== '0.00'
+      ? euroPrice(selectedPrice)
+      : euroPrice(card.textContent ?? '');
+    if (!title || listingPrice === '0.00') continue;
     seen.add(id);
     if (card instanceof HTMLElement) card.dataset.dealScannerExternalId = id;
     listings.push({
       platform: 'kleinanzeigen', externalId: id, url,
-      title: text(card, ['h2', 'h3', '.ellipsis']), description: '',
-      price: price(text(card, ['.aditem-main--middle--price-shipping--price', '[class*="price"]'])),
-      currency: 'EUR', location: text(card, ['[class*="location"]']), categoryProfile: 'general',
+      title,
+      description: text(card, [
+        '.aditem-main--middle--description',
+        '[data-testid*="description"]',
+        '[class*="description"]',
+      ]),
+      price: listingPrice,
+      currency: 'EUR',
+      location: text(card, [
+        '[data-testid="location"]',
+        '.aditem-main--top--left',
+        '[class*="location"]',
+      ]),
+      categoryProfile: 'general',
       rawData: { source: 'visibleBrowserPage', capturedAt: new Date().toISOString(), imageUrls: imageUrls(card) },
       providerVersion: 'browser-extension-v1',
     });
   }
-  return listings.filter((listing) => listing.title && listing.price !== '0.00');
+  return listings;
 }
 
 function outcomeText(outcome: ImportOutcome): string {
@@ -139,13 +208,16 @@ async function importVisible(): Promise<void> {
     const known = result.results.filter((item) => !item.snapshotCreated).length;
     button.textContent = result.error
       ? `Fehler: ${result.error}`
-      : `${result.imported} verarbeitet${known ? ` · ${known} bekannt` : ''}`;
+      : `${result.imported} verarbeitet${known ? ` · ${known} bekannt` : ''}`
+        + `${result.imageFailures ? ` · ${result.imageFailures} ohne Bild` : ''}`;
   }
 }
 
 const button = document.createElement('button');
 button.id = 'deal-scanner-import';
-button.textContent = location.pathname.includes('/s-anzeige/') ? 'Angebot importieren' : 'Sichtbare Angebote importieren';
+button.textContent = location.pathname.includes('/s-anzeige/')
+  ? 'Angebot importieren'
+  : 'Alle Angebote dieser Seite importieren';
 button.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:2147483647;padding:12px 16px;border:0;border-radius:10px;background:#57e6ae;color:#07120f;font:700 14px system-ui;box-shadow:0 8px 30px #0008;cursor:pointer';
 button.addEventListener('click', () => void importVisible());
 document.body.append(button);

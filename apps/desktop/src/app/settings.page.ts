@@ -106,7 +106,13 @@ export class SettingsPage implements OnInit {
     try {
       this.pairing.set(await this.loopback.start(this.form.controls.apiUrl.value));
     } catch (error) {
-      this.loopbackError.set(error instanceof Error ? error.message : 'Loopback-Kopplung konnte nicht gestartet werden');
+      this.loopbackError.set(
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Loopback-Kopplung konnte nicht gestartet werden',
+      );
     }
   }
 

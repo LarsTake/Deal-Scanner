@@ -13,11 +13,14 @@ plattformabhängigen Tauri-Systembibliotheken benötigt; für den Serverbetrieb 
 
 ```powershell
 Copy-Item .env.example .env
-uv sync --all-packages
-pnpm install
-uv run --package deal-scanner-api uvicorn deal_scanner_api.main:app --reload
-pnpm --filter @deal-scanner/desktop start
+.\infrastructure\scripts\start-local.ps1 -Install
 ```
+
+Der Startbefehl prüft API und Oberfläche und startet zusätzlich Scheduler sowie Analyse-Worker,
+damit importierte Angebote nicht in der Warteschlange liegen bleiben. Unter `cmd.exe` lautet der
+erste Befehl `copy .env.example .env`; das Startskript wird dort mit
+`%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File infrastructure\scripts\start-local.ps1 -Install`
+aufgerufen. Bei späteren Starts kann `-Install` entfallen.
 
 Ohne Supabase-Konfiguration startet die API bewusst im Entwicklungsmodus mit SQLite und einem
 lokalen Testnutzer. Produktionsbetrieb verweigert diesen Auth-Modus.
@@ -50,6 +53,8 @@ verifizierter Abnahme und credential-abhängigen Live-Smokes steht in
 Provider-, Supabase-, Worker-, ERP- und Erweiterungs-Setup samt Fehlerdiagnose steht in
 [docs/setup-and-integrations.md](docs/setup-and-integrations.md). Die Abdeckung des vollständigen
 MVP ist in [docs/mvp-audit.md](docs/mvp-audit.md) den Implementierungs- und Testnachweisen zugeordnet.
+Geplante Erweiterungen für Cloudflare und komponentenbezogene Marktpreis-Referenzen stehen in
+[docs/roadmap.md](docs/roadmap.md).
 
 Das fachliche Datenmodell und der HTTP-Vertrag sind in
 [docs/data-model-and-api.md](docs/data-model-and-api.md) zusammengefasst. Wie weitere Kategorien,

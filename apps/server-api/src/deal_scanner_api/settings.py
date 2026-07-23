@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_service_role_key: str = ""
     supabase_jwt_audience: str = "authenticated"
-    cors_origins: str = "http://localhost:4200,tauri://localhost,http://tauri.localhost"
+    cors_origins: str = "http://127.0.0.1:4200,http://localhost:4200,tauri://localhost,http://tauri.localhost"
     extension_origins: str = ""
     api_title: str = "Deal Scanner API"
     api_version: str = "0.1.0"

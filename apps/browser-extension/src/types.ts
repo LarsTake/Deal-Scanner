@@ -37,5 +37,6 @@ export interface ImportOutcome {
 export interface ImportResponseMessage {
   imported: number;
   results: ImportOutcome[];
+  imageFailures?: number;
   error?: string;
 }

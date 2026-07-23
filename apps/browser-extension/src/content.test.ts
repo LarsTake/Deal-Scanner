@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { collectDetail, externalId, price, renderImportOutcomes } from './content';
+import { collectCards, collectDetail, euroPrice, externalId, price, renderImportOutcomes } from './content';
 
 describe('visible Kleinanzeigen extraction', () => {
   beforeEach(() => {
@@ -19,6 +19,7 @@ describe('visible Kleinanzeigen extraction', () => {
 
   it('normalizes German prices and stable listing ids', () => {
     expect(price('VB 1.299,00 €')).toBe('1299.00');
+    expect(euroPrice('RTX 5070 · 71636 Ludwigsburg · 1.150 € VB')).toBe('1150');
     expect(externalId(location.href)).toBe('1234567890');
   });
 
@@ -57,5 +58,69 @@ describe('visible Kleinanzeigen extraction', () => {
 
     expect(document.querySelector('[data-deal-scanner-badge="1234567890"]')?.textContent)
       .toBe('Bereits bekannt · Analyse offen');
+  });
+
+  it('collects every loaded result card without opening individual listings', () => {
+    history.replaceState({}, '', '/s-pc/k0');
+    document.body.innerHTML = `
+      <ol>
+        <li class="ad-listitem">
+          <article class="aditem" data-adid="3462624376">
+            <a href="/s-anzeige/gaming-pc/3462624376-228-1944"></a>
+            <h2 class="ellipsis">Gaming PC RTX 5070 Ti</h2>
+            <p class="aditem-main--middle--description">Ryzen 7, 32 GB RAM und 2 TB SSD</p>
+            <div class="aditem-main--middle--price-shipping--price">1.499 € VB</div>
+            <div class="aditem-main--top--left">Hamburg</div>
+          </article>
+        </li>
+        <article data-adid="3462624377"
+          data-href="/s-anzeige/gaming-pc/3462624377-228-1944">
+          <h2>Gaming PC RTX 4080</h2>
+          <div data-testid="price">1.899 €</div>
+          <div data-testid="location">Berlin</div>
+        </article>
+      </ol>
+    `;
+
+    expect(collectCards()).toEqual([
+      expect.objectContaining({
+        externalId: '3462624376',
+        title: 'Gaming PC RTX 5070 Ti',
+        description: 'Ryzen 7, 32 GB RAM und 2 TB SSD',
+        price: '1499',
+        location: 'Hamburg',
+      }),
+      expect.objectContaining({
+        externalId: '3462624377',
+        title: 'Gaming PC RTX 4080',
+        price: '1899',
+        location: 'Berlin',
+      }),
+    ]);
+  });
+
+  it('finds class-independent dynamic cards through their link, euro price and URL slug', () => {
+    history.replaceState({}, '', '/m-suche-verwenden.html?id=fixture');
+    document.body.innerHTML = `
+      <main>
+        <section>
+          <div>
+            <a href="/s-anzeige/gaming-pc-rtx-4070/3462624388-228-1944">
+              <img alt="Gaming-PC" />
+            </a>
+            <span>71636 Ludwigsburg</span>
+            <span>850 € VB</span>
+          </div>
+        </section>
+      </main>
+    `;
+
+    expect(collectCards()).toEqual([
+      expect.objectContaining({
+        externalId: '3462624388',
+        title: 'gaming pc rtx 4070',
+        price: '850',
+      }),
+    ]);
   });
 });

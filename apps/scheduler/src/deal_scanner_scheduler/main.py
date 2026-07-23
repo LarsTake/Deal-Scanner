@@ -273,7 +273,7 @@ class Scheduler:
         if not self.settings.imap_host or not self.settings.imap_username:
             return 0
         messages = await asyncio.to_thread(self._fetch_unseen)
-        parser = KleinanzeigenMailParser(set(self.settings.imap_allowed_senders.split(",")))
+        parser = KleinanzeigenMailParser(self._allowed_mail_senders())
         imported = 0
         processed_ids: list[str] = []
         try:
@@ -330,18 +330,29 @@ class Scheduler:
         return imported
 
     def _fetch_unseen(self) -> list[tuple[str, bytes]]:
+        allowed_senders = self._allowed_mail_senders()
+        if not allowed_senders:
+            return []
         mailbox = imaplib.IMAP4_SSL(self.settings.imap_host)
         try:
-            mailbox.login(self.settings.imap_username, self.settings.imap_password)
+            mailbox.login(self.settings.imap_username, self._imap_password())
             mailbox.select("INBOX")
-            status, data = mailbox.search(None, "UNSEEN")
-            if status != "OK":
-                return []
+            message_ids: list[bytes] = []
+            seen_ids: set[bytes] = set()
+            for sender in sorted(allowed_senders):
+                status, data = mailbox.search(None, "UNSEEN", "FROM", sender)
+                if status != "OK" or not data:
+                    continue
+                for message_id in data[0].split():
+                    if message_id not in seen_ids:
+                        message_ids.append(message_id)
+                        seen_ids.add(message_id)
             messages: list[tuple[str, bytes]] = []
-            for message_id in data[0].split()[:100]:
-                fetch_status, payload = mailbox.fetch(message_id, "(BODY.PEEK[])")
+            for message_id in message_ids[:100]:
+                message_id_text = message_id.decode("ascii")
+                fetch_status, payload = mailbox.fetch(message_id_text, "(BODY.PEEK[])")
                 if fetch_status == "OK" and payload and isinstance(payload[0], tuple):
-                    messages.append((message_id.decode("ascii"), payload[0][1]))
+                    messages.append((message_id_text, payload[0][1]))
             return messages
         finally:
             try:
@@ -349,10 +360,18 @@ class Scheduler:
             except imaplib.IMAP4.error:
                 pass
 
+    def _allowed_mail_senders(self) -> set[str]:
+        return {sender.strip().casefold() for sender in self.settings.imap_allowed_senders.split(",") if sender.strip()}
+
+    def _imap_password(self) -> str:
+        if self.settings.imap_host.casefold() == "imap.gmail.com":
+            return "".join(self.settings.imap_password.split())
+        return self.settings.imap_password
+
     def _mark_seen(self, message_ids: list[str]) -> None:
         mailbox = imaplib.IMAP4_SSL(self.settings.imap_host)
         try:
-            mailbox.login(self.settings.imap_username, self.settings.imap_password)
+            mailbox.login(self.settings.imap_username, self._imap_password())
             mailbox.select("INBOX")
             for message_id in message_ids:
                 mailbox.store(message_id, "+FLAGS", "\\Seen")

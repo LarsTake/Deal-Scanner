@@ -17,6 +17,7 @@ dev = [
   "pip-audit>=2.10.1",
   "yamllint>=1.38,<2",
   "zizmor>=1.28,<2",
+  "truststore>=0.10.4,<1",
 ]
 
 [tool.uv.workspace]

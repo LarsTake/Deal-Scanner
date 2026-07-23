@@ -34,8 +34,8 @@
   die Administratorrechte zum Aktivieren von `VirtualMachinePlatform`.
 - GitHub-CI-Läufe für Linux, Apple Silicon und Multi-Arch-Container; das lokale Repository besitzt
   noch kein Git-Remote.
-- Supabase-Migration/RLS/Storage gegen ein echtes Supabase-Projekt; die zugrunde liegenden
-  PostgreSQL-RLS-Regeln werden bereits in CI gegen PostgreSQL 17 geprüft.
+- Supabase-Migration/RLS/Storage wurde am 23.07.2026 gegen das verknüpfte Projekt read-only
+  geprüft; ein erneuter Lauf benötigt weiterhin die lokalen Projektzugänge.
 - eBay Sandbox und Produktion read-only mit freigeschalteten Client-Credentials.
 - IMAP-Retry, Roharchivierung und Quarantäne gegen das Testpostfach; bei konfiguriertem
   Supabase werden EML-Dateien zusätzlich in den privaten Bucket hochgeladen.

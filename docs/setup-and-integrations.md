@@ -58,6 +58,23 @@ und reicht das Supabase-JWT intern an die konfigurierte API weiter. **Widerrufen
 Listener sofort; spätestens nach fünf Minuten endet er automatisch. Alternativ kann die
 Erweiterung weiterhin direkt die Server-API mit einem dort erzeugten Pairing-Token verwenden.
 
+Für einen automatischen Kleinanzeigen-Import wird auf Kleinanzeigen zuerst eine Suche gespeichert
+und die E-Mail-Benachrichtigung aktiviert. Das empfangende Postfach wird anschließend in `.env`
+eingetragen:
+
+```dotenv
+DEAL_SCANNER_IMAP_HOST=imap.example.de
+DEAL_SCANNER_IMAP_USERNAME=name@example.de
+DEAL_SCANNER_IMAP_PASSWORD=APP_PASSWORT
+DEAL_SCANNER_IMAP_ALLOWED_SENDERS=kleinanzeigen.de
+DEAL_SCANNER_SCHEDULER_INTERVAL_SECONDS=300
+```
+
+Danach muss der Scheduler neu gestartet werden. Er liest alle fünf Minuten ungelesene
+Suchbenachrichtigungen, akzeptiert nur freigegebene Absender und übergibt gefundene Anzeigen an
+denselben Analyse- und Bewertungsprozess wie Browser- und manuelle Importe. Ein direktes,
+permanentes Scraping von Kleinanzeigen ist nicht Teil der Integration.
+
 ## Ollama, OCR und Benachrichtigungen
 
 `DEAL_SCANNER_OLLAMA_TEXT_MODEL` aktiviert strukturierte Textanalyse; leere Konfiguration lässt

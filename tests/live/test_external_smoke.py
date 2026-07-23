@@ -3,11 +3,13 @@ from __future__ import annotations
 import asyncio
 import imaplib
 import os
+import ssl
 from uuid import UUID
 
 import httpx
 import psycopg
 import pytest
+import truststore
 from deal_scanner_core.models import TextAnalysisRequest
 from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_worker.ollama import OllamaProvider
@@ -28,11 +30,17 @@ def required(name: str) -> str:
     return value
 
 
+def system_ssl_context() -> ssl.SSLContext:
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+
 @pytest.mark.asyncio
 async def test_supabase_auth_health_is_reachable() -> None:
     url = required("DEAL_SCANNER_SUPABASE_URL").rstrip("/")
-    async with httpx.AsyncClient(timeout=15) as client:
-        response = await client.get(f"{url}/auth/v1/health")
+    publishable_key = os.getenv("DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY", "").strip()
+    headers = {"apikey": publishable_key} if publishable_key else {}
+    async with httpx.AsyncClient(timeout=15, verify=system_ssl_context()) as client:
+        response = await client.get(f"{url}/auth/v1/health", headers=headers)
     assert response.status_code == 200
 
 
@@ -74,17 +82,16 @@ def test_supabase_schema_rls_and_private_buckets_read_only() -> None:
 @pytest.mark.asyncio
 async def test_ebay_oauth_health_read_only(environment: str) -> None:
     prefix = f"DEAL_SCANNER_EBAY_{environment.upper()}"
-    provider = EbayProvider(
-        EbaySettings(
-            client_id=required(f"{prefix}_CLIENT_ID"),
-            client_secret=required(f"{prefix}_CLIENT_SECRET"),
-            environment=environment,
+    async with httpx.AsyncClient(timeout=20, verify=system_ssl_context()) as client:
+        provider = EbayProvider(
+            EbaySettings(
+                client_id=required(f"{prefix}_CLIENT_ID"),
+                client_secret=required(f"{prefix}_CLIENT_SECRET"),
+                environment=environment,
+            ),
+            client=client,
         )
-    )
-    try:
         status = await provider.health_check()
-    finally:
-        await provider.close()
     assert status["available"] is True
 
 
@@ -94,7 +101,7 @@ def test_imap_login_and_noop_read_only() -> None:
     password = required("DEAL_SCANNER_IMAP_PASSWORD")
 
     def check() -> str:
-        with imaplib.IMAP4_SSL(host, timeout=15) as connection:
+        with imaplib.IMAP4_SSL(host, timeout=15, ssl_context=system_ssl_context()) as connection:
             connection.login(username, password)
             status, _ = connection.noop()
             return status

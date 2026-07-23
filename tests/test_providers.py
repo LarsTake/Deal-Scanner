@@ -1,3 +1,4 @@
+import imaplib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from deal_scanner_core.models import SearchProfile
 from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_email import KleinanzeigenMailParser
 from deal_scanner_manual import extract_ebay_legacy_id
-from deal_scanner_scheduler.main import Scheduler
+from deal_scanner_scheduler.main import Scheduler, SchedulerSettings
 
 
 def test_ebay_id_is_extracted_only_from_allowed_https_url() -> None:
@@ -60,6 +61,54 @@ def test_scheduler_applies_required_and_excluded_profile_filters() -> None:
     assert Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Hamburg", 12)
     assert not Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Berlin", 12)
     assert not Scheduler._matches_profile(local_profile, "Fanatec QR2 Bundle", "Mit Boost Kit", "Hamburg", 40)
+
+
+@pytest.mark.asyncio
+async def test_scheduler_fetches_only_unseen_mail_from_allowed_senders(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeMailbox:
+        def __init__(self) -> None:
+            self.search_calls: list[tuple[str, ...]] = []
+            self.fetch_calls: list[str] = []
+
+        def login(self, username: str, password: str) -> None:
+            assert username == "scanner@example.com"
+            assert password == "fixture"  # noqa: S105
+
+        def select(self, mailbox: str) -> None:
+            assert mailbox == "INBOX"
+
+        def search(self, charset: None, *criteria: str) -> tuple[str, list[bytes]]:
+            assert charset is None
+            self.search_calls.append(criteria)
+            return "OK", [b"2"]
+
+        def fetch(self, message_id: str, query: str) -> tuple[str, list[tuple[bytes, bytes]]]:
+            self.fetch_calls.append(message_id)
+            assert query == "(BODY.PEEK[])"
+            return "OK", [(b"2 (BODY[] {7})", b"fixture")]
+
+        def logout(self) -> None:
+            return None
+
+    mailbox = FakeMailbox()
+    monkeypatch.setattr(imaplib, "IMAP4_SSL", lambda _host: mailbox)
+    scheduler = Scheduler(
+        SchedulerSettings(
+            _env_file=None,
+            imap_host="imap.gmail.com",
+            imap_username="scanner@example.com",
+            imap_password="fix ture",  # noqa: S106
+            imap_allowed_senders=" kleinanzeigen.de ",
+        )
+    )
+    try:
+        messages = scheduler._fetch_unseen()
+    finally:
+        await scheduler.client.aclose()
+
+    assert mailbox.search_calls == [("UNSEEN", "FROM", "kleinanzeigen.de")]
+    assert mailbox.fetch_calls == ["2"]
+    assert messages == [("2", b"fixture")]
 
 
 @pytest.mark.asyncio

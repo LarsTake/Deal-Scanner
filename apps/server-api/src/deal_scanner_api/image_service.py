@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import ssl
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote, urlparse
 from uuid import UUID
 
 import httpx
+import truststore
 from deal_scanner_extraction import ImageFingerprint, InvalidImage, fingerprint_image
 from fastapi import HTTPException
 
@@ -16,6 +18,10 @@ IMAGE_HOSTS = {
     "ebay": {"i.ebayimg.com"},
     "kleinanzeigen": {"img.kleinanzeigen.de", "img.classistatic.de"},
 }
+
+
+def system_ssl_context() -> ssl.SSLContext:
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def validate_image_url(source_url: str, platform: str) -> None:
@@ -42,12 +48,13 @@ async def download_provider_image(
         timeout=httpx.Timeout(20, connect=5),
         follow_redirects=False,
         trust_env=False,
+        verify=system_ssl_context(),
     )
     try:
         async with http_client.stream(
             "GET",
             source_url,
-            headers={"Accept": "image/avif,image/webp,image/png,image/jpeg"},
+            headers={"Accept": "image/jpeg,image/png"},
         ) as response:
             if response.is_redirect:
                 raise HTTPException(status_code=422, detail="image redirects are not accepted")
@@ -87,7 +94,7 @@ async def store_private_image(
         upload_url = (
             f"{config.supabase_url.rstrip('/')}/storage/v1/object/listing-images/{quote(storage_path, safe='/')}"
         )
-        async with httpx.AsyncClient(timeout=30, trust_env=False) as client:
+        async with httpx.AsyncClient(timeout=30, trust_env=False, verify=system_ssl_context()) as client:
             response = await client.post(
                 upload_url,
                 content=content,
@@ -123,7 +130,7 @@ async def create_image_access(
         target = (
             f"{config.supabase_url.rstrip('/')}/storage/v1/object/sign/listing-images/{quote(storage_path, safe='/')}"
         )
-        async with httpx.AsyncClient(timeout=10, trust_env=False) as client:
+        async with httpx.AsyncClient(timeout=10, trust_env=False, verify=system_ssl_context()) as client:
             response = await client.post(
                 target,
                 json={"expiresIn": 300},

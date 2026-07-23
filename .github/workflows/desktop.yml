@@ -61,12 +61,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Test native desktop shell
         run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
-      - run: pnpm --filter @deal-scanner/desktop tauri build
+      - name: Build signed macOS artifact
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        run: pnpm --filter @deal-scanner/desktop tauri build
         env:
-          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Build unsigned macOS artifact
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE != 'true'
+        run: pnpm --filter @deal-scanner/desktop tauri build
+      - name: Build desktop artifact
+        if: runner.os != 'macOS'
+        run: pnpm --filter @deal-scanner/desktop tauri build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: deal-scanner-${{ matrix.artifact }}

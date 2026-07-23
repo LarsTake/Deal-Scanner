@@ -32,8 +32,8 @@
 
 - Tatsächlicher Compose-/Containerlauf; auf dem aktuellen Windows-Rechner fehlen Docker, WSL und
   die Administratorrechte zum Aktivieren von `VirtualMachinePlatform`.
-- GitHub-CI-Läufe für Linux, Apple Silicon und Multi-Arch-Container; das lokale Repository besitzt
-  noch kein Git-Remote.
+- GitHub-CI-Läufe für Linux, Apple Silicon und Multi-Arch-Container; das lokale Repository ist mit
+  dem privaten GitHub-Remote verbunden.
 - Supabase-Migration/RLS/Storage wurde am 23.07.2026 gegen das verknüpfte Projekt read-only
   geprüft; ein erneuter Lauf benötigt weiterhin die lokalen Projektzugänge.
 - eBay Sandbox und Produktion read-only mit freigeschalteten Client-Credentials.

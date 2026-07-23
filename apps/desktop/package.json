@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "ng serve --host 127.0.0.1 --port 4200",
+    "prebuild": "pnpm --filter @deal-scanner/contracts build && pnpm --filter @deal-scanner/api-client build",
     "build": "ng build",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "test": "ng test",

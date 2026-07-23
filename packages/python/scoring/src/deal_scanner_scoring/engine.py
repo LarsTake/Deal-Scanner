@@ -22,7 +22,7 @@ def _weighted_quantile(values: list[tuple[Decimal, float]], quantile: float) -> 
     cumulative = 0.0
     for value, weight in ordered:
         cumulative += weight
-        if cumulative >= threshold:
+        if cumulative >= threshold or math.isclose(cumulative, threshold, rel_tol=1e-9, abs_tol=1e-12):
             return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return ordered[-1][0].quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 

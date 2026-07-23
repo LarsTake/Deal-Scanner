@@ -31,7 +31,7 @@ class FixedWindowRateLimiter:
 
     @staticmethod
     def _sensitive(path: str) -> bool:
-        return any(
+        return "/extension/connections" in path or any(
             marker in path
             for marker in (
                 "/imports/",

@@ -29,6 +29,9 @@ from ..erp_service import MockErpIntegrationAdapter
 from ..schemas import (
     ComponentHealth,
     ErpExportResponse,
+    ExtensionConnectionCreate,
+    ExtensionConnectionCreatedResponse,
+    ExtensionConnectionResponse,
     MailImportCreate,
     MailImportResponse,
     PairingResponse,
@@ -199,6 +202,83 @@ async def revoke_pairing(pairing_id: UUID, context: Context) -> None:
         raise HTTPException(status_code=404, detail="pairing not found")
     pairing.revoked_at = datetime.now(UTC)
     record_audit_event(context, "extensionPairing.revoked", "extensionPairing", pairing.id)
+    await context.session.commit()
+
+
+def _extension_connection_response(row: ExtensionPairingRow) -> ExtensionConnectionResponse:
+    return ExtensionConnectionResponse(
+        id=row.id,
+        display_name=row.display_name,
+        created_at=row.created_at,
+    )
+
+
+@router.get("/extension/connections", response_model=list[ExtensionConnectionResponse])
+async def extension_connections(context: Context) -> list[ExtensionConnectionResponse]:
+    rows = (
+        await context.session.execute(
+            select(ExtensionPairingRow)
+            .where(
+                ExtensionPairingRow.workspace_id == context.workspace_id,
+                ExtensionPairingRow.expires_at.is_(None),
+                ExtensionPairingRow.revoked_at.is_(None),
+            )
+            .order_by(desc(ExtensionPairingRow.created_at))
+        )
+    ).scalars()
+    return [_extension_connection_response(row) for row in rows]
+
+
+@router.post("/extension/connections", response_model=ExtensionConnectionCreatedResponse, status_code=201)
+async def create_extension_connection(
+    payload: ExtensionConnectionCreate,
+    context: Context,
+) -> ExtensionConnectionCreatedResponse:
+    token = secrets.token_urlsafe(48)
+    row = ExtensionPairingRow(
+        workspace_id=context.workspace_id,
+        created_by_user_id=context.identity.user_id,
+        token_hash=hashlib.sha256(token.encode()).hexdigest(),
+        display_name=payload.display_name,
+        expires_at=None,
+    )
+    context.session.add(row)
+    await context.session.flush()
+    record_audit_event(
+        context,
+        "extensionConnection.created",
+        "extensionConnection",
+        row.id,
+        {"displayName": row.display_name},
+    )
+    await context.session.commit()
+    return ExtensionConnectionCreatedResponse(
+        **_extension_connection_response(row).model_dump(),
+        token=token,
+    )
+
+
+@router.delete("/extension/connections/{connection_id}", status_code=204)
+async def revoke_extension_connection(connection_id: UUID, context: Context) -> None:
+    connection = (
+        await context.session.execute(
+            select(ExtensionPairingRow).where(
+                ExtensionPairingRow.id == connection_id,
+                ExtensionPairingRow.workspace_id == context.workspace_id,
+                ExtensionPairingRow.expires_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if connection is None:
+        raise HTTPException(status_code=404, detail="extension connection not found")
+    connection.revoked_at = datetime.now(UTC)
+    record_audit_event(
+        context,
+        "extensionConnection.revoked",
+        "extensionConnection",
+        connection.id,
+        {"displayName": connection.display_name},
+    )
     await context.session.commit()
 
 

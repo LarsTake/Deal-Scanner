@@ -50,6 +50,13 @@ importiert nur nach Nutzeraktion sichtbare Kleinanzeigen-Daten und verwendet ein
 widerrufbares Pairing-Token. Nach dem Import zeigt sie auf sichtbaren Karten die vorhandenen
 Deal-, Risiko- und Datenqualitätswerte oder den Status **Bereits bekannt** an.
 
+Für die dauerhafte Verbindung zuerst in der Desktop-App mit E-Mail und Passwort anmelden. Unter
+**Einstellungen → Dauerhafte Kontoverbindung** wird anschließend ein widerrufbares Geräte-Token
+erzeugt. Die API speichert ausschließlich dessen SHA-256-Hash; Passwort, Supabase-Access-Token
+und Refresh-Token verlassen die Desktop-App nicht. API-Adresse und Geräte-Token werden einmalig
+in der Erweiterung gespeichert und überstehen Browser- und Desktop-Neustarts. Das Token ist nur
+für Browser- und Bildimporte gültig und kann in den Einstellungen jederzeit widerrufen werden.
+
 Für die direkte Desktop-Kopplung unter **Einstellungen → Sichere Desktop-Kopplung** eine neue
 Kopplung erzeugen und die angezeigte API-Adresse samt Token in der Erweiterung speichern. Tauri
 bindet dafür fünf Minuten lang einen zufälligen Port ausschließlich an `127.0.0.1`. Der lokale
@@ -77,10 +84,18 @@ permanentes Scraping von Kleinanzeigen ist nicht Teil der Integration.
 
 ## Ollama, OCR und Benachrichtigungen
 
-`DEAL_SCANNER_OLLAMA_TEXT_MODEL` aktiviert strukturierte Textanalyse; leere Konfiguration lässt
-den Regelpfad vollständig funktionsfähig. Modellausgaben werden gegen
-`schemas/ai/v1/text-analysis.schema.json` validiert. Tesseract aktiviert OCR, wenn das Kommando
-auffindbar ist. Desktop ist der Standardkanal; `DEAL_SCANNER_NTFY_URL` aktiviert optional ntfy.
+Der lokale Worker verwendet feste Modellrollen: `gemma4:12b` extrahiert Produkte, Komponenten
+und Attribute, `gpt-oss:latest` prüft unabhängig Risiken, Widersprüche und fehlende Angaben,
+`gemma4:12b` liest sichtbaren Text aus Angebotsbildern und `qwen3-embedding:0.6b` erzeugt
+semantische Vektoren für Komponenten- und Angebotsähnlichkeit. Die Zuordnung wird über
+`DEAL_SCANNER_OLLAMA_EXTRACTION_MODEL`, `DEAL_SCANNER_OLLAMA_REASONING_MODEL`,
+`DEAL_SCANNER_OLLAMA_VISION_MODEL` und `DEAL_SCANNER_OLLAMA_EMBEDDING_MODEL` geändert.
+`DEAL_SCANNER_OLLAMA_TEXT_MODEL` bleibt nur als Legacy-Fallback erhalten.
+
+Modellausgaben werden gegen Pydantic-/JSON-Schemata validiert. Bei Vision-Fehlern fällt der
+Worker auf Tesseract zurück, wenn dessen Kommando auffindbar ist. Ohne Textmodell bleibt der
+Regelpfad funktionsfähig. Desktop ist der Standardkanal; `DEAL_SCANNER_NTFY_URL` aktiviert
+optional ntfy.
 
 ## ERP und Migration
 

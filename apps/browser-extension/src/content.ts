@@ -201,15 +201,29 @@ async function importVisible(): Promise<void> {
   const button = document.querySelector<HTMLButtonElement>('#deal-scanner-import');
   const listings = location.pathname.includes('/s-anzeige/') ? collectDetail() : collectCards();
   if (!listings.length) { if (button) button.textContent = 'Keine sichtbaren Angebote'; return; }
-  const message: ImportMessage = { type: 'IMPORT_VISIBLE_LISTINGS', listings };
-  const result = await chrome.runtime.sendMessage(message) as ImportResponseMessage;
-  renderImportOutcomes(result.results ?? []);
   if (button) {
-    const known = result.results.filter((item) => !item.snapshotCreated).length;
-    button.textContent = result.error
-      ? `Fehler: ${result.error}`
-      : `${result.imported} verarbeitet${known ? ` · ${known} bekannt` : ''}`
-        + `${result.imageFailures ? ` · ${result.imageFailures} ohne Bild` : ''}`;
+    button.disabled = true;
+    button.textContent = `${listings.length} Angebot${listings.length === 1 ? '' : 'e'} werden importiert …`;
+  }
+  const message: ImportMessage = { type: 'IMPORT_VISIBLE_LISTINGS', listings };
+  try {
+    const result = await chrome.runtime.sendMessage(message) as ImportResponseMessage | undefined;
+    if (!result) throw new Error('Der Hintergrunddienst hat keine Antwort geliefert.');
+    renderImportOutcomes(result.results ?? []);
+    if (button) {
+      const known = result.results.filter((item) => !item.snapshotCreated).length;
+      button.textContent = result.error
+        ? `Fehler: ${result.error}`
+        : `${result.imported} verarbeitet${known ? ` · ${known} bekannt` : ''}`
+          + `${result.imageFailures ? ` · ${result.imageFailures} ohne Bild` : ''}`;
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'Unbekannter Erweiterungsfehler';
+    if (button) {
+      button.textContent = `Fehler: ${detail}. Erweiterung neu laden und erneut versuchen.`;
+    }
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 

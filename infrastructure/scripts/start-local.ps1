@@ -76,10 +76,16 @@ try {
     }
 
     $started = [ordered]@{}
-    $ollamaModel = Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_TEXT_MODEL'
+    $ollamaModels = @(
+        Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_EXTRACTION_MODEL'
+        Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_REASONING_MODEL'
+        Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_VISION_MODEL'
+        Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_EMBEDDING_MODEL'
+        Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_TEXT_MODEL'
+    ) | Where-Object { $_ }
     $ollamaUrl = Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_URL'
     if (
-        $ollamaModel -and
+        $ollamaModels.Count -gt 0 -and
         $ollamaUrl -match '^http://(?:127\.0\.0\.1|localhost):(?<port>\d+)' -and
         -not (Test-LocalPort -Port ([int]$Matches.port))
     ) {

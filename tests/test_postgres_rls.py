@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 from collections.abc import Iterator
 from pathlib import Path
@@ -23,6 +24,11 @@ def postgres() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
     connection.execute((root / "tests/postgres/bootstrap.sql").read_text(encoding="utf-8"))
     connection.execute(
         (root / "infrastructure/supabase/migrations/202607220001_initial.sql").read_text(encoding="utf-8")
+    )
+    connection.execute(
+        (root / "infrastructure/supabase/migrations/202607230001_permanent_extension_connections.sql").read_text(
+            encoding="utf-8"
+        )
     )
     connection.execute(
         "insert into auth.users(id, email) values (%s, %s), (%s, %s)",
@@ -66,6 +72,41 @@ def test_rls_isolates_two_personal_workspaces(postgres: psycopg.Connection[tuple
             """,
             (workspace_one,),
         )
+
+
+def test_extension_pairing_resolver_accepts_persistent_tokens_until_revoked(
+    postgres: psycopg.Connection[tuple[object, ...]],
+) -> None:
+    workspace_id = _workspace_for(postgres, USER_ONE)
+    token_hash = hashlib.sha256(b"persistent-extension-token").hexdigest()
+    pairing = postgres.execute(
+        """
+        insert into deal_scanner.extension_pairings(
+          workspace_id, created_by_user_id, token_hash, display_name, expires_at
+        ) values (%s, %s, %s, 'Test Browser', null)
+        returning id
+        """,
+        (workspace_id, USER_ONE, token_hash),
+    ).fetchone()
+    assert pairing is not None
+
+    resolved = postgres.execute(
+        "select workspace_id, user_id from deal_scanner.resolve_extension_pairing(%s)",
+        (token_hash,),
+    ).fetchone()
+    assert resolved == (workspace_id, USER_ONE)
+
+    postgres.execute(
+        "update deal_scanner.extension_pairings set revoked_at = now() where id = %s",
+        (pairing[0],),
+    )
+    assert (
+        postgres.execute(
+            "select workspace_id, user_id from deal_scanner.resolve_extension_pairing(%s)",
+            (token_hash,),
+        ).fetchone()
+        is None
+    )
 
 
 def test_private_storage_policy_uses_workspace_path(postgres: psycopg.Connection[tuple[object, ...]]) -> None:

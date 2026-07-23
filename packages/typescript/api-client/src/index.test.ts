@@ -66,4 +66,35 @@ describe('DealScannerClient', () => {
       filename: 'prices.csv',
     });
   });
+
+  it('creates and revokes an authenticated permanent extension connection', async () => {
+    const fetchMock = vi.fn(async (request: Request) => {
+      if (request.method === 'POST') {
+        expect(request.url).toBe('https://api.example.test/api/v1/extension/connections');
+        expect(await request.json()).toEqual({ displayName: 'Büro-Browser' });
+        return Response.json(
+          {
+            id: 'connection-id',
+            displayName: 'Büro-Browser',
+            createdAt: '2026-07-23T12:00:00Z',
+            token: 'device-token',
+          },
+          { status: 201 },
+        );
+      }
+      expect(request.method).toBe('DELETE');
+      expect(request.url).toBe(
+        'https://api.example.test/api/v1/extension/connections/connection-id',
+      );
+      return new Response(null, { status: 204 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new DealScannerClient({ baseUrl: 'https://api.example.test' });
+
+    await expect(
+      client.createExtensionConnection({ displayName: 'Büro-Browser' }),
+    ).resolves.toMatchObject({ token: 'device-token' });
+    await expect(client.revokeExtensionConnection('connection-id')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

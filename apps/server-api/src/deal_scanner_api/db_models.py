@@ -477,7 +477,8 @@ class ExtensionPairingRow(Base):
     created_by_user_id: Mapped[UUID] = mapped_column(Uuid, index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
     extension_id: Mapped[str | None] = mapped_column(String(255))
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    display_name: Mapped[str] = mapped_column(String(120), default="Browser-Erweiterung")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

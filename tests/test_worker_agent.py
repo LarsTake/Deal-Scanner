@@ -9,10 +9,17 @@ from deal_scanner_worker.main import WorkerAgent, WorkerSettings
 
 
 async def test_rule_only_worker_produces_schema_valid_text_result() -> None:
-    settings = WorkerSettings(_env_file=None, ollama_text_model="")
+    settings = WorkerSettings(
+        _env_file=None,
+        ollama_text_model="",
+        ollama_extraction_model="",
+        ollama_reasoning_model="",
+        ollama_vision_model="",
+        ollama_embedding_model="",
+    )
     agent = WorkerAgent(settings)
     try:
-        result, analysis_type, model_name, confidence = await agent._analyze(
+        result, analysis_type, model_name, prompt_version, confidence = await agent._analyze(
             {
                 "jobType": "text_analysis",
                 "listingId": "00000000-0000-4000-8000-000000000123",
@@ -26,6 +33,7 @@ async def test_rule_only_worker_produces_schema_valid_text_result() -> None:
         validated = TextAnalysisResult.model_validate(result)
         assert analysis_type == "text"
         assert model_name == "rules-v1"
+        assert prompt_version == "rules-v1"
         assert confidence == validated.overall_confidence
         assert validated.products[0].model == "RTX 4070 Super"
         assert validated.missing_information

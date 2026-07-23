@@ -7,7 +7,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .auth import CurrentIdentity, Identity, IdentityProvider, get_identity_provider
@@ -79,7 +79,10 @@ async def get_browser_request_context(
                 select(ExtensionPairingRow).where(
                     ExtensionPairingRow.token_hash == candidate_hash,
                     ExtensionPairingRow.revoked_at.is_(None),
-                    ExtensionPairingRow.expires_at > datetime.now(UTC),
+                    or_(
+                        ExtensionPairingRow.expires_at.is_(None),
+                        ExtensionPairingRow.expires_at > datetime.now(UTC),
+                    ),
                 )
             )
         ).scalar_one_or_none()

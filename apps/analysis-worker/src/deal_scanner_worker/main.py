@@ -34,6 +34,10 @@ class WorkerSettings(BaseSettings):
     development_user_id: str | None = None
     ollama_url: str = "http://127.0.0.1:11434"
     ollama_text_model: str = ""
+    ollama_extraction_model: str = "gemma4:12b"
+    ollama_reasoning_model: str = "gpt-oss:latest"
+    ollama_vision_model: str = "gemma4:12b"
+    ollama_embedding_model: str = "qwen3-embedding:0.6b"
     worker_name: str = "local-analysis-worker"
     worker_poll_seconds: float = 5.0
     worker_renew_seconds: float = 90.0
@@ -51,19 +55,29 @@ class WorkerAgent:
         if settings.development_user_id:
             headers["X-Development-User"] = settings.development_user_id
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
-        self.ollama = OllamaProvider(settings.ollama_url, settings.ollama_text_model, self.client)
+        extraction_model = settings.ollama_extraction_model or settings.ollama_text_model
+        self.ollama = OllamaProvider(
+            settings.ollama_url,
+            extraction_model,
+            self.client,
+            reasoning_model=settings.ollama_reasoning_model,
+            vision_model=settings.ollama_vision_model,
+            embedding_model=settings.ollama_embedding_model,
+        )
         self.worker_id: UUID | None = None
         self.tesseract_path = shutil.which(settings.tesseract_command)
         if self.tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = self.tesseract_path
         self.capabilities = (
             ["rules"]
-            + (["text-small"] if settings.ollama_text_model else [])
-            + (["ocr"] if self.tesseract_path else [])
+            + (["text-small"] if self.ollama.model else [])
+            + (["ocr"] if self.ollama.vision_model or self.tesseract_path else [])
+            + (["vision"] if self.ollama.vision_model else [])
+            + (["embedding"] if self.ollama.embedding_model else [])
         )
 
     async def register(self) -> None:
-        health = await self.ollama.health_check() if self.settings.ollama_text_model else None
+        health = await self.ollama.health_check() if self.ollama.configured_models else None
         gpu, vram_gb = await self._detect_gpu()
         response = await self.client.post(
             "/api/v1/workers/register",
@@ -78,6 +92,12 @@ class WorkerAgent:
                 "runtime": {
                     "python": platform.python_version(),
                     "ollama": self.settings.ollama_url,
+                    "modelAssignments": {
+                        "extraction": self.ollama.model,
+                        "reasoning": self.ollama.reasoning_model,
+                        "vision": self.ollama.vision_model,
+                        "embedding": self.ollama.embedding_model,
+                    },
                 },
                 "capabilities": self.capabilities,
                 "installedModels": health.models if health else [],
@@ -129,7 +149,7 @@ class WorkerAgent:
         logger.info("job_claimed", job_id=job["id"], job_type=job["jobType"], attempts=job["attempts"])
         renewal = asyncio.create_task(self._renew_while_running(job["id"]))
         try:
-            result, analysis_type, model_name, confidence = await self._analyze(job)
+            result, analysis_type, model_name, prompt_version, confidence = await self._analyze(job)
             completion = await self.client.post(
                 f"/api/v1/jobs/{job['id']}/complete",
                 json={
@@ -137,7 +157,7 @@ class WorkerAgent:
                     "analysisType": analysis_type,
                     "modelName": model_name,
                     "modelVersion": "local",
-                    "promptVersion": "text-v1",
+                    "promptVersion": prompt_version,
                     "resultSchemaVersion": "1.0.0",
                     "inputHash": job["inputHash"],
                     "result": result,
@@ -181,11 +201,9 @@ class WorkerAgent:
             response.raise_for_status()
             self._mark_healthy()
 
-    async def _analyze(self, job: dict[str, Any]) -> tuple[dict[str, Any], str, str, float]:
+    async def _analyze(self, job: dict[str, Any]) -> tuple[dict[str, Any], str, str, str, float]:
         payload = job["payload"]
         if job["jobType"] == "image_ocr":
-            if not self.tesseract_path:
-                raise RuntimeError("OCR job claimed without an available Tesseract runtime")
             access = await self.client.get(payload["imageAccessPath"])
             access.raise_for_status()
             image_url = access.json()["url"]
@@ -195,25 +213,54 @@ class WorkerAgent:
             else:
                 image_response = await self.client.get(image_url)
             image_response.raise_for_status()
+            image_id = UUID(payload["imageId"])
+            if self.ollama.vision_model:
+                try:
+                    ocr_result = await self.ollama.analyze_image(image_id, image_response.content)
+                    return (
+                        ocr_result.model_dump(mode="json", by_alias=True),
+                        "image_ocr",
+                        self.ollama.vision_model,
+                        "vision-ocr-v1",
+                        ocr_result.confidence,
+                    )
+                except (httpx.HTTPError, ValueError) as exc:
+                    if not self.tesseract_path:
+                        raise
+                    logger.warning(
+                        "vision_ocr_failed_using_tesseract",
+                        error_type=type(exc).__name__,
+                    )
+            if not self.tesseract_path:
+                raise RuntimeError("OCR job claimed without an available OCR runtime")
             text = await asyncio.to_thread(self._ocr, image_response.content)
             confidence = 0.7 if text.strip() else 0.2
             ocr_result = ImageOcrResult(
-                image_id=UUID(payload["imageId"]),
+                image_id=image_id,
                 text=text[:100_000],
                 language=self.settings.ocr_language,
                 confidence=confidence,
                 engine="tesseract",
             )
-            return ocr_result.model_dump(mode="json", by_alias=True), "image_ocr", "tesseract", confidence
+            return (
+                ocr_result.model_dump(mode="json", by_alias=True),
+                "image_ocr",
+                "tesseract",
+                "ocr-v1",
+                confidence,
+            )
         request = TextAnalysisRequest(
             listing_id=UUID(job["listingId"]),
             title=payload["title"],
             description=payload["description"],
             category_profile=payload["categoryProfile"],
         )
-        if self.settings.ollama_text_model:
+        if self.ollama.model:
             text_result = await self.ollama.analyze_text(request)
-            model_name = self.settings.ollama_text_model
+            model_name = "+".join(
+                dict.fromkeys(model for model in (self.ollama.model, self.ollama.reasoning_model) if model)
+            )
+            prompt_version = "text-routed-v2"
         else:
             rule_analysis = RuleExtractor().analyze(request.title, request.description)
             product_confidences = [product.confidence for product in rule_analysis.products]
@@ -228,10 +275,12 @@ class WorkerAgent:
                 ],
             )
             model_name = "rules-v1"
+            prompt_version = "rules-v1"
         return (
             text_result.model_dump(mode="json", by_alias=True),
             "text",
             model_name,
+            prompt_version,
             text_result.overall_confidence,
         )
 

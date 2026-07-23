@@ -13,7 +13,7 @@ Zuordnung; eine spätere ERP-Mandanten-ID liegt am Workspace.
 | Produkt | `canonical_products`, `product_aliases`, `listing_products`, `product_attributes` | Katalog erweiterbar; Erkennungen je Analyse nachvollziehbar |
 | Markt/Score | `price_observations`, `market_value_estimates`, `risk_signals`, `deal_evaluations` | jede Berechnung erzeugt eine versionierte neue Zeile |
 | Analyse | `analysis_jobs`, `workers`, `analysis_results` | Lease-Zustandsautomat; Ergebnisse per Job/Input-Hash dedupliziert |
-| Interaktion | `user_feedback`, `notifications`, `notification_deliveries`, `extension_pairings` | Feedback/Auslieferungen historisch; Tokens nur gehasht |
+| Interaktion | `user_feedback`, `notifications`, `notification_deliveries`, `extension_pairings` | Feedback/Auslieferungen historisch; kurzlebige Pairings und dauerhafte Geräte-Tokens nur gehasht und widerrufbar |
 | Nachweis | `audit_events`, `idempotency_keys` | Audit append-only; Idempotenzschlüssel zeitlich begrenzt |
 
 Geld wird als `numeric(14,2)` mit ISO-4217-Währung gespeichert. Externe IDs sind pro
@@ -34,7 +34,7 @@ Die wichtigsten Bereiche sind:
 - Listings und Analyse: `/listings`, `/listings/{id}/reanalyze`, `/listings/{id}/feedback`
 - Imports und Markt: `/imports/*`, `/products`, `/price-observations`, `/market-data/imports/csv`
 - Worker: `/workers/*`, `/jobs/claim`, `/jobs/{id}/*`
-- Integrationen: `/extension/pairings`, `/erp/exports`, `/notifications`
+- Integrationen: `/extension/pairings`, `/extension/connections`, `/erp/exports`, `/notifications`
 - Betrieb: `/health/live`, `/health/ready`, `/system/status`
 
 Im laufenden Entwicklungsserver sind Swagger UI unter `/docs`, ReDoc unter `/redoc` und der

@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import type { ExtensionConnection, ExtensionConnectionCreated } from '@deal-scanner/api-client';
 
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -29,6 +30,31 @@ import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loop
       @if (saved()) { <span class="notice">Gespeichert.</span> }
       @if (error()) { <span class="notice error">{{ error() }}</span> }
     </form></mat-card>
+    <section class='section-head'><div><p class='eyebrow'>Browser-Erweiterung</p><h2>Dauerhafte Kontoverbindung</h2></div></section>
+    <mat-card class='form-card compact'>
+      <p>Die Verbindung wird nach deiner Anmeldung als widerrufbares Geräte-Token erstellt. Passwort und Supabase-Sitzung bleiben in der Desktop-App.</p>
+      @if (!auth.userEmail()) {
+        <div class='notice'>Bitte zuerst mit E-Mail und Passwort anmelden.</div>
+      } @else {
+        <div class='notice'>Angemeldet als {{ auth.userEmail() }}</div>
+        <mat-form-field><mat-label>Gerätename</mat-label><input matInput [formControl]='connectionName' /></mat-form-field>
+        <button mat-flat-button type='button' [disabled]='connectionName.invalid || connectionBusy()' (click)='createPermanentConnection()'>
+          {{ connectionBusy() ? 'Verbindung wird erstellt…' : 'Dauerhafte Verbindung erstellen' }}
+        </button>
+        @if (createdConnection(); as created) {
+          <div class='notice'>Das Geräte-Token wird nur jetzt vollständig angezeigt. Speichere beide Werte in der Browser-Erweiterung.</div>
+          <mat-form-field><mat-label>API-Adresse</mat-label><input matInput readonly [value]='form.controls.apiUrl.value' /></mat-form-field>
+          <mat-form-field><mat-label>Geräte-Token</mat-label><input matInput readonly [value]='created.token' /></mat-form-field>
+        }
+        @for (connection of permanentConnections(); track connection.id) {
+          <div class='row'>
+            <span><strong>{{ connection.displayName }}</strong><small>Erstellt: {{ connectionCreatedAt(connection) }}</small></span>
+            <button mat-stroked-button type='button' (click)='revokePermanentConnection(connection.id)'>Widerrufen</button>
+          </div>
+        }
+      }
+      @if (connectionError()) { <div class='notice error'>{{ connectionError() }}</div> }
+    </mat-card>
     <section class="section-head"><div><p class="eyebrow">Browser-Erweiterung</p><h2>Sichere Desktop-Kopplung</h2></div></section>
     <mat-card class="form-card compact">
       @if (!loopback.available()) {
@@ -50,13 +76,21 @@ import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loop
   `,
 })
 export class SettingsPage implements OnInit {
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
   readonly loopback = inject(ExtensionLoopbackService);
   readonly saved = signal(false);
   readonly error = signal('');
   readonly pairing = signal<LoopbackPairing | null>(null);
   readonly loopbackError = signal('');
+  readonly permanentConnections = signal<ExtensionConnection[]>([]);
+  readonly createdConnection = signal<ExtensionConnectionCreated | null>(null);
+  readonly connectionBusy = signal(false);
+  readonly connectionError = signal('');
+  readonly connectionName = new FormControl('Browser-Erweiterung', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(120)],
+  });
   readonly form = new FormGroup({
     apiUrl: new FormControl(localStorage.getItem('deal-scanner-api-url') ?? 'http://127.0.0.1:8000', { nonNullable: true, validators: [Validators.required] }),
     supabaseUrl: new FormControl(localStorage.getItem('deal-scanner-supabase-url') ?? '', { nonNullable: true }),
@@ -66,6 +100,17 @@ export class SettingsPage implements OnInit {
     ebayMarketplace: new FormControl('EBAY_DE', { nonNullable: true, validators: [Validators.required] }),
     ebaySecretReference: new FormControl('env:DEAL_SCANNER_EBAY_CLIENT_SECRET', { nonNullable: true }),
   });
+
+  constructor() {
+    effect(() => {
+      if (this.auth.userEmail()) {
+        void this.loadPermanentConnections();
+      } else {
+        this.permanentConnections.set([]);
+        this.createdConnection.set(null);
+      }
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     try {
@@ -99,6 +144,53 @@ export class SettingsPage implements OnInit {
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Provider-Konfiguration konnte nicht gespeichert werden');
     }
+  }
+
+  private async loadPermanentConnections(): Promise<void> {
+    try {
+      this.permanentConnections.set(await this.api.extensionConnections());
+      this.connectionError.set('');
+    } catch (error) {
+      this.connectionError.set(
+        error instanceof Error ? error.message : 'Geräteverbindungen konnten nicht geladen werden',
+      );
+    }
+  }
+
+  async createPermanentConnection(): Promise<void> {
+    const displayName = this.connectionName.value.trim();
+    if (!this.auth.userEmail() || !displayName || this.connectionBusy()) return;
+    this.connectionBusy.set(true);
+    this.connectionError.set('');
+    try {
+      this.createdConnection.set(
+        await this.api.createExtensionConnection({ displayName }),
+      );
+      await this.loadPermanentConnections();
+    } catch (error) {
+      this.connectionError.set(
+        error instanceof Error ? error.message : 'Geräteverbindung konnte nicht erstellt werden',
+      );
+    } finally {
+      this.connectionBusy.set(false);
+    }
+  }
+
+  async revokePermanentConnection(connectionId: string): Promise<void> {
+    this.connectionError.set('');
+    try {
+      await this.api.revokeExtensionConnection(connectionId);
+      if (this.createdConnection()?.id === connectionId) this.createdConnection.set(null);
+      await this.loadPermanentConnections();
+    } catch (error) {
+      this.connectionError.set(
+        error instanceof Error ? error.message : 'Geräteverbindung konnte nicht widerrufen werden',
+      );
+    }
+  }
+
+  connectionCreatedAt(connection: ExtensionConnection): string {
+    return new Date(connection.createdAt).toLocaleString('de-DE');
   }
 
   async startLoopback(): Promise<void> {

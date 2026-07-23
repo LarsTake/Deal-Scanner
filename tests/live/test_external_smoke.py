@@ -112,12 +112,25 @@ def test_imap_login_and_noop_read_only() -> None:
 @pytest.mark.asyncio
 async def test_ollama_model_is_available_read_only() -> None:
     url = required("DEAL_SCANNER_OLLAMA_URL").rstrip("/")
-    model = required("DEAL_SCANNER_OLLAMA_TEXT_MODEL")
+    models = {
+        value
+        for name in (
+            "DEAL_SCANNER_OLLAMA_EXTRACTION_MODEL",
+            "DEAL_SCANNER_OLLAMA_REASONING_MODEL",
+            "DEAL_SCANNER_OLLAMA_VISION_MODEL",
+            "DEAL_SCANNER_OLLAMA_EMBEDDING_MODEL",
+            "DEAL_SCANNER_OLLAMA_TEXT_MODEL",
+        )
+        if (value := os.getenv(name))
+    }
+    if not models:
+        pytest.skip("no Ollama model roles configured")
     async with httpx.AsyncClient(timeout=15) as client:
         response = await client.get(f"{url}/api/tags")
     response.raise_for_status()
     names = {item.get("name") for item in response.json().get("models", [])}
-    assert model in names or any(isinstance(name, str) and name.startswith(f"{model}:") for name in names)
+    for model in models:
+        assert model in names or any(isinstance(name, str) and name.startswith(f"{model}:") for name in names)
 
 
 @pytest.mark.asyncio
@@ -125,9 +138,14 @@ async def test_ollama_structured_inference_contract() -> None:
     if os.getenv("DEAL_SCANNER_RUN_OLLAMA_INFERENCE_TESTS") != "1":
         pytest.skip("set DEAL_SCANNER_RUN_OLLAMA_INFERENCE_TESTS=1 for the compute-intensive model call")
     url = required("DEAL_SCANNER_OLLAMA_URL").rstrip("/")
-    model = required("DEAL_SCANNER_OLLAMA_TEXT_MODEL")
+    model = os.getenv("DEAL_SCANNER_OLLAMA_EXTRACTION_MODEL") or required("DEAL_SCANNER_OLLAMA_TEXT_MODEL")
     async with httpx.AsyncClient() as client:
-        result = await OllamaProvider(url, model, client).analyze_text(
+        result = await OllamaProvider(
+            url,
+            model,
+            client,
+            reasoning_model=os.getenv("DEAL_SCANNER_OLLAMA_REASONING_MODEL", ""),
+        ).analyze_text(
             TextAnalysisRequest(
                 listing_id=UUID("00000000-0000-4000-8000-000000000999"),
                 title="Gaming PC mit RTX 4070S und Ryzen 7 5800X3D",

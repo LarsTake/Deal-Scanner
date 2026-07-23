@@ -373,6 +373,20 @@ class PairingResponse(CamelModel):
     expires_at: datetime
 
 
+class ExtensionConnectionCreate(CamelModel):
+    display_name: str = Field(default="Browser-Erweiterung", min_length=1, max_length=120)
+
+
+class ExtensionConnectionResponse(CamelModel):
+    id: UUID
+    display_name: str
+    created_at: datetime
+
+
+class ExtensionConnectionCreatedResponse(ExtensionConnectionResponse):
+    token: str
+
+
 class ListingPage(CamelModel):
     items: list[ListingSummary]
     next_cursor: str | None = None

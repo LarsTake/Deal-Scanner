@@ -1,6 +1,6 @@
 [package]
 name = "deal-scanner-desktop"
-version = "0.1.3"
+version = "0.2.0"
 description = "Deal Scanner desktop shell"
 authors = ["Deal Scanner"]
 edition = "2021"

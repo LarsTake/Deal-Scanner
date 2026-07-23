@@ -276,6 +276,48 @@ def test_idempotency_and_extension_pairing() -> None:
         assert paired_import.status_code == 201, paired_import.text
 
 
+def test_authenticated_permanent_extension_connection_can_be_used_and_revoked() -> None:
+    with TestClient(app) as client:
+        created = client.post(
+            "/api/v1/extension/connections",
+            json={"displayName": "Mein Browser"},
+        )
+        assert created.status_code == 201, created.text
+        connection = created.json()
+        assert connection["displayName"] == "Mein Browser"
+        assert len(connection["token"]) >= 64
+
+        listed = client.get("/api/v1/extension/connections")
+        assert listed.status_code == 200, listed.text
+        assert listed.json() == [
+            {
+                "id": connection["id"],
+                "displayName": "Mein Browser",
+                "createdAt": connection["createdAt"],
+            }
+        ]
+
+        browser_payload = payload()
+        browser_payload["externalId"] = "permanently-connected-browser-listing"
+        imported = client.post(
+            "/api/v1/imports/browser",
+            headers={"X-Extension-Pairing": connection["token"]},
+            json=browser_payload,
+        )
+        assert imported.status_code == 201, imported.text
+
+        revoked = client.delete("/api/v1/extension/connections/{}".format(connection["id"]))
+        assert revoked.status_code == 204, revoked.text
+        assert client.get("/api/v1/extension/connections").json() == []
+
+        denied = client.post(
+            "/api/v1/imports/browser",
+            headers={"X-Extension-Pairing": connection["token"]},
+            json=browser_payload,
+        )
+        assert denied.status_code == 401, denied.text
+
+
 def test_market_data_csv_import() -> None:
     csv_content = (
         "platform;observedPrice;shippingCost;currency;observationKind;observedAt;sourceQuality\n"

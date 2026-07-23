@@ -1,6 +1,9 @@
 import type {
   AnalysisJob,
   CsvImport,
+  ExtensionConnection,
+  ExtensionConnectionCreate,
+  ExtensionConnectionCreated,
   FeedbackCreate,
   ListingDetail,
   ListingEvaluation,
@@ -255,6 +258,26 @@ export class DealScannerClient {
 
   async providerConfigurations(): Promise<ProviderConfiguration[]> {
     return this.unwrap(await this.client.GET('/api/v1/provider-configurations'));
+  }
+
+  async extensionConnections(): Promise<ExtensionConnection[]> {
+    return this.unwrap(await this.client.GET('/api/v1/extension/connections'));
+  }
+
+  async createExtensionConnection(
+    connection: ExtensionConnectionCreate,
+  ): Promise<ExtensionConnectionCreated> {
+    return this.unwrap(
+      await this.client.POST('/api/v1/extension/connections', { body: connection }),
+    );
+  }
+
+  async revokeExtensionConnection(connectionId: string): Promise<void> {
+    this.unwrapVoid(
+      await this.client.DELETE('/api/v1/extension/connections/{connection_id}', {
+        params: { path: { connection_id: connectionId } },
+      }),
+    );
   }
 
   async configureProvider(

@@ -145,7 +145,7 @@ def test_ebay_deletion_audit_is_private_and_append_only_exception_is_owner_only(
         (workspace_id, listing_id[0], uuid4().hex * 2),
     )
 
-    with pytest.raises(psycopg.errors.RaiseException), postgres.transaction():
+    with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState), postgres.transaction():
         postgres.execute("set local role authenticated")
         postgres.execute("select set_config('request.jwt.claim.sub', %s, true)", (str(USER_ONE),))
         postgres.execute("set local deal_scanner.account_deletion = 'on'")

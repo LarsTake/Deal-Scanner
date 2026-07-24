@@ -22,17 +22,9 @@ def postgres() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
     connection = psycopg.connect(POSTGRES_URL, autocommit=True)
     root = Path(__file__).parents[1]
     connection.execute((root / "tests/postgres/bootstrap.sql").read_text(encoding="utf-8"))
-    connection.execute(
-        (root / "infrastructure/supabase/migrations/202607220001_initial.sql").read_text(encoding="utf-8")
-    )
-    connection.execute(
-        (root / "infrastructure/supabase/migrations/202607230001_permanent_extension_connections.sql").read_text(
-            encoding="utf-8"
-        )
-    )
-    connection.execute(
-        (root / "infrastructure/supabase/migrations/202607240001_ebay_account_deletion.sql").read_text(encoding="utf-8")
-    )
+    migrations = root / "infrastructure/supabase/migrations"
+    for migration in sorted(migrations.glob("*.sql")):
+        connection.execute(migration.read_text(encoding="utf-8"))
     connection.execute(
         "insert into auth.users(id, email) values (%s, %s), (%s, %s)",
         (USER_ONE, "one@example.test", USER_TWO, "two@example.test"),

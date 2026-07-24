@@ -8,6 +8,7 @@ import type {
   ListingDetail,
   ListingEvaluation,
   ListingImage,
+  ListingNoteUpdate,
   ListingPage,
   MailImport,
   ManualImport,
@@ -125,6 +126,18 @@ export class DealScannerClient {
     return this.unwrap(
       await this.client.GET('/api/v1/listings/{listing_id}', {
         params: { path: { listing_id: listingId } },
+      }),
+    );
+  }
+
+  async updateListingNote(
+    listingId: string,
+    payload: ListingNoteUpdate,
+  ): Promise<ListingDetail> {
+    return this.unwrap(
+      await this.client.PATCH('/api/v1/listings/{listing_id}/note', {
+        params: { path: { listing_id: listingId } },
+        body: payload,
       }),
     );
   }

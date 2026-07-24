@@ -279,6 +279,7 @@ async def process_account_deletion(
                 "url": listing.url,
                 "title": listing.title,
                 "description": listing.description,
+                "manualNote": listing.manual_note,
                 "location": listing.location,
             },
             identifiers,

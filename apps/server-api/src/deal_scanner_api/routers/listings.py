@@ -22,7 +22,7 @@ from ..db_models import (
     UserFeedbackRow,
 )
 from ..product_service import persist_listing_products
-from ..schemas import FeedbackCreate, JobResponse, ListingDetail, ListingPage
+from ..schemas import FeedbackCreate, JobResponse, ListingDetail, ListingNoteUpdate, ListingPage
 from ..services import listing_detail, listing_summary
 
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -87,6 +87,50 @@ async def get_listing(listing_id: UUID, context: Context) -> ListingDetail:
     listing = result.scalar_one_or_none()
     if listing is None:
         raise HTTPException(status_code=404, detail="listing not found")
+    return await listing_detail(context.session, listing)
+
+
+@router.patch("/{listing_id}/note", response_model=ListingDetail)
+async def update_listing_note(
+    listing_id: UUID,
+    payload: ListingNoteUpdate,
+    context: Context,
+) -> ListingDetail:
+    result = await context.session.execute(
+        select(ListingRow).where(ListingRow.id == listing_id, ListingRow.workspace_id == context.workspace_id)
+    )
+    listing = result.scalar_one_or_none()
+    if listing is None:
+        raise HTTPException(status_code=404, detail="listing not found")
+    if listing.version != payload.base_listing_version:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "listing changed", "currentVersion": listing.version},
+        )
+
+    manual_note = payload.manual_note.strip() if payload.manual_note else None
+    if manual_note == "":
+        manual_note = None
+    if listing.manual_note != manual_note:
+        base_version = listing.version
+        listing.manual_note = manual_note
+        listing.version += 1
+        context.session.add(
+            AuditEventRow(
+                workspace_id=context.workspace_id,
+                actor_user_id=context.identity.user_id,
+                event_type="listing.noteUpdated",
+                aggregate_type="listing",
+                aggregate_id=listing.id,
+                payload={
+                    "baseVersion": base_version,
+                    "newVersion": listing.version,
+                    "notePresent": manual_note is not None,
+                    "noteLength": len(manual_note) if manual_note is not None else 0,
+                },
+            )
+        )
+        await context.session.commit()
     return await listing_detail(context.session, listing)
 
 

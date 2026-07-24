@@ -362,6 +362,7 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
     return ListingDetail(
         **summary.model_dump(),
         description=listing.description,
+        manual_note=listing.manual_note,
         category_profile=listing.category_profile,
         current_snapshot_id=listing.current_snapshot_id,
         risk_signals=signals,

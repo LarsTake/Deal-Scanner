@@ -108,6 +108,7 @@ class ListingRow(Base, TimestampMixin):
     url: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(String(500))
     description: Mapped[str] = mapped_column(Text, default="")
+    manual_note: Mapped[str | None] = mapped_column(Text)
     price: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     shipping_cost: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
     currency: Mapped[str] = mapped_column(String(3), default="EUR")

@@ -10,6 +10,8 @@ import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import inspect, text
+from sqlalchemy.engine import Connection
 
 from .database import engine
 from .db_models import Base
@@ -36,6 +38,12 @@ rate_limiter = FixedWindowRateLimiter(
     settings.rate_limit_per_minute,
     settings.sensitive_rate_limit_per_minute,
 )
+
+
+def _listing_column_names(connection: Connection) -> set[str]:
+    return {column["name"] for column in inspect(connection).get_columns("listings")}
+
+
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
@@ -51,6 +59,10 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     if settings.auto_create_db:
         async with engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
+            if settings.database_url.startswith("sqlite"):
+                listing_columns = await connection.run_sync(_listing_column_names)
+                if "manual_note" not in listing_columns:
+                    await connection.execute(text("ALTER TABLE listings ADD COLUMN manual_note TEXT"))
     yield
     await engine.dispose()
 

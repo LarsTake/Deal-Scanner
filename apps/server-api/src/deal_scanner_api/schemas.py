@@ -244,6 +244,7 @@ class ListingSummary(CamelModel):
 
 class ListingDetail(ListingSummary):
     description: str
+    manual_note: str | None
     location: str | None
     category_profile: str
     current_snapshot_id: UUID | None
@@ -255,6 +256,11 @@ class ListingDetail(ListingSummary):
     feedback: list[FeedbackResponse] = Field(default_factory=list)
     seller: SellerResponse | None = None
     comparison_observations: list[PriceObservationResponse] = Field(default_factory=list)
+
+
+class ListingNoteUpdate(CamelModel):
+    manual_note: str | None = Field(default=None, max_length=10_000)
+    base_listing_version: int = Field(ge=1)
 
 
 class CorrectedProductInput(CamelModel):

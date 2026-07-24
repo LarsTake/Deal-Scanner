@@ -135,6 +135,68 @@ def test_end_to_end_import_feedback_and_worker_lease() -> None:
         assert rejected.status_code == 422
 
 
+def test_listing_note_can_be_added_edited_and_removed() -> None:
+    headers = {"X-Development-User": "00000000-0000-4000-8000-000000000119"}
+    other_headers = {"X-Development-User": "00000000-0000-4000-8000-000000000120"}
+    note_payload = payload()
+    note_payload["externalId"] = "manual-note-listing"
+    original_description = str(note_payload["description"])
+
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", headers=headers, json=note_payload)
+        assert imported.status_code == 201, imported.text
+        listing = imported.json()["listing"]
+        assert listing["manualNote"] is None
+
+        created = client.patch(
+            f"/api/v1/listings/{listing['id']}/note",
+            headers=headers,
+            json={
+                "manualNote": "  Zustand vor Ort geprüft. Netzteil ist dabei.  ",
+                "baseListingVersion": listing["version"],
+            },
+        )
+        assert created.status_code == 200, created.text
+        created_listing = created.json()
+        assert created_listing["manualNote"] == "Zustand vor Ort geprüft. Netzteil ist dabei."
+        assert created_listing["description"] == original_description
+        assert created_listing["version"] == listing["version"] + 1
+
+        fetched = client.get(f"/api/v1/listings/{listing['id']}", headers=headers)
+        assert fetched.status_code == 200
+        assert fetched.json()["manualNote"] == created_listing["manualNote"]
+
+        stale = client.patch(
+            f"/api/v1/listings/{listing['id']}/note",
+            headers=headers,
+            json={"manualNote": "veraltet", "baseListingVersion": listing["version"]},
+        )
+        assert stale.status_code == 409
+
+        hidden_from_other_workspace = client.patch(
+            f"/api/v1/listings/{listing['id']}/note",
+            headers=other_headers,
+            json={"manualNote": "fremd", "baseListingVersion": created_listing["version"]},
+        )
+        assert hidden_from_other_workspace.status_code == 404
+
+        removed = client.patch(
+            f"/api/v1/listings/{listing['id']}/note",
+            headers=headers,
+            json={"manualNote": "   ", "baseListingVersion": created_listing["version"]},
+        )
+        assert removed.status_code == 200, removed.text
+        assert removed.json()["manualNote"] is None
+        assert removed.json()["version"] == created_listing["version"] + 1
+
+        too_long = client.patch(
+            f"/api/v1/listings/{listing['id']}/note",
+            headers=headers,
+            json={"manualNote": "x" * 10_001, "baseListingVersion": removed.json()["version"]},
+        )
+        assert too_long.status_code == 422
+
+
 def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> None:
     headers = {"X-Development-User": "00000000-0000-4000-8000-000000000909"}
     target = payload()

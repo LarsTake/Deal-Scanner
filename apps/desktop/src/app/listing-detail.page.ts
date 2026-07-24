@@ -45,6 +45,34 @@ import { ApiService } from './api.service';
       <mat-card class="form-card">
         <h2>Beschreibung</h2>
         <p class="description">{{ item.description || 'Keine Beschreibung vorhanden.' }}</p>
+        <h3>Eigene Notiz / Ergänzung</h3>
+        <p><small>Bleibt bei späteren Aktualisierungen des Originalangebots erhalten.</small></p>
+        <form [formGroup]="noteForm" (ngSubmit)="saveNote(item)">
+          <mat-form-field class="note-field">
+            <mat-label>Zusätzliche Angaben zum Artikel</mat-label>
+            <textarea
+              matInput
+              formControlName="manualNote"
+              maxlength="10000"
+              rows="5"
+              placeholder="z. B. Zustand geprüft, Zubehör, Gespräch mit Verkäufer …"
+            ></textarea>
+            <mat-hint align="end">{{ noteForm.controls.manualNote.value.length }} / 10000</mat-hint>
+          </mat-form-field>
+          <div class="row actions">
+            <button mat-flat-button type="submit" [disabled]="noteForm.invalid || savingNote()">
+              {{ savingNote() ? 'Wird gespeichert …' : 'Notiz speichern' }}
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="savingNote() || !noteForm.controls.manualNote.value"
+              (click)="clearNote(item)"
+            >
+              Notiz löschen
+            </button>
+          </div>
+        </form>
         @if (item.seller; as seller) {
           <h3>Verkäufer</h3>
           <p>{{ seller.displayName ?? seller.externalId }} · {{ seller.location ?? 'Ort unbekannt' }}</p>
@@ -156,7 +184,7 @@ import { ApiService } from './api.service';
       }
     }
   `,
-  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: #07120f; margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
+  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .note-field { width: 100%; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: #07120f; margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
 })
 export class ListingDetailPage implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
@@ -166,7 +194,14 @@ export class ListingDetailPage implements OnInit, OnDestroy {
   readonly imageUrls = signal<Record<string, string>>({});
   readonly loading = signal(false);
   readonly error = signal('');
+  readonly savingNote = signal(false);
   readonly savingCorrection = signal(false);
+  readonly noteForm = new FormGroup({
+    manualNote: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(10_000)],
+    }),
+  });
   readonly correctionForm = new FormGroup({
     productType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     manufacturer: new FormControl('', { nonNullable: true }),
@@ -199,6 +234,15 @@ export class ListingDetailPage implements OnInit, OnDestroy {
 
   async toggleHidden(item: ListingDetail): Promise<void> {
     await this.feedback(item, item.isHidden ? 'unhide' : 'hide');
+  }
+
+  async saveNote(item: ListingDetail): Promise<void> {
+    if (this.noteForm.invalid) return;
+    await this.persistNote(item, this.noteForm.controls.manualNote.value);
+  }
+
+  async clearNote(item: ListingDetail): Promise<void> {
+    await this.persistNote(item, null);
   }
 
   async submitCorrection(item: ListingDetail): Promise<void> {
@@ -250,6 +294,23 @@ export class ListingDetailPage implements OnInit, OnDestroy {
     }
   }
 
+  private async persistNote(item: ListingDetail, manualNote: string | null): Promise<void> {
+    this.error.set('');
+    this.savingNote.set(true);
+    try {
+      const updated = await this.api.updateListingNote(item.id, {
+        manualNote,
+        baseListingVersion: item.version,
+      });
+      this.listing.set(updated);
+      this.noteForm.controls.manualNote.setValue(updated.manualNote ?? '');
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Notiz konnte nicht gespeichert werden');
+    } finally {
+      this.savingNote.set(false);
+    }
+  }
+
   private async reload(): Promise<void> {
     this.loading.set(true);
     try {
@@ -258,6 +319,7 @@ export class ListingDetailPage implements OnInit, OnDestroy {
         this.api.listingImages(this.id),
       ]);
       this.listing.set(listing);
+      this.noteForm.controls.manualNote.setValue(listing.manualNote ?? '');
       this.images.set(images);
       for (const url of Object.values(this.imageUrls())) URL.revokeObjectURL(url);
       const imageUrls: Record<string, string> = {};

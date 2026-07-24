@@ -10,6 +10,7 @@
     "dev": "pnpm --filter @deal-scanner/desktop start",
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
+    "test:netlify": "pnpm --filter @deal-scanner/ebay-compliance test",
     "lint": "pnpm -r --if-present lint",
     "pretypecheck": "pnpm --filter @deal-scanner/contracts build && pnpm --filter @deal-scanner/api-client build",
     "typecheck": "pnpm -r --if-present typecheck",

@@ -10,6 +10,8 @@ __pycache__/
 .coverage
 htmlcov/
 node_modules/
+.netlify/
+netlify/functions/
 .angular/
 dist/
 target/

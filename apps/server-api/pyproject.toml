@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
   "aiosqlite>=0.21,<1",
+  "cryptography>=45,<50",
   "deal-scanner-core",
   "deal-scanner-extraction",
   "deal-scanner-scoring",

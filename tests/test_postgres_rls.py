@@ -31,6 +31,9 @@ def postgres() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
         )
     )
     connection.execute(
+        (root / "infrastructure/supabase/migrations/202607240001_ebay_account_deletion.sql").read_text(encoding="utf-8")
+    )
+    connection.execute(
         "insert into auth.users(id, email) values (%s, %s), (%s, %s)",
         (USER_ONE, "one@example.test", USER_TWO, "two@example.test"),
     )
@@ -124,6 +127,52 @@ def test_private_storage_policy_uses_workspace_path(postgres: psycopg.Connection
         postgres.execute("select set_config('request.jwt.claim.sub', %s, true)", (str(USER_TWO),))
         visible = postgres.execute("select name from storage.objects where name = %s", (object_name,)).fetchall()
     assert visible == []
+
+
+def test_ebay_deletion_audit_is_private_and_append_only_exception_is_owner_only(
+    postgres: psycopg.Connection[tuple[object, ...]],
+) -> None:
+    workspace_id = _workspace_for(postgres, USER_ONE)
+    listing_id = postgres.execute(
+        """
+        insert into deal_scanner.listings(
+          workspace_id, platform, external_id, url, title, price, currency
+        ) values (%s, 'ebay', 'deletion-rls-fixture', 'https://www.ebay.de/itm/123456789012',
+                  'Deletion fixture', 100, 'EUR')
+        returning id
+        """,
+        (workspace_id,),
+    ).fetchone()
+    assert listing_id is not None
+    postgres.execute(
+        """
+        insert into deal_scanner.listing_snapshots(
+          workspace_id, listing_id, content_hash, raw_data, provider_version, fetched_at
+        ) values (%s, %s, %s, '{}', 'test-v1', now())
+        """,
+        (workspace_id, listing_id[0], uuid4().hex * 2),
+    )
+
+    with pytest.raises(psycopg.errors.RaiseException), postgres.transaction():
+        postgres.execute("set local role authenticated")
+        postgres.execute("select set_config('request.jwt.claim.sub', %s, true)", (str(USER_ONE),))
+        postgres.execute("set local deal_scanner.account_deletion = 'on'")
+        postgres.execute("delete from deal_scanner.listings where id = %s", (listing_id[0],))
+
+    with postgres.transaction():
+        postgres.execute("set local deal_scanner.account_deletion = 'on'")
+        postgres.execute("delete from deal_scanner.listings where id = %s", (listing_id[0],))
+    assert (
+        postgres.execute(
+            "select id from deal_scanner.listings where id = %s",
+            (listing_id[0],),
+        ).fetchone()
+        is None
+    )
+
+    with pytest.raises(psycopg.errors.InsufficientPrivilege), postgres.transaction():
+        postgres.execute("set local role authenticated")
+        postgres.execute("select * from deal_scanner.ebay_account_deletion_events")
 
 
 def test_postgres_skip_locked_allows_only_one_concurrent_job_claim(

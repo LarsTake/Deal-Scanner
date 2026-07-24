@@ -1,0 +1,19 @@
+{
+  "name": "@deal-scanner/ebay-compliance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "esbuild src/ebay-account-deletion.mjs --bundle --format=esm --platform=node --target=node24 --outfile=functions/ebay-account-deletion.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "postgres": "3.4.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}

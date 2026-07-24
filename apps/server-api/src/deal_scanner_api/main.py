@@ -15,7 +15,18 @@ from .database import engine
 from .db_models import Base
 from .problems import install_problem_handlers
 from .rate_limit import FixedWindowRateLimiter
-from .routers import auth, health, images, imports, listings, market, search_profiles, system, workers
+from .routers import (
+    auth,
+    ebay_notifications,
+    health,
+    images,
+    imports,
+    listings,
+    market,
+    search_profiles,
+    system,
+    workers,
+)
 from .schemas import ProblemDetails
 from .settings import get_settings
 
@@ -68,6 +79,7 @@ app.add_middleware(
         "Authorization",
         "Content-Type",
         "Idempotency-Key",
+        "X-EBAY-SIGNATURE",
         "X-Development-User",
         "X-Extension-Pairing",
     ],
@@ -117,7 +129,7 @@ async def security_headers(
     return response
 
 
-for module in (auth, health, images, imports, listings, market, search_profiles, system, workers):
+for module in (auth, ebay_notifications, health, images, imports, listings, market, search_profiles, system, workers):
     app.include_router(module.router, prefix="/api/v1")
 
 

@@ -10,6 +10,29 @@ Supabase-JWKS/DB-Zugang und ein Scheduler-Service-Token gesetzt sein. eBay-Zugan
 IMAP-Passwort und Ollama-Modell sind optionale, getrennte Secrets. Service-Schlüssel werden
 nie an Web-, Desktop- oder Extension-Bundles übergeben.
 
+Für den eBay-Production-Keyset wird Graper einschließlich Caddy öffentlich gestartet:
+
+```powershell
+$env:DEAL_SCANNER_DOMAIN='api.example.de'
+docker compose --profile tls up --build -d
+```
+
+DNS muss vorher auf den Server zeigen und die Ports 80/443 müssen erreichbar sein, damit Caddy
+ein öffentlich vertrauenswürdiges Zertifikat ausstellen kann. Die in eBay einzutragende
+Marketplace-Account-Deletion-URL lautet danach
+`https://api.example.de/api/v1/webhooks/ebay/account-deletion`. Vor dem Speichern im eBay-Portal
+werden `DEAL_SCANNER_EBAY_DELETION_ENDPOINT_URL` auf genau diese URL und der zugehörige
+Verification Token in der Server-Umgebung gesetzt. Ein nachträglicher URL-Wechsel erfordert auch
+eine erneute eBay-Challenge, weil die vollständige URL in deren Challenge-Hash eingeht.
+
+Alternativ kann nur der eBay-Compliance-Webhook als Netlify Function veröffentlicht werden.
+Der Quellcode liegt unter `netlify/src`, der produktive Build wird mit
+`pnpm --filter @deal-scanner/ebay-compliance build` erzeugt. In Netlify werden ausschließlich
+die eBay-Production-Werte, der Verification Token sowie Supabase-URL, Pooler-DB-URL und
+Service-Role-Key als Production-Secrets hinterlegt. Die vollständige FastAPI-Anwendung bleibt
+dabei unverändert auf ihrer bisherigen Laufzeit; Netlify übernimmt nur Challenge,
+Signaturprüfung und die Kontolöschung.
+
 Der Container-Workflow baut API, Scheduler und Worker für `linux/amd64` und `linux/arm64`.
 Desktop-Artefakte werden auf den jeweiligen nativen GitHub-Runnern erzeugt. Signierung wird
 nur aktiviert, wenn die zugehörigen Repository-Secrets vorhanden sind.

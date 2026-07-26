@@ -114,6 +114,36 @@ async def store_private_image(
     return storage_path
 
 
+async def delete_private_images(
+    storage_paths: list[str],
+    settings: Settings | None = None,
+) -> None:
+    if not storage_paths:
+        return
+    config = settings or get_settings()
+    unique_paths = list(dict.fromkeys(storage_paths))
+    if config.supabase_url and config.supabase_service_role_key:
+        target = f"{config.supabase_url.rstrip('/')}/storage/v1/object/listing-images"
+        headers = {
+            "apikey": config.supabase_service_role_key,
+            "Authorization": f"Bearer {config.supabase_service_role_key}",
+            "Content-Type": "application/json",
+        }
+        async with httpx.AsyncClient(timeout=30, trust_env=False, verify=system_ssl_context()) as client:
+            for start in range(0, len(unique_paths), 1000):
+                response = await client.request(
+                    "DELETE",
+                    target,
+                    json={"prefixes": unique_paths[start : start + 1000]},
+                    headers=headers,
+                )
+                response.raise_for_status()
+        return
+
+    local_targets = [resolve_local_image(storage_path, config) for storage_path in unique_paths]
+    await asyncio.gather(*(asyncio.to_thread(target.unlink, missing_ok=True) for target in local_targets))
+
+
 def _write_once(target: Path, content: bytes) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     if not target.exists():

@@ -8,6 +8,7 @@ import type {
   ListingDetail,
   ListingEvaluation,
   ListingImage,
+  ListingNoteUpdate,
   ListingPage,
   MailImport,
   ManualImport,
@@ -112,11 +113,26 @@ export class DealScannerClient {
 
   async listings(
     cursor?: string,
-    view: 'all' | 'new' | 'favorites' | 'hidden' = 'all',
+    view: 'all' | 'new' | 'favorites' | 'hidden' | 'top_rated' = 'all',
+    platform?: string,
+    category?: string,
+    q?: string,
+    importedFrom?: string,
+    importedTo?: string,
   ): Promise<ListingPage> {
     return this.unwrap(
       await this.client.GET('/api/v1/listings', {
-        params: { query: { cursor, view } },
+        params: {
+          query: {
+            cursor,
+            view,
+            platform,
+            category,
+            q,
+            imported_from: importedFrom,
+            imported_to: importedTo,
+          },
+        },
       }),
     );
   }
@@ -125,6 +141,18 @@ export class DealScannerClient {
     return this.unwrap(
       await this.client.GET('/api/v1/listings/{listing_id}', {
         params: { path: { listing_id: listingId } },
+      }),
+    );
+  }
+
+  async updateListingNote(
+    listingId: string,
+    payload: ListingNoteUpdate,
+  ): Promise<ListingDetail> {
+    return this.unwrap(
+      await this.client.PATCH('/api/v1/listings/{listing_id}/note', {
+        params: { path: { listing_id: listingId } },
+        body: payload,
       }),
     );
   }
@@ -281,7 +309,7 @@ export class DealScannerClient {
   }
 
   async configureProvider(
-    provider: 'ebay' | 'kleinanzeigenEmail' | 'browser' | 'manual',
+    provider: 'ebay' | 'kleinanzeigenEmail' | 'browser' | 'manual' | 'ollama',
     configuration: ProviderConfigurationUpsert,
   ): Promise<ProviderConfiguration> {
     return this.unwrap(

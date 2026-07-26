@@ -29,6 +29,15 @@ im Server-Secret-Store. Die Buckets `listing-images` und `mail-archive` bleiben 
 Die gepinnte CLI wird mit `pnpm exec supabase --workdir infrastructure <Befehl>` aufgerufen;
 `supabase start` und `supabase status` benötigen einen laufenden Docker-kompatiblen Dienst.
 
+Für lokale Passwort-Recovery ist die Site URL `http://127.0.0.1:4200` konfiguriert. Die
+Redirect-Allowlist enthält `http://127.0.0.1:4200/login` und `http://localhost:4200/login`.
+Die Recovery-Mail verlinkt nicht direkt auf Supabases einmalig nutzbare Confirmation URL,
+sondern auf `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. Dadurch verbrauchen
+Mail-Sicherheitsprüfungen den Link nicht vor dem Benutzer. Das Login verifiziert den Token,
+zeigt das Formular für das neue Passwort an und meldet die Recovery-Sitzung danach ab.
+Für frei gehostete Supabase-Projekte erfordert diese angepasste Mailvorlage einen eigenen
+SMTP-Versand; SMTP-Zugangsdaten gehören ausschließlich in Supabase und niemals ins Repository.
+
 Scheduler und Analyse-Worker authentifizieren sich ebenfalls an der API. Im Entwicklungsmodus
 kann dafür `DEAL_SCANNER_DEVELOPMENT_USER_ID` verwendet werden. In Produktion ist ein gültiges,
 eng begrenztes Benutzer-JWT als `DEAL_SCANNER_API_TOKEN` Pflicht; Prozesse verweigern ohne Token
@@ -40,6 +49,37 @@ Eine eBay-Developer-Anwendung benötigt Client-ID und Client-Secret. Zuerst wird
 danach ausdrücklich read-only `production` verwendet. Das Server-UI speichert nur die Referenz
 auf das Secret, niemals dessen Wert. Marketplace ist standardmäßig `EBAY_DE`. Ohne Credentials
 überspringt der Scheduler den Lauf und erzeugt keine erfundenen Marktdaten.
+
+Für einen Production-Keyset muss zusätzlich die **Marketplace Account Deletion**-Benachrichtigung
+eingerichtet werden. Graper stellt dafür diesen öffentlichen Handler bereit:
+
+```text
+https://<öffentliche-domain>/api/v1/webhooks/ebay/account-deletion
+```
+
+Die URL muss über öffentlich erreichbares HTTPS auf Port 443 verfügbar sein; `localhost`, private
+IP-Adressen und selbstsignierte Zertifikate akzeptiert eBay nicht. Die produktive Umgebung erhält:
+
+```dotenv
+DEAL_SCANNER_EBAY_ENVIRONMENT=production
+DEAL_SCANNER_EBAY_PRODUCTION_CLIENT_ID=<Production-App-ID>
+DEAL_SCANNER_EBAY_PRODUCTION_CLIENT_SECRET=<Production-Cert-ID>
+DEAL_SCANNER_EBAY_DELETION_ENDPOINT_URL=https://<öffentliche-domain>/api/v1/webhooks/ebay/account-deletion
+DEAL_SCANNER_EBAY_DELETION_VERIFICATION_TOKEN=<32-80-Zeichen-Token>
+```
+
+Die umgebungsspezifischen Werte überschreiben beim Start die generischen eBay-Felder gemeinsam;
+dadurch kann ein Production Client ID nicht versehentlich mit dem Sandbox Client Secret kombiniert
+werden.
+
+Endpoint-URL und Verification Token werden anschließend exakt identisch im eBay Developer Portal
+unter **Alerts & Notifications → Marketplace Account Deletion** eingetragen. Der GET-Aufruf
+beantwortet eBays Challenge. POST-Benachrichtigungen werden erst nach Prüfung der
+`X-EBAY-SIGNATURE` gegen den über die eBay Notification API geladenen öffentlichen Schlüssel
+verarbeitet. Danach löscht Graper Verkäufer, zugehörige Angebote, Snapshots, Auswertungen,
+Beobachtungen und private Listing-Bilder irreversibel. Nur die Notification-ID und Löschzähler
+bleiben als personenbezugsfreier Wiederholschutz bestehen. Ein ungültig signierter Aufruf erhält
+HTTP 412 und verändert keine Daten.
 
 ## E-Mail und Browser-Erweiterung
 

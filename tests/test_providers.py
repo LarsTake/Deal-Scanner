@@ -1,3 +1,4 @@
+import asyncio
 import imaplib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -149,6 +150,40 @@ async def test_ebay_delta_cursor_uses_overlap_and_stops_at_known_items() -> None
     ]
     await client.aclose()
     assert [snapshot.external_id for snapshot in discovered] == ["111111111111"]
+
+
+@pytest.mark.asyncio
+async def test_scheduler_retries_api_rate_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = 0
+    delays: list[float] = []
+
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(429, headers={"Retry-After": "2"})
+        return httpx.Response(201, json={"snapshotCreated": True})
+
+    async def record_sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr(asyncio, "sleep", record_sleep)
+    scheduler = Scheduler(SchedulerSettings(_env_file=None))
+    await scheduler.client.aclose()
+    scheduler.client = httpx.AsyncClient(base_url="http://test", transport=httpx.MockTransport(handler))
+    try:
+        response = await scheduler._post_with_rate_limit_retry("/api/v1/imports/manual", json={"fixture": True})
+    finally:
+        await scheduler.client.aclose()
+
+    assert response.status_code == 201
+    assert calls == 2
+    assert delays == [2]
+
+
+def test_scheduler_treats_naive_api_timestamps_as_utc() -> None:
+    assert Scheduler._api_datetime("2026-07-24T15:50:45.018153").tzinfo is UTC
+    assert Scheduler._api_datetime("2026-07-24T15:50:45.018153Z").tzinfo is UTC
 
 
 @pytest.mark.asyncio

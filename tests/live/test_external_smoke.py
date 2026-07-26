@@ -101,7 +101,7 @@ def test_imap_login_and_noop_read_only() -> None:
     password = required("DEAL_SCANNER_IMAP_PASSWORD")
 
     def check() -> str:
-        with imaplib.IMAP4_SSL(host, timeout=15, ssl_context=system_ssl_context()) as connection:
+        with imaplib.IMAP4_SSL(host, timeout=15) as connection:
             connection.login(username, password)
             status, _ = connection.noop()
             return status

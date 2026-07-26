@@ -108,6 +108,7 @@ class ListingRow(Base, TimestampMixin):
     url: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(String(500))
     description: Mapped[str] = mapped_column(Text, default="")
+    manual_note: Mapped[str | None] = mapped_column(Text)
     price: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     shipping_cost: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
     currency: Mapped[str] = mapped_column(String(3), default="EUR")
@@ -508,3 +509,13 @@ class AuditEventRow(Base):
     aggregate_id: Mapped[UUID | None] = mapped_column(Uuid)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class EbayAccountDeletionEventRow(Base):
+    __tablename__ = "ebay_account_deletion_events"
+
+    notification_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    deleted_seller_count: Mapped[int] = mapped_column(Integer, default=0)
+    deleted_listing_count: Mapped[int] = mapped_column(Integer, default=0)

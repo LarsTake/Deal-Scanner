@@ -4,6 +4,8 @@ import asyncio
 import hashlib
 import imaplib
 import os
+import selectors
+import sys
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from email import policy
@@ -31,10 +33,15 @@ class SchedulerSettings(BaseSettings):
 
     api_url: str = "http://127.0.0.1:8000"
     api_token: str | None = None
+    supabase_service_role_key: str = ""
     development_user_id: str | None = None
     ebay_environment: str = "sandbox"
     ebay_client_id: str = ""
     ebay_client_secret: str = ""
+    ebay_sandbox_client_id: str = ""
+    ebay_sandbox_client_secret: str = ""
+    ebay_production_client_id: str = ""
+    ebay_production_client_secret: str = ""
     imap_host: str = ""
     imap_username: str = ""
     imap_password: str = ""
@@ -46,6 +53,14 @@ class SchedulerSettings(BaseSettings):
     supabase_publishable_key: str = ""
     health_file: str = ""
 
+    def ebay_credentials(self, environment: str) -> tuple[str, str]:
+        specific = (
+            (self.ebay_production_client_id, self.ebay_production_client_secret)
+            if environment == "production"
+            else (self.ebay_sandbox_client_id, self.ebay_sandbox_client_secret)
+        )
+        return specific if any(specific) else (self.ebay_client_id, self.ebay_client_secret)
+
 
 class Scheduler:
     def __init__(self, settings: SchedulerSettings) -> None:
@@ -55,12 +70,36 @@ class Scheduler:
             headers["Authorization"] = f"Bearer {settings.api_token}"
         if settings.development_user_id:
             headers["X-Development-User"] = settings.development_user_id
+        if settings.supabase_service_role_key:
+            headers["X-Internal-Key"] = settings.supabase_service_role_key
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
         self._workspace_id: str | None = None
 
+    async def _post_with_rate_limit_retry(
+        self,
+        url: str,
+        *,
+        json: dict[str, Any],
+        headers: dict[str, str] | None = None,
+        max_attempts: int = 3,
+    ) -> httpx.Response:
+        for attempt in range(max_attempts):
+            response = await self.client.post(url, json=json, headers=headers)
+            if response.status_code != 429 or attempt == max_attempts - 1:
+                return response
+            try:
+                retry_after = int(response.headers.get("Retry-After", "1"))
+            except ValueError:
+                retry_after = 1
+            await asyncio.sleep(max(0, min(retry_after, 120)))
+        raise RuntimeError("rate limit retry loop terminated unexpectedly")
+
+    @staticmethod
+    def _api_datetime(value: str) -> datetime:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
     async def sync_ebay(self) -> int:
-        if not self.settings.ebay_client_id or not self.settings.ebay_client_secret:
-            return 0
         configuration_response = await self.client.get("/api/v1/provider-configurations")
         configuration_response.raise_for_status()
         ebay_configuration = next(
@@ -70,14 +109,18 @@ class Scheduler:
         if ebay_configuration is not None and not ebay_configuration["enabled"]:
             return 0
         provider_settings = ebay_configuration["settings"] if ebay_configuration is not None else {}
+        environment = str(provider_settings.get("environment", self.settings.ebay_environment))
+        client_id, client_secret = self.settings.ebay_credentials(environment)
+        if not client_id or not client_secret:
+            return 0
         response = await self.client.get("/api/v1/search-profiles")
         response.raise_for_status()
         imported = 0
         provider = EbayProvider(
             EbaySettings(
-                client_id=self.settings.ebay_client_id,
-                client_secret=self.settings.ebay_client_secret,
-                environment=str(provider_settings.get("environment", self.settings.ebay_environment)),
+                client_id=client_id,
+                client_secret=client_secret,
+                environment=environment,
                 marketplace_id=str(provider_settings.get("marketplaceId", "EBAY_DE")),
             )
         )
@@ -93,7 +136,7 @@ class Scheduler:
                 history = history_response.json()["items"]
                 previous = history[0] if history else None
                 if previous and previous["status"] == "COMPLETED" and previous["completedAt"]:
-                    completed_at = datetime.fromisoformat(previous["completedAt"].replace("Z", "+00:00"))
+                    completed_at = self._api_datetime(previous["completedAt"])
                     if datetime.now(UTC) - completed_at < timedelta(minutes=item["scanIntervalMinutes"]):
                         continue
                 if previous and previous["status"] == "RUNNING":
@@ -184,7 +227,7 @@ class Scheduler:
                                 "reviewCount": seller_data.get("feedbackScore"),
                                 "rawData": seller_data,
                             }
-                        result = await self.client.post(
+                        result = await self._post_with_rate_limit_retry(
                             "/api/v1/imports/manual",
                             json=payload,
                             headers={"Idempotency-Key": normalized.raw_snapshot_hash},
@@ -196,7 +239,7 @@ class Scheduler:
                         run_imported += created
                         image_urls = self._ebay_image_urls(snapshot.payload)
                         if created and image_urls:
-                            image_result = await self.client.post(
+                            image_result = await self._post_with_rate_limit_retry(
                                 f"/api/v1/listings/{import_result['listing']['id']}/images",
                                 json={"sourceUrls": image_urls},
                             )
@@ -507,6 +550,17 @@ class Scheduler:
 
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
-    if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not os.getenv("DEAL_SCANNER_API_TOKEN"):
-        raise RuntimeError("production scheduler requires an API token")
-    asyncio.run(Scheduler(SchedulerSettings()).run_forever())
+    settings = SchedulerSettings()
+    if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not (
+        settings.api_token or settings.supabase_service_role_key
+    ):
+        raise RuntimeError("production scheduler requires internal authentication")
+    if sys.platform == "win32":
+        loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(Scheduler(settings).run_forever())
+        finally:
+            loop.close()
+        return
+    asyncio.run(Scheduler(settings).run_forever())

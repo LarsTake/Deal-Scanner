@@ -40,7 +40,7 @@ class NotificationSettings(CamelModel):
 class SearchProfileCreate(CamelModel):
     name: str = Field(min_length=1, max_length=120)
     query: str = Field(min_length=1, max_length=100)
-    category_profile: Literal["computer", "simracing", "fpv", "general"] = "general"
+    category_profile: str = Field(default="general", min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
     enabled_platforms: list[str] = Field(default_factory=lambda: ["ebay"])
     minimum_price: Decimal | None = Field(default=None, ge=0)
     maximum_price: Decimal | None = Field(default=None, ge=0)
@@ -102,7 +102,7 @@ class SellerResponse(SellerInput):
 
 
 class ManualImportRequest(CamelModel):
-    platform: Literal["ebay", "kleinanzeigen", "manual"]
+    platform: str = Field(min_length=1, max_length=32, pattern=r"^[a-z0-9_-]+$")
     external_id: str = Field(min_length=1, max_length=255)
     url: HttpUrl
     title: str = Field(min_length=1, max_length=500)
@@ -111,7 +111,7 @@ class ManualImportRequest(CamelModel):
     shipping_cost: Decimal = Field(default=Decimal("0"), ge=0)
     currency: str = Field(default="EUR", pattern=r"^[A-Z]{3}$")
     location: str | None = Field(default=None, max_length=255)
-    category_profile: Literal["computer", "simracing", "fpv", "general"] = "general"
+    category_profile: str = Field(default="general", min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
     published_at: datetime | None = None
     raw_data: dict[str, Any] = Field(default_factory=dict)
     provider_version: str = "manual-v1"
@@ -244,6 +244,7 @@ class ListingSummary(CamelModel):
 
 class ListingDetail(ListingSummary):
     description: str
+    manual_note: str | None
     location: str | None
     category_profile: str
     current_snapshot_id: UUID | None
@@ -255,6 +256,11 @@ class ListingDetail(ListingSummary):
     feedback: list[FeedbackResponse] = Field(default_factory=list)
     seller: SellerResponse | None = None
     comparison_observations: list[PriceObservationResponse] = Field(default_factory=list)
+
+
+class ListingNoteUpdate(CamelModel):
+    manual_note: str | None = Field(default=None, max_length=10_000)
+    base_listing_version: int = Field(ge=1)
 
 
 class CorrectedProductInput(CamelModel):

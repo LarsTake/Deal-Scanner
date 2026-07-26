@@ -43,7 +43,7 @@ import { NavIconComponent, type NavIconName } from './nav-icon.component';
             <button mat-icon-button (click)="drawer.toggle()" aria-label="Navigation öffnen"><ds-nav-icon name="menu" /></button>
           }
           <span class="spacer"></span>
-          <span class="connection"><i></i> Lokaler Modus</span>
+          <span class="connection"><i></i> {{ connectionLabel }}</span>
         </mat-toolbar>
         <main><router-outlet /></main>
       </mat-sidenav-content>
@@ -66,12 +66,18 @@ import { NavIconComponent, type NavIconName } from './nav-icon.component';
 export class AppComponent {
   private readonly breakpoints = inject(BreakpointObserver);
   readonly isHandset$ = this.breakpoints.observe(Breakpoints.Handset).pipe(map((result) => result.matches));
+  get connectionLabel(): string {
+    return localStorage.getItem('deal-scanner-supabase-url') ? 'Cloud-Speicher aktiv' : 'Lokaler Modus';
+  }
+
   readonly navigation: ReadonlyArray<{ path: string; label: string; icon: NavIconName }> = [
     { path: '/', label: 'Dashboard', icon: 'dashboard' },
     { path: '/search-profiles', label: 'Suchaufträge', icon: 'manage_search' },
     { path: '/new-listings', label: 'Neue Angebote', icon: 'new_releases' },
+    { path: '/top-rated', label: 'Beste Angebote', icon: 'star' },
     { path: '/listings', label: 'Alle Angebote', icon: 'view_list' },
     { path: '/favorites', label: 'Favoriten', icon: 'favorite' },
+    { path: '/hidden', label: 'Ausgeblendet', icon: 'sync_problem' },
     { path: '/queue', label: 'Analysewarteschlange', icon: 'memory' },
     { path: '/prices', label: 'Preisverläufe', icon: 'query_stats' },
     { path: '/catalog', label: 'Produktkatalog', icon: 'inventory_2' },

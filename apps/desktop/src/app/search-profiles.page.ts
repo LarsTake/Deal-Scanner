@@ -28,11 +28,19 @@ import { ApiService } from './api.service';
       <mat-card class="form-card">
         <h2>{{ editingId() ? 'Suchauftrag bearbeiten' : 'Neuer Suchauftrag' }}</h2>
         <form [formGroup]="form" (ngSubmit)="create()">
+          <div class="preset-header">
+            <button mat-stroked-button type="button" (click)="applyUsedPcsProfilePreset()">🖥️ Vorlage: Gebrauchte PCs (eBay & Kleinanzeigen)</button>
+          </div>
           <mat-form-field><mat-label>Name</mat-label><input matInput formControlName="name" /></mat-form-field>
           <mat-form-field><mat-label>Suchbegriff</mat-label><input matInput formControlName="query" /></mat-form-field>
           <mat-form-field><mat-label>Kategorie</mat-label><mat-select formControlName="categoryProfile">
             <mat-option value="computer">Computer</mat-option><mat-option value="simracing">Simracing</mat-option>
-            <mat-option value="fpv">FPV & Drohnen</mat-option><mat-option value="general">Allgemein</mat-option>
+            <mat-option value="fpv">FPV & Drohnen</mat-option><mat-option value="electronics">Elektronik</mat-option>
+            <mat-option value="vehicles">Fahrzeuge</mat-option><mat-option value="real_estate">Immobilien</mat-option>
+            <mat-option value="general">Allgemein</mat-option>
+          </mat-select></mat-form-field>
+          <mat-form-field><mat-label>Ziel-Plattformen</mat-label><mat-select formControlName="enabledPlatforms" multiple>
+            <mat-option value="ebay">eBay</mat-option><mat-option value="kleinanzeigen">Kleinanzeigen</mat-option>
           </mat-select></mat-form-field>
           <div class="form-row"><mat-form-field><mat-label>Preis min.</mat-label><input matInput type="number" formControlName="minimumPrice" /></mat-form-field><mat-form-field><mat-label>Preis max.</mat-label><input matInput type="number" formControlName="maximumPrice" /></mat-form-field></div>
           <div class="form-row"><mat-form-field><mat-label>Standort</mat-label><input matInput formControlName="location" /></mat-form-field><mat-form-field><mat-label>Radius (km)</mat-label><input matInput type="number" formControlName="radiusKm" /></mat-form-field></div>
@@ -50,7 +58,7 @@ import { ApiService } from './api.service';
       <div class="profile-list">
         @for (profile of profiles(); track profile.id) {
           <mat-card><div class="row"><div><h3>{{ profile.name }}</h3><p>{{ profile.query }}</p></div><span class="tag">{{ profile.categoryProfile }}</span></div>
-            <small>Deal ≥ {{ profile.minimumDealScore }} · Risiko ≤ {{ profile.maximumRiskScore }} · alle {{ profile.scanIntervalMinutes }} Min.</small>
+            <small>Deal ≥ {{ profile.minimumDealScore }} · Risiko ≤ {{ profile.maximumRiskScore }} · {{ (profile.enabledPlatforms ?? []).join(', ') }} · alle {{ profile.scanIntervalMinutes }} Min.</small>
             <p>{{ profile.location ?? 'ohne Ortsfilter' }}{{ profile.radiusKm ? ' · ' + profile.radiusKm + ' km' : '' }}</p>
             <div class="row actions">
               <button mat-stroked-button (click)="edit(profile)">Bearbeiten</button>
@@ -72,7 +80,8 @@ export class SearchProfilesPage implements OnInit {
   readonly form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     query: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    categoryProfile: new FormControl<'computer' | 'simracing' | 'fpv' | 'general'>('computer', { nonNullable: true }),
+    categoryProfile: new FormControl<string>('computer', { nonNullable: true }),
+    enabledPlatforms: new FormControl<string[]>(['ebay', 'kleinanzeigen'], { nonNullable: true }),
     minimumPrice: new FormControl<number | null>(null),
     maximumPrice: new FormControl<number | null>(null),
     location: new FormControl('', { nonNullable: true }),
@@ -91,6 +100,19 @@ export class SearchProfilesPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try { this.profiles.set(await this.api.searchProfiles()); } catch (error) { this.setError(error); }
+  }
+
+  applyUsedPcsProfilePreset(): void {
+    this.form.patchValue({
+      name: 'Gebrauchte PCs (eBay & Kleinanzeigen)',
+      query: 'Gaming PC i7 Ryzen Gebraucht',
+      categoryProfile: 'computer',
+      enabledPlatforms: ['ebay', 'kleinanzeigen'],
+      requiredTerms: 'gebraucht, pc',
+      excludedTerms: 'neu, ovp, defekt',
+      minimumDealScore: 70,
+      maximumRiskScore: 50,
+    });
   }
 
   async create(): Promise<void> {
@@ -119,7 +141,7 @@ export class SearchProfilesPage implements OnInit {
           desktopEnabled: value.desktopEnabled,
           ntfyEnabled: value.ntfyEnabled,
         },
-        enabledPlatforms: ['ebay'],
+        enabledPlatforms: value.enabledPlatforms.length ? value.enabledPlatforms : ['ebay', 'kleinanzeigen'],
         scanIntervalMinutes: 15,
         enabled: true,
       };
@@ -147,6 +169,7 @@ export class SearchProfilesPage implements OnInit {
       name: profile.name,
       query: profile.query,
       categoryProfile: profile.categoryProfile,
+      enabledPlatforms: profile.enabledPlatforms ?? ['ebay', 'kleinanzeigen'],
       minimumPrice: profile.minimumPrice === null ? null : Number(profile.minimumPrice),
       maximumPrice: profile.maximumPrice === null ? null : Number(profile.maximumPrice),
       location: profile.location ?? '',
@@ -167,7 +190,8 @@ export class SearchProfilesPage implements OnInit {
   cancelEdit(): void {
     this.editingId.set(null);
     this.form.reset({
-      name: '', query: '', categoryProfile: 'computer', minimumPrice: null, maximumPrice: null,
+      name: '', query: '', categoryProfile: 'computer', enabledPlatforms: ['ebay', 'kleinanzeigen'],
+      minimumPrice: null, maximumPrice: null,
       location: '', radiusKm: null, requiredTerms: '', excludedTerms: '', requiredProducts: '',
       excludedProducts: '', minimumDealScore: 75, maximumRiskScore: 45,
       minimumMarketAdvantagePercent: 15, maximumListingAgeHours: 24,

@@ -18,6 +18,10 @@
 - Der native CSV-Dateidialog akzeptiert nur CSV-Dateien bis 2 MB, liest sie als UTF-8 und gibt
   ausschließlich Dateiname und Inhalt an den Webview zurück; lokale Dateipfade bleiben verborgen.
 - E-Mails und Bilder liegen privat; Logs enthalten keine Tokens, vollständigen Mailtexte oder PII.
+- Der öffentliche eBay-Kontolösch-Webhook akzeptiert Nutzdaten erst nach ECDSA-Prüfung der
+  `X-EBAY-SIGNATURE` mit dem über eBays Notification API geladenen Schlüssel. Die Löschung läuft
+  außerhalb von Workspace-RLS nur in einer eng begrenzten Compliance-Transaktion; ungültige
+  Signaturen erhalten HTTP 412 und der Wiederholschutz speichert keine eBay-Kontoidentifikatoren.
 - Cloud-Modelle sind standardmäßig deaktiviert. Verkäuferkontakte und automatische Käufe sind kein Bestandteil.
 
 ## Nachverfolgte RustSec-Ausnahmen

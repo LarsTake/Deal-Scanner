@@ -1,11 +1,11 @@
 export interface VisibleListing {
-  platform: 'kleinanzeigen';
+  platform: string;
   externalId: string;
   url: string;
   title: string;
   description: string;
   price: string;
-  currency: 'EUR';
+  currency: string;
   location?: string;
   seller?: {
     externalId: string;
@@ -15,9 +15,18 @@ export interface VisibleListing {
     location?: string;
     rawData: { source: 'visibleBrowserPage' };
   };
-  categoryProfile: 'general';
-  rawData: { source: 'visibleBrowserPage'; capturedAt: string; imageUrls?: string[] };
-  providerVersion: 'browser-extension-v1';
+  categoryProfile: string;
+  rawData: {
+    source: 'visibleBrowserPage';
+    capturedAt: string;
+    imageUrls?: string[];
+    pageHost?: string;
+    extractionMethod?: string;
+    crawlSessionId?: string;
+    crawlPosition?: number;
+    crawlTotal?: number;
+  };
+  providerVersion: string;
 }
 
 export interface ImportMessage {
@@ -40,3 +49,44 @@ export interface ImportResponseMessage {
   imageFailures?: number;
   error?: string;
 }
+
+export interface CrawlCandidate {
+  url: string;
+  title: string;
+}
+
+export interface CrawlListingsMessage {
+  type: 'CRAWL_LISTINGS';
+  candidates: CrawlCandidate[];
+}
+
+export interface ExtractCurrentMessage {
+  type: 'EXTRACT_CURRENT_LISTING';
+}
+
+export interface ShowPanelMessage {
+  type: 'SHOW_PANEL';
+}
+
+export interface CancelCrawlMessage {
+  type: 'CANCEL_CRAWL';
+}
+
+export interface CrawlProgressMessage {
+  type: 'CRAWL_PROGRESS';
+  sessionId: string;
+  current: number;
+  total: number;
+  title: string;
+  url: string;
+  status: 'opening' | 'extracting' | 'saving' | 'saved' | 'skipped' | 'error' | 'complete';
+  detail?: string;
+}
+
+export type ExtensionMessage =
+  | ImportMessage
+  | CrawlListingsMessage
+  | ExtractCurrentMessage
+  | ShowPanelMessage
+  | CancelCrawlMessage
+  | CrawlProgressMessage;

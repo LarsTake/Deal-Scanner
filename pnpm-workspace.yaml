@@ -1,4 +1,5 @@
 packages:
   - apps/desktop
   - apps/browser-extension
+  - netlify
   - packages/typescript/*

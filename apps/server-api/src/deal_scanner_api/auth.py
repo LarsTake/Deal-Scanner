@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import secrets
 from functools import lru_cache
 from typing import Annotated, Protocol
 from uuid import UUID
@@ -82,8 +83,16 @@ def get_identity_provider() -> IdentityProvider:
 async def get_identity(
     authorization: Annotated[str | None, Header()] = None,
     x_development_user: Annotated[str | None, Header()] = None,
+    x_internal_key: Annotated[str | None, Header()] = None,
     provider: IdentityProvider = Depends(get_identity_provider),
 ) -> Identity:
+    settings = get_settings()
+    if (
+        x_internal_key
+        and settings.supabase_service_role_key
+        and secrets.compare_digest(x_internal_key, settings.supabase_service_role_key)
+    ):
+        return await DevelopmentIdentityProvider(settings).authenticate(None, x_development_user)
     return await provider.authenticate(authorization, x_development_user)
 
 

@@ -209,6 +209,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/listings/{listing_id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Listing Note */
+        patch: operations["update_listing_note_api_v1_listings__listing_id__note_patch"];
+        trace?: never;
+    };
     "/api/v1/listings/{listing_id}/reanalyze": {
         parameters: {
             query?: never;
@@ -1146,6 +1163,8 @@ export interface components {
             riskScore?: number | null;
             /** Description */
             description: string;
+            /** Manualnote */
+            manualNote: string | null;
             /** Categoryprofile */
             categoryProfile: string;
             /** Currentsnapshotid */
@@ -1216,6 +1235,13 @@ export interface components {
             exactDuplicateOf?: string | null;
             /** Perceptualduplicateof */
             perceptualDuplicateOf?: string | null;
+        };
+        /** ListingNoteUpdate */
+        ListingNoteUpdate: {
+            /** Manualnote */
+            manualNote?: string | null;
+            /** Baselistingversion */
+            baseListingVersion: number;
         };
         /** ListingPage */
         ListingPage: {
@@ -1419,11 +1445,8 @@ export interface components {
         };
         /** ManualImportRequest */
         ManualImportRequest: {
-            /**
-             * Platform
-             * @enum {string}
-             */
-            platform: "ebay" | "kleinanzeigen" | "manual";
+            /** Platform */
+            platform: string;
             /** Externalid */
             externalId: string;
             /**
@@ -1455,9 +1478,8 @@ export interface components {
             /**
              * Categoryprofile
              * @default general
-             * @enum {string}
              */
-            categoryProfile: "computer" | "simracing" | "fpv" | "general";
+            categoryProfile: string;
             /** Publishedat */
             publishedAt?: string | null;
             /** Rawdata */
@@ -1873,9 +1895,8 @@ export interface components {
             /**
              * Categoryprofile
              * @default general
-             * @enum {string}
              */
-            categoryProfile: "computer" | "simracing" | "fpv" | "general";
+            categoryProfile: string;
             /** Enabledplatforms */
             enabledPlatforms?: string[];
             /** Minimumprice */
@@ -1925,9 +1946,8 @@ export interface components {
             /**
              * Categoryprofile
              * @default general
-             * @enum {string}
              */
-            categoryProfile: "computer" | "simracing" | "fpv" | "general";
+            categoryProfile: string;
             /** Enabledplatforms */
             enabledPlatforms?: string[];
             /** Minimumprice */
@@ -2167,6 +2187,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2270,6 +2291,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2577,6 +2599,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -2682,6 +2705,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
                 "x-extension-pairing"?: string | null;
             };
             path: {
@@ -2792,6 +2816,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 image_id: string;
@@ -2897,6 +2922,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 image_id: string;
@@ -3001,6 +3027,7 @@ export interface operations {
                 "Idempotency-Key"?: string | null;
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3109,6 +3136,7 @@ export interface operations {
                 "Idempotency-Key"?: string | null;
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
                 "x-extension-pairing"?: string | null;
             };
             path?: never;
@@ -3218,6 +3246,7 @@ export interface operations {
                 "Idempotency-Key"?: string | null;
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3324,11 +3353,17 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string | null;
-                view?: "all" | "new" | "favorites" | "hidden";
+                view?: "all" | "new" | "favorites" | "hidden" | "top_rated";
+                platform?: string | null;
+                category?: string | null;
+                q?: string | null;
+                imported_from?: string | null;
+                imported_to?: string | null;
             };
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3432,6 +3467,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -3531,12 +3567,123 @@ export interface operations {
             };
         };
     };
+    update_listing_note_api_v1_listings__listing_id__note_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
+            };
+            path: {
+                listing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListingNoteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingDetail"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     reanalyze_api_v1_listings__listing_id__reanalyze_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -3642,6 +3789,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -3756,6 +3904,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3859,6 +4008,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3966,6 +4116,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -4071,6 +4222,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -4176,6 +4328,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -4279,6 +4432,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 notification_id: string;
@@ -4382,6 +4536,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -4489,6 +4644,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -4592,6 +4748,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -4699,6 +4856,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 profile_id: string;
@@ -4808,6 +4966,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 profile_id: string;
@@ -4911,6 +5070,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5014,6 +5174,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5117,6 +5278,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 pairing_id: string;
@@ -5220,6 +5382,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5323,6 +5486,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5430,6 +5594,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 connection_id: string;
@@ -5533,6 +5698,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 listing_id: string;
@@ -5638,6 +5804,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5741,6 +5908,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -5844,6 +6012,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 provider: string;
@@ -5957,6 +6126,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6060,6 +6230,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6167,6 +6338,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 run_id: string;
@@ -6276,6 +6448,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6379,6 +6552,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6486,6 +6660,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6591,6 +6766,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6694,6 +6870,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6801,6 +6978,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 worker_id: string;
@@ -6910,6 +7088,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7017,6 +7196,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 job_id: string;
@@ -7126,6 +7306,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 job_id: string;
@@ -7235,6 +7416,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-development-user"?: string | null;
+                "x-internal-key"?: string | null;
             };
             path: {
                 job_id: string;

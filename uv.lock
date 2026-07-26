@@ -418,6 +418,7 @@ version = "0.1.0"
 source = { editable = "apps/server-api" }
 dependencies = [
     { name = "aiosqlite" },
+    { name = "cryptography" },
     { name = "deal-scanner-core" },
     { name = "deal-scanner-ebay" },
     { name = "deal-scanner-extraction" },
@@ -438,6 +439,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21,<1" },
+    { name = "cryptography", specifier = ">=45,<50" },
     { name = "deal-scanner-core", editable = "packages/python/core" },
     { name = "deal-scanner-ebay", editable = "providers/ebay" },
     { name = "deal-scanner-extraction", editable = "packages/python/extraction" },

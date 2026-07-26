@@ -5,6 +5,7 @@ import type { components } from './generated';
 export type ListingSummary = components['schemas']['ListingSummary'];
 export type ListingPage = components['schemas']['ListingPage'];
 export type ListingDetail = components['schemas']['ListingDetail'];
+export type ListingNoteUpdate = components['schemas']['ListingNoteUpdate'];
 export type SearchProfile = components['schemas']['SearchProfileResponse'];
 export type SearchProfileCreate = components['schemas']['SearchProfileCreate'];
 export type Worker = components['schemas']['WorkerResponse'];

@@ -3,6 +3,7 @@ import { validateApiTarget } from './api-target';
 const api = document.querySelector<HTMLInputElement>('#api')!;
 const token = document.querySelector<HTMLInputElement>('#token')!;
 const statusElement = document.querySelector<HTMLElement>('#status')!;
+const activate = document.querySelector<HTMLButtonElement>('#activate')!;
 document.querySelector<HTMLLabelElement>('label[for=token]')!.textContent = 'Access- oder Geräte-Token';
 
 void Promise.all([
@@ -39,6 +40,42 @@ document.querySelector('#save')?.addEventListener('click', () => void (async () 
   statusElement.textContent = tokenType === 'pairing'
     ? 'Dauerhafte Verbindung gespeichert. Der Import startet nur nach deiner Aktion auf Kleinanzeigen.'
     : 'Access-Token gespeichert. Er kann nach Ablauf erneut erforderlich sein.';
+})());
+
+activate.addEventListener('click', () => void (async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !tab.url) {
+    statusElement.textContent = 'Der aktive Tab konnte nicht ermittelt werden.';
+    return;
+  }
+  let current: URL;
+  try {
+    current = new URL(tab.url);
+  } catch {
+    statusElement.textContent = 'Diese Browserseite kann nicht analysiert werden.';
+    return;
+  }
+  if (!['http:', 'https:'].includes(current.protocol)) {
+    statusElement.textContent = 'Browser- und Einstellungsseiten können nicht analysiert werden.';
+    return;
+  }
+  const origin = `${current.protocol}//${current.hostname}/*`;
+  const granted = await chrome.permissions.request({ origins: [origin] });
+  if (!granted) {
+    statusElement.textContent = 'Die Berechtigung für diese Website wurde abgelehnt.';
+    return;
+  }
+  try {
+    try {
+      await chrome.tabs.sendMessage(tab.id, { type: 'SHOW_PANEL' });
+    } catch {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+    }
+    statusElement.textContent = `Deal Scanner ist auf ${current.hostname} aktiv. Das Steuerfenster ist unten rechts sichtbar.`;
+    window.close();
+  } catch (error) {
+    statusElement.textContent = error instanceof Error ? error.message : 'Die Erweiterung konnte nicht gestartet werden.';
+  }
 })());
 
 export {};

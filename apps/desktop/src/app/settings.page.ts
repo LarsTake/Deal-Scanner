@@ -26,6 +26,12 @@ import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loop
       <mat-form-field><mat-label>Marketplace</mat-label><input matInput formControlName="ebayMarketplace" /></mat-form-field>
       <mat-form-field><mat-label>Secret-Referenz</mat-label><input matInput formControlName="ebaySecretReference" /></mat-form-field>
       <small>Hier wird nur der Name der Secret-Quelle gespeichert, niemals das Client-Secret selbst.</small>
+      <h2>KI-Modelle nach Aufgabe</h2>
+      <p>Der Worker wählt automatisch das passende Modell für Extraktion, Prüfung, Bilder und Ähnlichkeit.</p>
+      <mat-form-field><mat-label>Faktenextraktion</mat-label><input matInput formControlName="extractionModel" /></mat-form-field>
+      <mat-form-field><mat-label>Risiko- und Plausibilitätsprüfung</mat-label><input matInput formControlName="reasoningModel" /></mat-form-field>
+      <mat-form-field><mat-label>Bildanalyse / OCR</mat-label><input matInput formControlName="visionModel" /></mat-form-field>
+      <mat-form-field><mat-label>Ähnlichkeit / Embeddings</mat-label><input matInput formControlName="embeddingModel" /></mat-form-field>
       <button mat-flat-button [disabled]="form.invalid">Speichern</button>
       @if (saved()) { <span class="notice">Gespeichert.</span> }
       @if (error()) { <span class="notice error">{{ error() }}</span> }
@@ -99,6 +105,10 @@ export class SettingsPage implements OnInit {
     ebayEnvironment: new FormControl('sandbox', { nonNullable: true, validators: [Validators.required] }),
     ebayMarketplace: new FormControl('EBAY_DE', { nonNullable: true, validators: [Validators.required] }),
     ebaySecretReference: new FormControl('env:DEAL_SCANNER_EBAY_CLIENT_SECRET', { nonNullable: true }),
+    extractionModel: new FormControl('gemma4:12b', { nonNullable: true, validators: [Validators.required] }),
+    reasoningModel: new FormControl('gpt-oss:latest', { nonNullable: true, validators: [Validators.required] }),
+    visionModel: new FormControl('gemma4:12b', { nonNullable: true, validators: [Validators.required] }),
+    embeddingModel: new FormControl('qwen3-embedding:0.6b', { nonNullable: true, validators: [Validators.required] }),
   });
 
   constructor() {
@@ -115,6 +125,7 @@ export class SettingsPage implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       const ebay = (await this.api.providerConfigurations()).find((item) => item.provider === 'ebay');
+      const ollama = (await this.api.providerConfigurations()).find((item) => item.provider === 'ollama');
       if (ebay) {
         const settings = ebay.settings ?? {};
         this.form.patchValue({
@@ -122,6 +133,15 @@ export class SettingsPage implements OnInit {
           ebayEnvironment: String(settings['environment'] ?? 'sandbox'),
           ebayMarketplace: String(settings['marketplaceId'] ?? 'EBAY_DE'),
           ebaySecretReference: ebay.secretReference ?? '',
+        });
+      }
+      if (ollama) {
+        const modelSettings = ollama.settings ?? {};
+        this.form.patchValue({
+          extractionModel: String(modelSettings['extractionModel'] ?? 'gemma4:12b'),
+          reasoningModel: String(modelSettings['reasoningModel'] ?? 'gpt-oss:latest'),
+          visionModel: String(modelSettings['visionModel'] ?? 'gemma4:12b'),
+          embeddingModel: String(modelSettings['embeddingModel'] ?? 'qwen3-embedding:0.6b'),
         });
       }
     } catch {
@@ -139,6 +159,17 @@ export class SettingsPage implements OnInit {
         enabled: value.ebayEnabled,
         settings: { environment: value.ebayEnvironment, marketplaceId: value.ebayMarketplace },
         secretReference: value.ebaySecretReference || null,
+      });
+      await this.api.configureProvider('ollama', {
+        enabled: true,
+        settings: {
+          extractionModel: value.extractionModel,
+          reasoningModel: value.reasoningModel,
+          visionModel: value.visionModel,
+          embeddingModel: value.embeddingModel,
+          routing: 'automatic-by-task',
+        },
+        secretReference: null,
       });
       this.saved.set(true);
     } catch (error) {

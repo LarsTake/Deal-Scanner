@@ -49,6 +49,34 @@ describe('DealScannerClient', () => {
     } satisfies Partial<ApiProblemError>);
   });
 
+  it('updates a versioned manual listing note through the generated route', async () => {
+    const fetchMock = vi.fn(async (request: Request) => {
+      expect(request.method).toBe('PATCH');
+      expect(request.url).toBe('https://api.example.test/api/v1/listings/listing-id/note');
+      expect(await request.json()).toEqual({
+        manualNote: 'Zustand vor Ort geprüft',
+        baseListingVersion: 3,
+      });
+      return Response.json({
+        id: 'listing-id',
+        manualNote: 'Zustand vor Ort geprüft',
+        version: 4,
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new DealScannerClient({ baseUrl: 'https://api.example.test' });
+
+    await expect(
+      client.updateListingNote('listing-id', {
+        manualNote: 'Zustand vor Ort geprüft',
+        baseListingVersion: 3,
+      }),
+    ).resolves.toMatchObject({
+      manualNote: 'Zustand vor Ort geprüft',
+      version: 4,
+    });
+  });
+
   it('uploads market data through the generated multipart route', async () => {
     vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
       expect(request.url).toBe('https://api.example.test/api/v1/market-data/imports/csv');

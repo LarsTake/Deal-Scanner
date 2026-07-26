@@ -170,6 +170,7 @@ class WorkerAgent:
 
     async def heartbeat(self) -> None:
         assert self.worker_id
+        await self._load_model_configuration()
         response = await self.client.post(
             f"/api/v1/workers/{self.worker_id}/heartbeat",
             json={"currentLoad": psutil.cpu_percent() / 100, "capabilities": self.capabilities},

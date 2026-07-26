@@ -1,7 +1,7 @@
 {
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\main.py": {
-    "mtime": 1785096558.8838224,
-    "hash": "69ab8dedc2919b86c1023108b6d81e75"
+    "mtime": 1785096896.1916897,
+    "hash": "18ec66c6c094abbc9949a0c86189b17e"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\apps\\analysis-worker\\src\\deal_scanner_worker\\ollama.py": {
     "mtime": 1784836464.1754062,
@@ -416,7 +416,7 @@
     "hash": "4215e29ed663cf0fcaa33509b0a72bdc"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\generated.ts": {
-    "mtime": 1785095500.4823804,
+    "mtime": 1785096629.8232365,
     "hash": "87c5c398e6618a4a87fbd390a292fa6b"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\packages\\typescript\\contracts\\src\\index.ts": {
@@ -446,6 +446,10 @@
   "C:\\Users\\Lars\\Documents\\Graper\\providers\\manual-import\\src\\deal_scanner_manual\\__init__.py": {
     "mtime": 1784735621.577605,
     "hash": "3b9dbcbb0855670207aafd84bc20380c"
+  },
+  "C:\\Users\\Lars\\Documents\\Graper\\tests\\conftest.py": {
+    "mtime": 1785096770.4273038,
+    "hash": "442a3c38e4da1f169c424b3168b01b87"
   },
   "C:\\Users\\Lars\\Documents\\Graper\\tests\\test_ai_contracts.py": {
     "mtime": 1784744493.7185512,

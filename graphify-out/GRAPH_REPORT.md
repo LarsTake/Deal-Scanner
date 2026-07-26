@@ -1,11 +1,11 @@
 # Graph Report - Graper  (2026-07-26)
 
 ## Corpus Check
-- 175 files · ~100,460 words
+- 176 files · ~100,501 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1239 nodes · 2467 edges · 104 communities (88 shown, 16 thin omitted)
+- 1240 nodes · 2468 edges · 105 communities (88 shown, 17 thin omitted)
 - Extraction: 80% EXTRACTED · 20% INFERRED · 0% AMBIGUOUS · INFERRED: 489 edges (avg confidence: 0.64)
 - Token cost: 0 input · 0 output
 
@@ -116,6 +116,8 @@
 10. `Scheduler` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `test_scheduler_selects_ebay_credentials_for_the_effective_environment()` --calls--> `SchedulerSettings`  [INFERRED]
+  tests/test_security.py → apps/scheduler/src/deal_scanner_scheduler/main.py
 - `test_local_angular_origins_are_allowed_by_default()` --calls--> `Settings`  [INFERRED]
   tests/test_security.py → apps/server-api/src/deal_scanner_api/settings.py
 - `test_ebay_environment_specific_credentials_do_not_mix_sandbox_and_production()` --calls--> `Settings`  [INFERRED]
@@ -124,38 +126,36 @@
   apps/analysis-worker/src/deal_scanner_worker/main.py → packages/python/core/src/deal_scanner_core/models.py
 - `WorkerSettings` --uses--> `TextAnalysisRequest`  [INFERRED]
   apps/analysis-worker/src/deal_scanner_worker/main.py → packages/python/core/src/deal_scanner_core/models.py
-- `WorkerSettings` --uses--> `TextAnalysisResult`  [INFERRED]
-  apps/analysis-worker/src/deal_scanner_worker/main.py → packages/python/core/src/deal_scanner_core/models.py
 
-## Communities (104 total, 16 thin omitted)
+## Communities (105 total, 17 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.07
-Nodes (71): BaseModel, AnalysisJobRow, AnalysisResultRow, AuditEventRow, Base, CanonicalProductRow, DealEvaluationRow, EbayAccountDeletionEventRow (+63 more)
+Cohesion: 0.08
+Nodes (66): BaseModel, AnalysisJobRow, AnalysisResultRow, AuditEventRow, Base, CanonicalProductRow, DealEvaluationRow, EbayAccountDeletionEventRow (+58 more)
 
 ### Community 1 - "Community 1"
+Cohesion: 0.05
+Nodes (46): DevelopmentIdentityProvider, get_identity(), get_identity_provider(), Identity, IdentityProvider, SupabaseIdentityProvider, get_browser_request_context(), get_request_context() (+38 more)
+
+### Community 2 - "Community 2"
 Cohesion: 0.08
 Nodes (64): CamelModel, AnalysisResultResponse, AuthMeResponse, ComponentHealth, CorrectedAttributeInput, CorrectedProductInput, CsvImportResponse, DealEvaluationHistoryResponse (+56 more)
 
-### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (40): DevelopmentIdentityProvider, get_identity(), get_identity_provider(), Identity, IdentityProvider, SupabaseIdentityProvider, get_browser_request_context(), get_request_context() (+32 more)
-
 ### Community 3 - "Community 3"
 Cohesion: 0.07
-Nodes (51): record_audit_event(), MockErpIntegrationAdapter, Stable ERP boundary; replace this adapter without changing the REST contract., Stable ERP boundary; replace this adapter without changing the REST contract., latest_evaluation(), listing_summary(), select(), _decode_cursor() (+43 more)
+Nodes (50): record_audit_event(), MockErpIntegrationAdapter, Stable ERP boundary; replace this adapter without changing the REST contract., Stable ERP boundary; replace this adapter without changing the REST contract., latest_evaluation(), listing_summary(), select(), _decode_cursor() (+42 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.08
-Nodes (41): NotificationDeliveryRow, _deal_component_scores(), estimate_listing_market(), evaluate_listing_record(), _send_ntfy(), DesktopNotificationAdapter, NtfyNotificationAdapter, ProductDetection (+33 more)
+Cohesion: 0.06
+Nodes (28): BaseSettings, _body(), _first_image(), KleinanzeigenMailParser, ParsedMail, extract_ebay_legacy_id(), _api_datetime(), _ebay_image_urls() (+20 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.1
-Nodes (9): ApiProblemError, ApiResult, ClientOptions, createGeneratedDealScannerClient(), DealScannerClient, GeneratedDealScannerClient, client, fetchMock (+1 more)
+Cohesion: 0.08
+Nodes (14): ApiProblemError, ApiResult, ClientOptions, createGeneratedDealScannerClient(), DealScannerClient, GeneratedDealScannerClient, client, fetchMock (+6 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.08
-Nodes (20): BaseSettings, KleinanzeigenMailParser, extract_ebay_legacy_id(), _api_datetime(), _ebay_image_urls(), _matches_profile(), run(), Scheduler (+12 more)
+Cohesion: 0.12
+Nodes (29): NotificationDeliveryRow, _deal_component_scores(), estimate_listing_market(), evaluate_listing_record(), _send_ntfy(), DesktopNotificationAdapter, NtfyNotificationAdapter, DealScoreEngine (+21 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.08
@@ -183,95 +183,91 @@ Nodes (28): challengeResponse(), config, database(), decodeBase64Strict(), delet
 
 ### Community 13 - "Community 13"
 Cohesion: 0.12
-Nodes (18): AiRiskSignal, AnalysisStatus, Contradiction, DetectedAttribute, ImageOcrResult, ListingStatus, ModelProviderStatus, SearchProfile (+10 more)
+Nodes (12): AnalysisStatus, DetectedAttribute, ListingStatus, Money, NormalizedListing, SearchProfile, AiModelProvider, ErpIntegrationAdapter (+4 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.12
-Nodes (14): DealScannerError, LeaseConflict, ProviderError, ProviderRateLimited, Base error safe to map to a structured API problem., Money, NormalizedListing, RawListingSnapshot (+6 more)
-
-### Community 15 - "Community 15"
 Cohesion: 0.17
 Nodes (6): ApiService, CatalogPage, DashboardPage, PlaceholderPage, SystemPage, WorkersPage
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.15
 Nodes (18): add_erp_image(), payload(), set_job_times(), test_authenticated_permanent_extension_connection_can_be_used_and_revoked(), test_end_to_end_import_feedback_and_worker_lease(), test_erp_mock_uses_stable_purchase_contract(), test_evaluation_keeps_risk_separate_and_creates_notification(), test_idempotency_and_extension_pairing() (+10 more)
 
+### Community 16 - "Community 16"
+Cohesion: 0.19
+Nodes (11): AiRiskSignal, Contradiction, ImageOcrResult, ModelProviderStatus, TextAnalysisRequest, TextAnalysisResult, OllamaProvider, RiskReview (+3 more)
+
 ### Community 17 - "Community 17"
-Cohesion: 0.17
-Nodes (13): _problem(), _body(), _first_image(), ParsedMail, str, import_csv(), test_ebay_deletion_audit_is_private_and_append_only_exception_is_owner_only(), test_extension_pairing_resolver_accepts_persistent_tokens_until_revoked() (+5 more)
+Cohesion: 0.18
+Nodes (11): DealScannerError, LeaseConflict, ProviderError, ProviderRateLimited, Base error safe to map to a structured API problem., RawListingSnapshot, EbayProvider, EbaySettings (+3 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.15
 Nodes (14): ActiveLoopback, forward(), forward_preserves_auth_idempotency_status_and_body(), is_uuid_like(), LoopbackController, LoopbackPairing, problem(), proxy_browser_import() (+6 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.22
+Cohesion: 0.23
 Nodes (6): _detect_gpu_sync(), run(), WorkerAgent, WorkerSettings, test_rule_only_worker_produces_schema_valid_text_result(), test_worker_reconnects_after_transient_api_failure()
 
 ### Community 21 - "Community 21"
+Cohesion: 0.22
+Nodes (12): ProductDetection, normalize_text(), ProductRule, RiskRule, RuleAnalysis, RuleExtractor, models(), test_o3_vista_and_elrs_remain_distinct() (+4 more)
+
+### Community 22 - "Community 22"
 Cohesion: 0.14
 Nodes (15): code:powershell ($env:DEAL_SCANNER_POSTGRES_BIN='C:\Pfad\zu\pgsql\bin'), code:text (https://<öffentliche-domain>/api/v1/webhooks/ebay/account-de), code:dotenv (DEAL_SCANNER_EBAY_ENVIRONMENT=production), code:dotenv (DEAL_SCANNER_IMAP_HOST=imap.example.de), code:powershell ($env:DEAL_SCANNER_RUN_LIVE_TESTS='1'), Credential-gesteuerte Live-Abnahme, Desktop-Signierung und Notarisierung, E-Mail und Browser-Erweiterung (+7 more)
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.19
 Nodes (14): database(), decodeBase64Strict(), errorName(), handleChallenge(), handleNotification(), handler(), isVerificationToken(), parse() (+6 more)
 
-### Community 24 - "Community 24"
+### Community 25 - "Community 25"
 Cohesion: 0.32
 Nodes (7): isConflictError(), OutboxItem, OutboxKind, processOutboxItems(), conflicted, delivered, sender
 
-### Community 25 - "Community 25"
-Cohesion: 0.23
-Nodes (3): OllamaProvider, RuntimeError, test_ollama_routes_text_vision_and_embeddings_to_assigned_models()
+### Community 26 - "Community 26"
+Cohesion: 0.2
+Nodes (10): build(), deletePrivateImages(), escapeIdentifiers(), fragment(), insert(), stringify(), stringifyValue(), values() (+2 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.29
 Nodes (6): AppComponent, appConfig, routes, ICON_PATHS, NavIconComponent, NavIconName
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.44
 Nodes (8): required(), system_ssl_context(), test_ebay_oauth_health_read_only(), test_imap_login_and_noop_read_only(), test_ollama_model_is_available_read_only(), test_ollama_structured_inference_contract(), test_supabase_auth_health_is_reachable(), test_supabase_schema_rls_and_private_buckets_read_only()
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
+Cohesion: 0.28
+Nodes (9): catch(), execute(), finally(), firstIsString(), generic(), handle(), handleValue(), notTagged() (+1 more)
+
+### Community 32 - "Community 32"
 Cohesion: 0.22
 Nodes (8): 1. Öffentlicher Betrieb hinter Cloudflare, 2. Komponentenbezogene Marktpreis-Referenzen, Ausbau-Roadmap, Bewertungslogik und Oberfläche, Daten und Herkunft, Offene Produktentscheidung, Quellenstrategie, Umsetzungspakete
 
-### Community 32 - "Community 32"
+### Community 34 - "Community 34"
 Cohesion: 0.25
 Nodes (8): challengeResponse(), closeDatabaseConnection(), end(), hmac(), md5(), sha256(), update(), verifyEbaySignature()
 
-### Community 33 - "Community 33"
+### Community 35 - "Community 35"
 Cohesion: 0.25
 Nodes (8): forEach(), osUsername(), parseOptions(), parseTransform(), parseUrl(), postgres(), Subscribe(), tsa()
 
-### Community 34 - "Community 34"
+### Community 36 - "Community 36"
 Cohesion: 0.29
 Nodes (7): code:bash (cp .env.example .env), code:bash (brew install uv rustup), code:powershell (Copy-Item .env.example .env), code:powershell (uv run pytest), Deal Scanner, Qualitätsprüfungen, Schnellstart
 
-### Community 35 - "Community 35"
+### Community 37 - "Community 37"
 Cohesion: 0.38
 Nodes (4): ApiTarget, validateApiTarget(), apiUrl, value
-
-### Community 36 - "Community 36"
-Cohesion: 0.29
-Nodes (6): build(), escapeIdentifiers(), insert(), values(), valuesBuilder(), main()
-
-### Community 37 - "Community 37"
-Cohesion: 0.33
-Nodes (7): deletePrivateImages(), firstIsString(), fragment(), generic(), handleValue(), stringify(), stringifyValue()
 
 ### Community 38 - "Community 38"
 Cohesion: 0.29
 Nodes (6): Deal Scanner erweitern, Neue Kategorie, Neuer Benachrichtigungs- oder ERP-Adapter, Neuer Listing-Provider, Neues Analysemodell, Änderungs-Checkliste
 
-### Community 39 - "Community 39"
-Cohesion: 0.47
-Nodes (3): FileAccessService, runsInTauri(), SelectedTextFile
-
 ### Community 40 - "Community 40"
 Cohesion: 0.47
-Nodes (6): catch(), execute(), finally(), handle(), notTagged(), then()
+Nodes (3): FileAccessService, runsInTauri(), SelectedTextFile
 
 ### Community 41 - "Community 41"
 Cohesion: 0.4
@@ -436,16 +432,16 @@ Nodes (3): fetchAccessToken(), fetchPublicKey(), normalizePublicKey()
 ## Knowledge Gaps
 - **184 isolated node(s):** `ApiTarget`, `listing`, `config`, `fetchMock`, `[listing]` (+179 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `str` connect `Community 17` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 8`, `Community 9`, `Community 14`, `Community 16`, `Community 19`, `Community 25`, `Community 29`?**
+- **Why does `str` connect `Community 4` to `Community 0`, `Community 1`, `Community 3`, `Community 6`, `Community 8`, `Community 9`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 30`?**
   _High betweenness centrality (0.109) - this node is a cross-community bridge._
-- **Why does `select()` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 36`, `Community 4`, `Community 8`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
-- **Why does `CamelModel` connect `Community 1` to `Community 0`, `Community 4`, `Community 13`, `Community 14`, `Community 25`?**
+- **Why does `select()` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 6`, `Community 8`, `Community 26`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+- **Why does `CamelModel` connect `Community 2` to `Community 0`, `Community 6`, `Community 13`, `Community 16`, `Community 17`, `Community 21`?**
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Are the 68 inferred relationships involving `CamelModel` (e.g. with `RiskReview` and `VisionText`) actually correct?**
   _`CamelModel` has 68 INFERRED edges - model-reasoned connections that need verification._

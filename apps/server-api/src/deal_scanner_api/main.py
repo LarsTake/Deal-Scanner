@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+import selectors
+import sys
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from time import perf_counter
@@ -157,6 +160,7 @@ app.add_middleware(
         "Idempotency-Key",
         "X-EBAY-SIGNATURE",
         "X-Development-User",
+        "X-Internal-Key",
         "X-Extension-Pairing",
     ],
 )
@@ -215,4 +219,16 @@ async def root() -> dict[str, str]:
 
 
 def run() -> None:
+    if sys.platform == "win32":
+        loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(
+                uvicorn.Server(
+                    uvicorn.Config("deal_scanner_api.main:app", host="127.0.0.1", port=8000)
+                ).serve()
+            )
+        finally:
+            loop.close()
+        return
     uvicorn.run("deal_scanner_api.main:app", host="127.0.0.1", port=8000)

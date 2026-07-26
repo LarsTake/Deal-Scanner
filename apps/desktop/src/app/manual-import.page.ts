@@ -27,7 +27,7 @@ import { OfflineCacheService } from './offline-cache.service';
       } @else {
         <p class="notice">Externe ID, Titel, Beschreibung, Preis, Versand und Verkäufer werden nach dem Absenden aus der offiziellen eBay API übernommen.</p>
       }
-      <mat-form-field><mat-label>Kategorie</mat-label><mat-select formControlName="categoryProfile"><mat-option value="computer">Computer</mat-option><mat-option value="simracing">Simracing</mat-option><mat-option value="fpv">FPV</mat-option><mat-option value="general">Allgemein</mat-option></mat-select></mat-form-field>
+      <mat-form-field><mat-label>Branche / Kategorie</mat-label><mat-select formControlName="categoryProfile"><mat-option value="computer">Computer</mat-option><mat-option value="simracing">Simracing</mat-option><mat-option value="fpv">FPV</mat-option><mat-option value="electronics">Elektronik</mat-option><mat-option value="vehicles">Fahrzeuge</mat-option><mat-option value="real_estate">Immobilien</mat-option><mat-option value="general">Allgemein</mat-option></mat-select></mat-form-field>
       @if (message()) { <div class="notice">{{ message() }}</div> }
       <button mat-flat-button [disabled]="form.invalid || busy()">Importieren</button>
     </form></mat-card>
@@ -60,7 +60,7 @@ export class ManualImportPage implements OnInit {
     description: new FormControl('', { nonNullable: true }),
     price: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     shippingCost: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
-    categoryProfile: new FormControl<'computer' | 'simracing' | 'fpv' | 'general'>('general', { nonNullable: true }),
+    categoryProfile: new FormControl<string>('general', { nonNullable: true }),
   });
 
   platformChanged(platform: 'ebay' | 'kleinanzeigen'): void {

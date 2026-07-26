@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [switch]$Install,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$Restart
 )
 
 $ErrorActionPreference = 'Stop'
@@ -75,6 +76,24 @@ try {
             -PassThru
     }
 
+    if ($Restart) {
+        $portsToKill = @(8000, 4200)
+        foreach ($port in $portsToKill) {
+            $connections = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+            foreach ($conn in $connections) {
+                Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
+            }
+        }
+        Get-CimInstance Win32_Process |
+            Where-Object {
+                $_.ProcessId -ne $PID -and
+                $_.CommandLine -and
+                $_.CommandLine -match 'deal-scanner-(?:api|worker|scheduler)(?:\.exe)?'
+            } |
+            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+        Start-Sleep -Seconds 2
+    }
+
     $started = [ordered]@{}
     $ollamaModels = @(
         Get-EnvironmentFileValue -Name 'DEAL_SCANNER_OLLAMA_EXTRACTION_MODEL'
@@ -99,8 +118,7 @@ try {
     if (-not (Test-LocalPort -Port 8000)) {
         $started.api = (
             Start-LoggedProcess -Name 'api' -Executable $uv.Source -Arguments @(
-                '--system-certs', 'run', '--package', 'deal-scanner-api', 'uvicorn',
-                'deal_scanner_api.main:app', '--host', '127.0.0.1', '--port', '8000'
+                '--system-certs', 'run', '--package', 'deal-scanner-api', 'deal-scanner-api'
             )
         ).Id
     }
@@ -128,7 +146,7 @@ try {
 
     $apiReady = $false
     $uiReady = $false
-    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if (-not $apiReady) {
             try {
                 $apiResponse = Invoke-WebRequest `

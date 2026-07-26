@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated
@@ -10,7 +11,7 @@ from fastapi import Depends, Header, HTTPException
 from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .auth import CurrentIdentity, Identity, IdentityProvider, get_identity_provider
+from .auth import CurrentIdentity, DevelopmentIdentityProvider, Identity, IdentityProvider, get_identity_provider
 from .database import get_session
 from .db_models import ExtensionPairingRow, WorkspaceMemberRow, WorkspaceRow
 from .settings import get_settings
@@ -54,11 +55,20 @@ async def get_browser_request_context(
     session: Annotated[AsyncSession, Depends(get_session)],
     authorization: Annotated[str | None, Header()] = None,
     x_development_user: Annotated[str | None, Header()] = None,
+    x_internal_key: Annotated[str | None, Header()] = None,
     x_extension_pairing: Annotated[str | None, Header()] = None,
     provider: IdentityProvider = Depends(get_identity_provider),
 ) -> RequestContext:
     if not x_extension_pairing:
-        identity = await provider.authenticate(authorization, x_development_user)
+        settings = get_settings()
+        if (
+            x_internal_key
+            and settings.supabase_service_role_key
+            and secrets.compare_digest(x_internal_key, settings.supabase_service_role_key)
+        ):
+            identity = await DevelopmentIdentityProvider(settings).authenticate(None, x_development_user)
+        else:
+            identity = await provider.authenticate(authorization, x_development_user)
         return await get_request_context(identity, session)
 
     candidate_hash = hashlib.sha256(x_extension_pairing.encode()).hexdigest()

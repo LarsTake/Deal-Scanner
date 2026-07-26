@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import secrets
 import time
 from collections import deque
 
 from fastapi import Request
+
+from .settings import get_settings
 
 
 class FixedWindowRateLimiter:
@@ -42,7 +45,25 @@ class FixedWindowRateLimiter:
             )
         )
 
+    @staticmethod
+    def _is_worker_or_internal(request: Request) -> bool:
+        internal_key = request.headers.get("x-internal-key")
+        configured_key = get_settings().supabase_service_role_key
+        if internal_key and configured_key and secrets.compare_digest(internal_key, configured_key):
+            return True
+        path = request.url.path
+        return any(
+            marker in path
+            for marker in (
+                "/jobs",
+                "/workers",
+                "/listing-images",
+            )
+        )
+
     async def check(self, request: Request) -> tuple[bool, int, int]:
+        if self._is_worker_or_internal(request):
+            return True, 9999, 0
         limit = self.sensitive_limit if self._sensitive(request.url.path) else self.default_limit
         now = time.monotonic()
         key = f"{self._identity(request)}:{'sensitive' if self._sensitive(request.url.path) else 'default'}"

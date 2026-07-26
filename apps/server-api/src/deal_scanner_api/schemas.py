@@ -40,7 +40,7 @@ class NotificationSettings(CamelModel):
 class SearchProfileCreate(CamelModel):
     name: str = Field(min_length=1, max_length=120)
     query: str = Field(min_length=1, max_length=100)
-    category_profile: Literal["computer", "simracing", "fpv", "general"] = "general"
+    category_profile: str = Field(default="general", min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
     enabled_platforms: list[str] = Field(default_factory=lambda: ["ebay"])
     minimum_price: Decimal | None = Field(default=None, ge=0)
     maximum_price: Decimal | None = Field(default=None, ge=0)
@@ -111,7 +111,7 @@ class ManualImportRequest(CamelModel):
     shipping_cost: Decimal = Field(default=Decimal("0"), ge=0)
     currency: str = Field(default="EUR", pattern=r"^[A-Z]{3}$")
     location: str | None = Field(default=None, max_length=255)
-    category_profile: Literal["computer", "simracing", "fpv", "general"] = "general"
+    category_profile: str = Field(default="general", min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
     published_at: datetime | None = None
     raw_data: dict[str, Any] = Field(default_factory=dict)
     provider_version: str = "manual-v1"

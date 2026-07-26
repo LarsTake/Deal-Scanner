@@ -50,6 +50,26 @@ export class AuthService {
     this.userEmail.set(data.user.email ?? null);
   }
 
+  async signUp(email: string, password: string, desktopPassphrase: string): Promise<boolean> {
+    if (!this.client) throw new Error('Supabase ist noch nicht konfiguriert.');
+    if (runsInTauri()) await this.tokens.unlockDesktop(desktopPassphrase);
+    const { data, error } = await this.client.auth.signUp({ email, password });
+    if (error) throw error;
+    if (!data.session) return false;
+    await this.tokens.setSessionTokens({
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+    });
+    this.userEmail.set(data.user?.email ?? email);
+    return true;
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    if (!this.client) throw new Error('Supabase ist noch nicht konfiguriert.');
+    const { error } = await this.client.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+  }
+
   async signOut(): Promise<void> {
     await this.client?.auth.signOut();
     await this.tokens.setSessionTokens(null).catch(() => undefined);

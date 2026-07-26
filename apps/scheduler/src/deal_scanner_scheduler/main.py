@@ -4,6 +4,8 @@ import asyncio
 import hashlib
 import imaplib
 import os
+import selectors
+import sys
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from email import policy
@@ -31,6 +33,7 @@ class SchedulerSettings(BaseSettings):
 
     api_url: str = "http://127.0.0.1:8000"
     api_token: str | None = None
+    supabase_service_role_key: str = ""
     development_user_id: str | None = None
     ebay_environment: str = "sandbox"
     ebay_client_id: str = ""
@@ -67,6 +70,8 @@ class Scheduler:
             headers["Authorization"] = f"Bearer {settings.api_token}"
         if settings.development_user_id:
             headers["X-Development-User"] = settings.development_user_id
+        if settings.supabase_service_role_key:
+            headers["X-Internal-Key"] = settings.supabase_service_role_key
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
         self._workspace_id: str | None = None
 
@@ -545,6 +550,17 @@ class Scheduler:
 
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
-    if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not os.getenv("DEAL_SCANNER_API_TOKEN"):
-        raise RuntimeError("production scheduler requires an API token")
-    asyncio.run(Scheduler(SchedulerSettings()).run_forever())
+    settings = SchedulerSettings()
+    if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not (
+        settings.api_token or settings.supabase_service_role_key
+    ):
+        raise RuntimeError("production scheduler requires internal authentication")
+    if sys.platform == "win32":
+        loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(Scheduler(settings).run_forever())
+        finally:
+            loop.close()
+        return
+    asyncio.run(Scheduler(settings).run_forever())

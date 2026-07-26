@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     environment: str = "development"
     database_url: str = "sqlite+aiosqlite:///./.data/deal-scanner.db"
+    supabase_db_url: str = ""
     database_role: str = Field(default="authenticated", pattern=r"^[a-z_][a-z0-9_]*$")
     auto_create_db: bool = True
     auth_mode: str = "development"
@@ -46,6 +47,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_security_mode(self) -> "Settings":
+        if (
+            self.environment == "production"
+            and self.supabase_db_url
+            and self.database_url == "sqlite+aiosqlite:///./.data/deal-scanner.db"
+        ):
+            self.database_url = self.supabase_db_url.replace(
+                "postgresql://",
+                "postgresql+psycopg://",
+                1,
+            )
         environment_credentials = (
             (self.ebay_production_client_id, self.ebay_production_client_secret)
             if self.ebay_environment == "production"

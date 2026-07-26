@@ -23,6 +23,7 @@ export const routes: Routes = [
     title: 'Anmelden',
   },
   { path: 'new-listings', component: ListingsPage, title: 'Neue Angebote', data: { title: 'Neue Angebote', view: 'new' } },
+  { path: 'top-rated', component: ListingsPage, title: 'Beste Angebote', data: { title: 'Beste Angebote', view: 'top_rated' } },
   { path: 'favorites', component: ListingsPage, title: 'Favoriten', data: { title: 'Favoriten', view: 'favorites' } },
   { path: 'hidden', component: ListingsPage, title: 'Ausgeblendete Angebote', data: { title: 'Ausgeblendete Angebote', view: 'hidden' } },
   { path: 'queue', component: QueuePage, title: 'Analysewarteschlange' },

@@ -111,6 +111,11 @@ class EbayProvider:
             lower = str(profile.minimum_price or "")
             upper = str(profile.maximum_price or "")
             filters.extend([f"price:[{lower}..{upper}]", "priceCurrency:EUR"])
+        search_text = f"{profile.query} {' '.join(profile.required_terms or [])}".casefold()
+        if "gebraucht" in search_text or (
+            profile.category_profile == "computer" and "neu" in (profile.excluded_terms or [])
+        ):
+            filters.append("conditions:{USED_EXCELLENT|USED_VERY_GOOD|USED_GOOD|USED_ACCEPTABLE|3000|4000|5000|6000}")
         offset = 0
         maximum_pages = 20 if since is not None else 1
         for _ in range(maximum_pages):

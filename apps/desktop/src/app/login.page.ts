@@ -16,12 +16,25 @@ import { AuthService } from './auth.service';
       @if (!auth.configured()) { <div class="notice error">Supabase-URL und Publishable Key zuerst unter Einstellungen speichern.</div> }
       @if (auth.userEmail()) { <div class="notice">Angemeldet als {{ auth.userEmail() }}</div><button mat-stroked-button (click)="signOut()">Abmelden</button> }
       @else {
-        <form [formGroup]="form" (ngSubmit)="signIn()">
+        <div class="row actions">
+          <button mat-stroked-button type="button" (click)="mode.set('signin')">Anmelden</button>
+          <button mat-stroked-button type="button" (click)="mode.set('signup')">Registrieren</button>
+        </div>
+        <h2>{{ mode() === 'signup' ? 'Account anlegen' : 'Anmelden' }}</h2>
+        <form [formGroup]="form" (ngSubmit)="submit()">
           <mat-form-field><mat-label>E-Mail</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
           <mat-form-field><mat-label>Passwort</mat-label><input matInput type="password" formControlName="password" /></mat-form-field>
           <mat-form-field><mat-label>Desktop-Tresorpassphrase</mat-label><input matInput type="password" formControlName="vaultPassphrase" /><mat-hint>Nur in Tauri erforderlich; wird nicht gespeichert.</mat-hint></mat-form-field>
           @if (error()) { <div class="notice error">{{ error() }}</div> }
-          <button mat-flat-button [disabled]="form.invalid || busy()">{{ busy() ? 'Anmeldung…' : 'Anmelden' }}</button>
+          @if (message()) { <div class="notice">{{ message() }}</div> }
+          <div class="row actions">
+            <button mat-flat-button [disabled]="form.invalid || busy()">
+              {{ busy() ? 'Bitte warten …' : mode() === 'signup' ? 'Account anlegen' : 'Anmelden' }}
+            </button>
+            <button mat-button type="button" [disabled]="!form.controls.email.valid || busy()" (click)="resetPassword()">
+              Passwort vergessen
+            </button>
+          </div>
         </form>
       }
     </mat-card>
@@ -31,21 +44,46 @@ export class LoginPage {
   readonly auth = inject(AuthService);
   readonly busy = signal(false);
   readonly error = signal('');
+  readonly message = signal('');
+  readonly mode = signal<'signin' | 'signup'>('signin');
   readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     vaultPassphrase: new FormControl('', { nonNullable: true }),
   });
 
-  async signIn(): Promise<void> {
+  async submit(): Promise<void> {
     if (this.form.invalid) return;
     this.busy.set(true);
     this.error.set('');
+    this.message.set('');
     try {
       const value = this.form.getRawValue();
-      await this.auth.signIn(value.email, value.password, value.vaultPassphrase);
+      if (this.mode() === 'signup') {
+        const signedIn = await this.auth.signUp(value.email, value.password, value.vaultPassphrase);
+        if (!signedIn) {
+          this.message.set('Account angelegt. Bitte bestätige die E-Mail und melde dich danach an.');
+          this.mode.set('signin');
+        }
+      } else {
+        await this.auth.signIn(value.email, value.password, value.vaultPassphrase);
+      }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Anmeldung fehlgeschlagen');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async resetPassword(): Promise<void> {
+    this.busy.set(true);
+    this.error.set('');
+    this.message.set('');
+    try {
+      await this.auth.requestPasswordReset(this.form.controls.email.value);
+      this.message.set('Die E-Mail zum Zurücksetzen des Passworts wurde versendet.');
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Passwort-Zurücksetzen fehlgeschlagen');
     } finally {
       this.busy.set(false);
     }

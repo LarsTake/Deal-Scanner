@@ -18,7 +18,11 @@ router = APIRouter(prefix="/imports", tags=["imports"])
 
 
 async def _resolve_manual_ebay(payload: ManualImportRequest) -> ManualImportRequest:
-    if payload.platform != "ebay" or payload.provider_version.startswith("browse-"):
+    if (
+        payload.platform != "ebay"
+        or payload.provider_version.startswith("browse-")
+        or payload.provider_version.startswith("cloud-migration-")
+    ):
         return payload
     legacy_id = extract_ebay_legacy_id(str(payload.url))
     if legacy_id is None:
@@ -122,16 +126,18 @@ async def _idempotent_import(
     except IntegrityError:
         await context.session.rollback()
         return await _idempotent_import(payload, context, idempotency_key, operation)
+    reservation_id = reservation.id
 
     try:
         response = await import_listing(context.session, context.workspace_id, payload)
     except Exception:
-        stored_reservation = await context.session.get(IdempotencyKeyRow, reservation.id)
+        await context.session.rollback()
+        stored_reservation = await context.session.get(IdempotencyKeyRow, reservation_id)
         if stored_reservation is not None:
             await context.session.delete(stored_reservation)
             await context.session.commit()
         raise
-    stored_reservation = await context.session.get(IdempotencyKeyRow, reservation.id)
+    stored_reservation = await context.session.get(IdempotencyKeyRow, reservation_id)
     if stored_reservation is None:
         raise HTTPException(status_code=409, detail="idempotency reservation was lost")
     stored_reservation.resource_id = response.listing.id

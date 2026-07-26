@@ -4,6 +4,7 @@ import asyncio
 import platform
 import shutil
 import socket
+import subprocess
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
@@ -31,6 +32,7 @@ class WorkerSettings(BaseSettings):
     environment: str = "development"
     api_url: str = "http://127.0.0.1:8000"
     api_token: str | None = None
+    supabase_service_role_key: str = ""
     development_user_id: str | None = None
     ollama_url: str = "http://127.0.0.1:11434"
     ollama_text_model: str = ""
@@ -41,6 +43,7 @@ class WorkerSettings(BaseSettings):
     worker_name: str = "local-analysis-worker"
     worker_poll_seconds: float = 5.0
     worker_renew_seconds: float = 90.0
+    worker_concurrency: int = 2
     tesseract_command: str = "tesseract"
     ocr_language: str = "deu+eng"
     health_file: str = ""
@@ -54,6 +57,8 @@ class WorkerAgent:
             headers["Authorization"] = f"Bearer {settings.api_token}"
         if settings.development_user_id:
             headers["X-Development-User"] = settings.development_user_id
+        if settings.supabase_service_role_key:
+            headers["X-Internal-Key"] = settings.supabase_service_role_key
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
         extraction_model = settings.ollama_extraction_model or settings.ollama_text_model
         self.ollama = OllamaProvider(
@@ -77,6 +82,7 @@ class WorkerAgent:
         )
 
     async def register(self) -> None:
+        await self._load_model_configuration()
         health = await self.ollama.health_check() if self.ollama.configured_models else None
         gpu, vram_gb = await self._detect_gpu()
         response = await self.client.post(
@@ -106,25 +112,60 @@ class WorkerAgent:
         response.raise_for_status()
         self.worker_id = UUID(response.json()["id"])
 
+    async def _load_model_configuration(self) -> None:
+        response = await self.client.get("/api/v1/provider-configurations")
+        if response.status_code >= 400:
+            return
+        configuration = next(
+            (item for item in response.json() if item.get("provider") == "ollama" and item.get("enabled")),
+            None,
+        )
+        if configuration is None:
+            return
+        values = configuration.get("settings") or {}
+        self.ollama.model = str(values.get("extractionModel") or self.ollama.model)
+        self.ollama.reasoning_model = str(values.get("reasoningModel") or self.ollama.reasoning_model)
+        self.ollama.vision_model = str(values.get("visionModel") or self.ollama.vision_model)
+        self.ollama.embedding_model = str(values.get("embeddingModel") or self.ollama.embedding_model)
+
     async def _detect_gpu(self) -> tuple[str | None, float | None]:
-        executable = shutil.which("nvidia-smi")
+        return await asyncio.to_thread(self._detect_gpu_sync)
+
+    @staticmethod
+    def _detect_gpu_sync() -> tuple[str | None, float | None]:
+        executable = shutil.which("nvidia-smi") or shutil.which("nvidia-smi.exe")
+        if executable is None:
+            candidates = [
+                r"C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe",
+                r"C:\Windows\System32\nvidia-smi.exe",
+            ]
+            for cand in candidates:
+                if Path(cand).is_file():
+                    executable = cand
+                    break
+            if executable is None and platform.system() == "Windows":
+                driver_store = Path(r"C:\Windows\System32\DriverStore\FileRepository")
+                if driver_store.is_dir():
+                    found = list(driver_store.glob("**/nvidia-smi.exe"))
+                    if found:
+                        executable = str(found[0])
         if executable is None:
             return None, None
         try:
-            process = await asyncio.create_subprocess_exec(
-                executable,
+            process = subprocess.run(  # noqa: S603 - executable is resolved from trusted system paths
+                [executable,
                 "--query-gpu=name,memory.total",
-                "--format=csv,noheader,nounits",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.DEVNULL,
+                "--format=csv,noheader,nounits"],
+                capture_output=True,
+                check=False,
+                timeout=5,
             )
-            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5)
-            if process.returncode != 0 or not stdout:
+            if process.returncode != 0 or not process.stdout:
                 return None, None
-            first = stdout.decode(errors="replace").splitlines()[0]
+            first = process.stdout.decode(errors="replace").splitlines()[0]
             name, memory_mib = (part.strip() for part in first.rsplit(",", 1))
             return name, round(float(memory_mib) / 1024, 2)
-        except (OSError, ValueError, TimeoutError):
+        except (OSError, ValueError, subprocess.TimeoutExpired):
             return None, None
 
     async def heartbeat(self) -> None:
@@ -290,25 +331,37 @@ class WorkerAgent:
             return str(pytesseract.image_to_string(image, lang=self.settings.ocr_language))
 
     async def run_forever(self) -> None:
-        heartbeat_counter = 0
         try:
             while True:
                 try:
                     if self.worker_id is None:
                         await self.register()
                         self._mark_healthy()
-                    worked = await self.process_one()
-                    self._mark_healthy()
-                    heartbeat_counter += 1
-                    if heartbeat_counter >= 6:
-                        await self.heartbeat()
+
+                    async def _worker_loop() -> None:
                         heartbeat_counter = 0
-                    if not worked:
-                        await asyncio.sleep(self.settings.worker_poll_seconds)
+                        while self.worker_id is not None:
+                            worked = await self.process_one()
+                            self._mark_healthy()
+                            heartbeat_counter += 1
+                            if heartbeat_counter >= 6:
+                                await self.heartbeat()
+                                heartbeat_counter = 0
+                            if not worked:
+                                await asyncio.sleep(self.settings.worker_poll_seconds)
+
+                    concurrency = max(1, self.settings.worker_concurrency)
+                    tasks = [asyncio.create_task(_worker_loop()) for _ in range(concurrency)]
+                    done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+                    for task in pending:
+                        task.cancel()
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+                    for result in results:
+                        if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                            raise result
                 except httpx.HTTPError as exc:
                     logger.warning("api_unavailable", error_type=type(exc).__name__, detail=str(exc))
                     self.worker_id = None
-                    heartbeat_counter = 0
                     await asyncio.sleep(self.settings.worker_poll_seconds)
         finally:
             await self.client.aclose()
@@ -321,6 +374,8 @@ class WorkerAgent:
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
     settings = WorkerSettings()
-    if settings.environment == "production" and not settings.api_token:
-        raise RuntimeError("production analysis worker requires an API token")
+    if settings.environment == "production" and not (
+        settings.api_token or settings.supabase_service_role_key
+    ):
+        raise RuntimeError("production analysis worker requires internal authentication")
     asyncio.run(WorkerAgent(settings).run_forever())

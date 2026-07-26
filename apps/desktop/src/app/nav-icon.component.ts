@@ -15,6 +15,7 @@ const ICON_PATHS = {
   monitor_heart: 'M3 5h18v13H3z M7 12h3l2-4 2 7 2-3h2 M9 22h6',
   settings: 'M4 7h10 M18 7h2 M4 17h2 M10 17h10 M14 4v6 M6 14v6',
   login: 'M14 5h5v14h-5 M10 8l4 4-4 4 M14 12H3',
+  star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
   menu: 'M4 6h16 M4 12h16 M4 18h16',
 } as const;
 

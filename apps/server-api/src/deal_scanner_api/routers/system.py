@@ -48,7 +48,7 @@ from ..schemas import (
 from ..settings import get_settings
 
 router = APIRouter(tags=["system"])
-SUPPORTED_PROVIDERS = {"ebay", "kleinanzeigenEmail", "browser", "manual"}
+SUPPORTED_PROVIDERS = {"ebay", "kleinanzeigenEmail", "browser", "manual", "ollama"}
 
 
 @router.get("/system/status", response_model=SystemStatusResponse)

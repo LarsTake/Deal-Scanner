@@ -10,13 +10,15 @@ from uuid import UUID, uuid4
 
 from deal_scanner_core.models import ProductDetection
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import and_, desc, or_, select
+from sqlalchemy import and_, desc, func, or_, select
 
 from ..context import Context
 from ..db_models import (
     AnalysisJobRow,
     AnalysisResultRow,
     AuditEventRow,
+    DealEvaluationRow,
+    ListingProductRow,
     ListingRow,
     ListingSnapshotRow,
     UserFeedbackRow,
@@ -47,9 +49,23 @@ async def list_listings(
     context: Context,
     limit: int = Query(default=30, ge=1, le=100),
     cursor: str | None = None,
-    view: Literal["all", "new", "favorites", "hidden"] = "all",
+    view: Literal["all", "new", "favorites", "hidden", "top_rated"] = "all",
+    platform: str | None = None,
+    category: str | None = None,
+    q: str | None = None,
+    imported_from: datetime | None = None,
+    imported_to: datetime | None = None,
 ) -> ListingPage:
     query = select(ListingRow).where(ListingRow.workspace_id == context.workspace_id)
+    top_score = (
+        select(func.max(DealEvaluationRow.deal_score))
+        .where(
+            DealEvaluationRow.workspace_id == context.workspace_id,
+            DealEvaluationRow.listing_id == ListingRow.id,
+        )
+        .correlate(ListingRow)
+        .scalar_subquery()
+    )
     if view == "hidden":
         query = query.where(ListingRow.is_hidden.is_(True))
     else:
@@ -58,6 +74,39 @@ async def list_listings(
         query = query.where(ListingRow.is_favorite.is_(True))
     elif view == "new":
         query = query.where(ListingRow.first_seen_at >= datetime.now(UTC) - timedelta(hours=24))
+    elif view == "top_rated":
+        query = query.where(top_score >= 70)
+    if platform and platform.strip() and platform != "all":
+        query = query.where(ListingRow.platform.ilike(f"%{platform.strip()}%"))
+    if category and category.strip() and category != "all":
+        query = query.where(ListingRow.category_profile == category.strip())
+    if q and q.strip():
+        search_term = f"%{q.strip()}%"
+        product_subq = (
+            select(ListingProductRow.listing_id)
+            .where(
+                ListingProductRow.workspace_id == context.workspace_id,
+                or_(
+                    ListingProductRow.model.ilike(search_term),
+                    ListingProductRow.manufacturer.ilike(search_term),
+                    ListingProductRow.product_type.ilike(search_term),
+                ),
+            )
+            .distinct()
+        )
+        query = query.where(
+            or_(
+                ListingRow.title.ilike(search_term),
+                ListingRow.description.ilike(search_term),
+                ListingRow.external_id.ilike(search_term),
+                ListingRow.manual_note.ilike(search_term),
+                ListingRow.id.in_(product_subq),
+            )
+        )
+    if imported_from is not None:
+        query = query.where(ListingRow.first_seen_at >= imported_from)
+    if imported_to is not None:
+        query = query.where(ListingRow.first_seen_at <= imported_to)
     if cursor:
         cursor_time, cursor_id = _decode_cursor(cursor)
         query = query.where(
@@ -66,9 +115,12 @@ async def list_listings(
                 and_(ListingRow.last_seen_at == cursor_time, ListingRow.id < cursor_id),
             )
         )
-    result = await context.session.execute(
-        query.order_by(desc(ListingRow.last_seen_at), desc(ListingRow.id)).limit(limit + 1)
+    ordering = (
+        (desc(top_score), desc(ListingRow.last_seen_at), desc(ListingRow.id))
+        if view == "top_rated"
+        else (desc(ListingRow.last_seen_at), desc(ListingRow.id))
     )
+    result = await context.session.execute(query.order_by(*ordering).limit(limit + 1))
     rows = list(result.scalars())
     has_more = len(rows) > limit
     page_rows = rows[:limit]

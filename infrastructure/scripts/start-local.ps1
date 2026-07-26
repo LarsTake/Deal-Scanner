@@ -181,7 +181,15 @@ try {
         throw "Lokaler Start unvollstaendig. API bereit: $apiReady; Oberflaeche bereit: $uiReady. Logs: $runtimeDirectory"
     }
 
-    $status = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/v1/system/status' -TimeoutSec 5
+    $statusHeaders = @{}
+    $internalKey = Get-EnvironmentFileValue -Name 'DEAL_SCANNER_SUPABASE_SERVICE_ROLE_KEY'
+    if ($internalKey) {
+        $statusHeaders['X-Internal-Key'] = $internalKey
+    }
+    $status = Invoke-RestMethod `
+        -Uri 'http://127.0.0.1:8000/api/v1/system/status' `
+        -Headers $statusHeaders `
+        -TimeoutSec 5
     Write-Host "Deal Scanner laeuft: http://127.0.0.1:4200/" -ForegroundColor Green
     Write-Host "API: http://127.0.0.1:8000/api/docs"
     Write-Host "System: $($status.status), Worker: $($status.components.worker.status), offene Jobs: $($status.openJobs)"

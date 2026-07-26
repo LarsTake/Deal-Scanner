@@ -224,6 +224,8 @@ class WorkerAgent:
                 job_id=job["id"],
                 job_type=job["jobType"],
                 error_type=type(exc).__name__,
+                detail=str(exc)[:1000],
+                exc_info=True,
                 duration_ms=round((perf_counter() - started_at) * 1000, 2),
             )
         finally:
@@ -373,7 +375,13 @@ class WorkerAgent:
 
 
 def run() -> None:
-    structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
+    structlog.configure(
+        processors=[
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.format_exc_info,
+            structlog.processors.JSONRenderer(),
+        ]
+    )
     settings = WorkerSettings()
     if settings.environment == "production" and not (
         settings.api_token or settings.supabase_service_role_key

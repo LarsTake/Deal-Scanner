@@ -14,7 +14,29 @@ import { AuthService } from './auth.service';
     <header class="page-header"><div><p class="eyebrow">Identität</p><h1>Anmelden</h1><p>Supabase-JWTs werden lokal validiert; der Desktop speichert die Sitzung im Stronghold-Tresor.</p></div></header>
     <mat-card class="form-card compact">
       @if (!auth.configured()) { <div class="notice error">Supabase-URL und Publishable Key zuerst unter Einstellungen speichern.</div> }
-      @if (auth.userEmail()) { <div class="notice">Angemeldet als {{ auth.userEmail() }}</div><button mat-stroked-button (click)="signOut()">Abmelden</button> }
+      @if (auth.redirectError()) {
+        <div class="notice error">{{ auth.redirectError() }} Bitte fordere einen neuen Passwort-Link an.</div>
+      }
+      @if (auth.passwordRecovery()) {
+        <h2>Neues Passwort festlegen</h2>
+        <p>Der Recovery-Link wurde bestätigt. Lege jetzt dein neues Passwort fest.</p>
+        <form [formGroup]="recoveryForm" (ngSubmit)="completePasswordReset()">
+          <mat-form-field>
+            <mat-label>Neues Passwort</mat-label>
+            <input matInput type="password" autocomplete="new-password" formControlName="password" />
+            <mat-hint>Mindestens 8 Zeichen</mat-hint>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Passwort wiederholen</mat-label>
+            <input matInput type="password" autocomplete="new-password" formControlName="confirmation" />
+          </mat-form-field>
+          @if (error()) { <div class="notice error">{{ error() }}</div> }
+          <button mat-flat-button [disabled]="recoveryForm.invalid || busy()">
+            {{ busy() ? 'Passwort wird gespeichert …' : 'Neues Passwort speichern' }}
+          </button>
+        </form>
+      }
+      @else if (auth.userEmail()) { <div class="notice">Angemeldet als {{ auth.userEmail() }}</div><button mat-stroked-button (click)="signOut()">Abmelden</button> }
       @else {
         <div class="row actions">
           <button mat-stroked-button type="button" (click)="mode.set('signin')">Anmelden</button>
@@ -31,6 +53,16 @@ import { AuthService } from './auth.service';
             <button mat-flat-button [disabled]="form.invalid || busy()">
               {{ busy() ? 'Bitte warten …' : mode() === 'signup' ? 'Account anlegen' : 'Anmelden' }}
             </button>
+            @if (mode() === 'signin') {
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="!form.controls.vaultPassphrase.value || busy()"
+                (click)="unlockSavedSession()"
+              >
+                Gespeicherte Sitzung entsperren
+              </button>
+            }
             <button mat-button type="button" [disabled]="!form.controls.email.valid || busy()" (click)="resetPassword()">
               Passwort vergessen
             </button>
@@ -46,6 +78,16 @@ export class LoginPage {
   readonly error = signal('');
   readonly message = signal('');
   readonly mode = signal<'signin' | 'signup'>('signin');
+  readonly recoveryForm = new FormGroup({
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(8)],
+    }),
+    confirmation: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(8)],
+    }),
+  });
   readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -84,6 +126,43 @@ export class LoginPage {
       this.message.set('Die E-Mail zum Zurücksetzen des Passworts wurde versendet.');
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Passwort-Zurücksetzen fehlgeschlagen');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async completePasswordReset(): Promise<void> {
+    if (this.recoveryForm.invalid) return;
+    this.busy.set(true);
+    this.error.set('');
+    this.message.set('');
+    try {
+      const { password, confirmation } = this.recoveryForm.getRawValue();
+      if (password !== confirmation) {
+        this.error.set('Die beiden Passwörter stimmen nicht überein.');
+        return;
+      }
+      await this.auth.updatePassword(password);
+      this.recoveryForm.reset();
+      this.message.set('Passwort geändert. Du kannst dich jetzt mit dem neuen Passwort anmelden.');
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Passwort konnte nicht gespeichert werden');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async unlockSavedSession(): Promise<void> {
+    this.busy.set(true);
+    this.error.set('');
+    this.message.set('');
+    try {
+      const unlocked = await this.auth.unlockDesktop(this.form.controls.vaultPassphrase.value);
+      if (!unlocked) {
+        this.error.set('Im Desktop-Tresor wurde keine gespeicherte Sitzung gefunden.');
+      }
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Desktop-Tresor konnte nicht entsperrt werden');
     } finally {
       this.busy.set(false);
     }

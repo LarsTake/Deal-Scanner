@@ -1445,11 +1445,8 @@ export interface components {
         };
         /** ManualImportRequest */
         ManualImportRequest: {
-            /**
-             * Platform
-             * @enum {string}
-             */
-            platform: "ebay" | "kleinanzeigen" | "manual";
+            /** Platform */
+            platform: string;
             /** Externalid */
             externalId: string;
             /**

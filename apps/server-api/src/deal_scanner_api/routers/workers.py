@@ -144,6 +144,7 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
     worker = await _owned_worker(context, payload.worker_id)
     now = datetime.now(UTC)
     settings = get_settings()
+    job_payload: dict[str, object] | None = None
     async with context.session.begin_nested():
         expired_jobs = (
             await context.session.execute(
@@ -197,33 +198,39 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
         job.lease_expires_at = now + timedelta(seconds=settings.default_lease_seconds)
         job.started_at = job.started_at or now
         job.attempts += 1
-    await context.session.commit()
-    snapshot = await context.session.get(ListingSnapshotRow, job.snapshot_id)
-    listing = await context.session.get(ListingRow, job.listing_id)
-    job_payload: dict[str, object] | None = None
-    if snapshot and listing:
-        if job.job_type == "image_ocr":
-            image = (
-                await context.session.execute(
-                    select(ListingImageRow).where(
-                        ListingImageRow.workspace_id == context.workspace_id,
-                        ListingImageRow.listing_id == listing.id,
-                        ListingImageRow.sha256_hash == job.input_hash,
+        snapshot = await context.session.get(ListingSnapshotRow, job.snapshot_id)
+        listing = await context.session.get(ListingRow, job.listing_id)
+        if snapshot and listing:
+            if job.job_type == "image_ocr":
+                image = (
+                    await context.session.execute(
+                        select(ListingImageRow).where(
+                            ListingImageRow.workspace_id == context.workspace_id,
+                            ListingImageRow.listing_id == listing.id,
+                            ListingImageRow.sha256_hash == job.input_hash,
+                        )
                     )
-                )
-            ).scalar_one_or_none()
-            if image is not None:
+                ).scalar_one_or_none()
+                if image is not None:
+                    job_payload = {
+                        "imageId": str(image.id),
+                        "imageAccessPath": f"/api/v1/listing-images/{image.id}/access",
+                    }
+            else:
                 job_payload = {
-                    "imageId": str(image.id),
-                    "imageAccessPath": f"/api/v1/listing-images/{image.id}/access",
+                    "title": listing.title,
+                    "description": listing.description,
+                    "categoryProfile": listing.category_profile,
+                    "snapshot": snapshot.raw_data,
                 }
-        else:
-            job_payload = {
-                "title": listing.title,
-                "description": listing.description,
-                "categoryProfile": listing.category_profile,
-                "snapshot": snapshot.raw_data,
-            }
+        if job_payload is None:
+            job.status = "DEAD"
+            job.assigned_worker_id = None
+            job.lease_expires_at = None
+            job.last_error = "job input is unavailable"
+    await context.session.commit()
+    if job_payload is None:
+        return None
     return _job_response(job, job_payload)
 
 

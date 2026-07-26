@@ -18,6 +18,7 @@ target/
 .data/
 .backups/
 coverage/
+artifacts/
 apps/desktop/src-tauri/gen/
 graphify-out/.graphify_*
 graphify-out/cache/

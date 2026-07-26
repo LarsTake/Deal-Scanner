@@ -10570,11 +10570,9 @@
         "properties": {
           "platform": {
             "type": "string",
-            "enum": [
-              "ebay",
-              "kleinanzeigen",
-              "manual"
-            ],
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_-]+$",
             "title": "Platform"
           },
           "externalId": {

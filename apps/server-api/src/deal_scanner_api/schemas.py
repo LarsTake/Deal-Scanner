@@ -102,7 +102,7 @@ class SellerResponse(SellerInput):
 
 
 class ManualImportRequest(CamelModel):
-    platform: Literal["ebay", "kleinanzeigen", "manual"]
+    platform: str = Field(min_length=1, max_length=32, pattern=r"^[a-z0-9_-]+$")
     external_id: str = Field(min_length=1, max_length=255)
     url: HttpUrl
     title: str = Field(min_length=1, max_length=500)

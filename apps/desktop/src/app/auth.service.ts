@@ -42,8 +42,10 @@ export function readAuthRedirectError(href: string = window.location.href): stri
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private client: SupabaseClient | null = null;
+  private initialization: Promise<void> = Promise.resolve();
   readonly userEmail = signal<string | null>(null);
   readonly configured = signal(false);
+  readonly initialized = signal(false);
   readonly passwordRecovery = signal(false);
   readonly redirectError = signal<string | null>(readAuthRedirectError());
 
@@ -55,6 +57,15 @@ export class AuthService {
     localStorage.setItem('deal-scanner-supabase-url', url);
     localStorage.setItem('deal-scanner-supabase-key', publishableKey);
     this.configureFromStorage();
+  }
+
+  async waitUntilInitialized(): Promise<void> {
+    await this.initialization;
+  }
+
+  async getAccessToken(): Promise<string | null> {
+    await this.waitUntilInitialized();
+    return this.tokens.getAccessToken();
   }
 
   async unlockDesktop(passphrase: string): Promise<boolean> {
@@ -118,7 +129,12 @@ export class AuthService {
   private configureFromStorage(): void {
     const url = localStorage.getItem('deal-scanner-supabase-url');
     const key = localStorage.getItem('deal-scanner-supabase-key');
-    if (!url || !key) return;
+    this.initialized.set(false);
+    if (!url || !key) {
+      this.configured.set(false);
+      this.initialization = Promise.resolve().then(() => this.initialized.set(true));
+      return;
+    }
     this.client = createClient(url, key, {
       auth: {
         persistSession: !runsInTauri(),
@@ -135,7 +151,7 @@ export class AuthService {
       this.userEmail.set(session?.user.email ?? null);
       if (session) void this.storeSession(session).catch(() => undefined);
     });
-    void this.initializeSession();
+    this.initialization = this.initializeSession().finally(() => this.initialized.set(true));
   }
 
   private async initializeSession(): Promise<void> {

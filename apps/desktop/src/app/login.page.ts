@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
@@ -74,6 +75,8 @@ import { AuthService } from './auth.service';
 })
 export class LoginPage {
   readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly message = signal('');
@@ -109,6 +112,7 @@ export class LoginPage {
         }
       } else {
         await this.auth.signIn(value.email, value.password, value.vaultPassphrase);
+        await this.continueAfterAuthentication();
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Anmeldung fehlgeschlagen');
@@ -160,6 +164,8 @@ export class LoginPage {
       const unlocked = await this.auth.unlockDesktop(this.form.controls.vaultPassphrase.value);
       if (!unlocked) {
         this.error.set('Im Desktop-Tresor wurde keine gespeicherte Sitzung gefunden.');
+      } else {
+        await this.continueAfterAuthentication();
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Desktop-Tresor konnte nicht entsperrt werden');
@@ -170,5 +176,12 @@ export class LoginPage {
 
   async signOut(): Promise<void> {
     await this.auth.signOut();
+  }
+
+  private async continueAfterAuthentication(): Promise<void> {
+    const requestedUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    const target =
+      requestedUrl?.startsWith('/') && !requestedUrl.startsWith('//') ? requestedUrl : '/';
+    await this.router.navigateByUrl(target);
   }
 }

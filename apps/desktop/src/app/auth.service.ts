@@ -150,6 +150,7 @@ export class AuthService {
       });
       if (error) {
         this.redirectError.set(error.message);
+        this.removeRecoveryParameters(currentUrl);
         return;
       }
       this.passwordRecovery.set(Boolean(data.session));

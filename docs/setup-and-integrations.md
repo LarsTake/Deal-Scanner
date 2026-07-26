@@ -29,6 +29,15 @@ im Server-Secret-Store. Die Buckets `listing-images` und `mail-archive` bleiben 
 Die gepinnte CLI wird mit `pnpm exec supabase --workdir infrastructure <Befehl>` aufgerufen;
 `supabase start` und `supabase status` benötigen einen laufenden Docker-kompatiblen Dienst.
 
+Für lokale Passwort-Recovery ist die Site URL `http://127.0.0.1:4200` konfiguriert. Die
+Redirect-Allowlist enthält `http://127.0.0.1:4200/login` und `http://localhost:4200/login`.
+Die Recovery-Mail verlinkt nicht direkt auf Supabases einmalig nutzbare Confirmation URL,
+sondern auf `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. Dadurch verbrauchen
+Mail-Sicherheitsprüfungen den Link nicht vor dem Benutzer. Das Login verifiziert den Token,
+zeigt das Formular für das neue Passwort an und meldet die Recovery-Sitzung danach ab.
+Für frei gehostete Supabase-Projekte erfordert diese angepasste Mailvorlage einen eigenen
+SMTP-Versand; SMTP-Zugangsdaten gehören ausschließlich in Supabase und niemals ins Repository.
+
 Scheduler und Analyse-Worker authentifizieren sich ebenfalls an der API. Im Entwicklungsmodus
 kann dafür `DEAL_SCANNER_DEVELOPMENT_USER_ID` verwendet werden. In Produktion ist ein gültiges,
 eng begrenztes Benutzer-JWT als `DEAL_SCANNER_API_TOKEN` Pflicht; Prozesse verweigern ohne Token

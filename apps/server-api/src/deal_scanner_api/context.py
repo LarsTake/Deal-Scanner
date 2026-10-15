@@ -11,7 +11,7 @@ from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .auth import CurrentIdentity, Identity, IdentityProvider, get_identity_provider
-from .database import get_session
+from .database import get_session, set_request_subject
 from .db_models import ExtensionPairingRow, WorkspaceMemberRow, WorkspaceRow
 from .settings import get_settings
 
@@ -29,10 +29,7 @@ async def get_request_context(
 ) -> RequestContext:
     settings = get_settings()
     if settings.database_url.startswith("postgresql"):
-        await session.execute(
-            text("select set_config('request.jwt.claim.sub', :subject, false)"),
-            {"subject": str(identity.user_id)},
-        )
+        await set_request_subject(session, identity.user_id)
     result = await session.execute(select(WorkspaceMemberRow).where(WorkspaceMemberRow.user_id == identity.user_id))
     membership = result.scalars().first()
     if membership is None:
@@ -91,10 +88,7 @@ async def get_browser_request_context(
         workspace_id, user_id = pairing.workspace_id, pairing.created_by_user_id
 
     if settings.database_url.startswith("postgresql"):
-        await session.execute(
-            text("select set_config('request.jwt.claim.sub', :subject, false)"),
-            {"subject": str(user_id)},
-        )
+        await set_request_subject(session, user_id)
     return RequestContext(
         identity=Identity(user_id=user_id, roles=["extension"]),
         workspace_id=workspace_id,

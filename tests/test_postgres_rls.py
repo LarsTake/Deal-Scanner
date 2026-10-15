@@ -8,6 +8,11 @@ from uuid import UUID, uuid4
 
 import psycopg
 import pytest
+from deal_scanner_api.database import set_request_subject
+from deal_scanner_api.db_models import SearchProfileRow, WorkspaceRow
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 POSTGRES_URL = os.getenv("DEAL_SCANNER_TEST_POSTGRES_URL")
 pytestmark = pytest.mark.skipif(not POSTGRES_URL, reason="requires DEAL_SCANNER_TEST_POSTGRES_URL")
@@ -179,3 +184,59 @@ def test_postgres_skip_locked_allows_only_one_concurrent_job_claim(
         second.rollback()
         first.close()
         second.close()
+
+
+async def test_request_context_survives_commit_and_new_physical_connection(
+    postgres: psycopg.Connection[tuple[object, ...]],
+) -> None:
+    assert POSTGRES_URL
+    url = POSTGRES_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # NullPool forces a fresh physical connection after every commit/rollback.
+    engine = create_async_engine(url, poolclass=NullPool)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    workspace_one = _workspace_for(postgres, USER_ONE)
+    workspace_two = _workspace_for(postgres, USER_TWO)
+    profile_id = uuid4()
+    try:
+        async with factory() as session:
+            session.info["deal_scanner_role"] = "authenticated"
+            await set_request_subject(session, USER_ONE)
+            profile = SearchProfileRow(
+                id=profile_id,
+                workspace_id=workspace_one,
+                name="Commit regression",
+                query="GPU",
+                category_profile="computer",
+                enabled_platforms=["kleinanzeigen"],
+                required_terms=[],
+                excluded_terms=[],
+                required_products=[],
+                excluded_products=[],
+                notification_settings={},
+            )
+            session.add(profile)
+            await session.commit()
+            # This is the exact create_profile() path that failed in production.
+            await session.refresh(profile)
+            assert profile.name == "Commit regression"
+            assert await session.scalar(text("select current_user")) == "authenticated"
+            assert await session.scalar(text("show search_path")) == "deal_scanner,public"
+            assert set((await session.scalars(select(WorkspaceRow.id))).all()) == {workspace_one}
+            await session.rollback()
+            # A new transaction must still apply the subject, role and schema.
+            assert await session.get(SearchProfileRow, profile_id) is not None
+            assert await session.scalar(text("select current_user")) == "authenticated"
+            await session.commit()
+        async with factory() as session:
+            session.info["deal_scanner_role"] = "authenticated"
+            await set_request_subject(session, USER_TWO)
+            assert set((await session.scalars(select(WorkspaceRow.id))).all()) == {workspace_two}
+            assert await session.get(SearchProfileRow, profile_id) is None
+            await session.commit()
+            assert await session.get(SearchProfileRow, profile_id) is None
+        # Transaction-local state must not leak to a subsequent unconfigured connection.
+        async with engine.connect() as connection:
+            assert await connection.scalar(text("select current_user")) == "postgres"
+            assert await connection.scalar(text("show search_path")) != "deal_scanner,public"
+    finally:
+        await engine.dispose()

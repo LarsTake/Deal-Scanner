@@ -17,6 +17,7 @@ from ..db_models import (
     PriceObservationRow,
 )
 from ..market_service import estimate_listing_market, evaluate_listing_record
+from ..notification_service import dispatch_ntfy_notifications
 from ..schemas import (
     CsvImportResponse,
     ListingEvaluationResponse,
@@ -27,6 +28,11 @@ from ..schemas import (
 )
 
 router = APIRouter(tags=["market-data"])
+
+
+@router.post("/notifications/dispatch")
+async def dispatch_notifications(context: Context) -> dict[str, int]:
+    return {"delivered": await dispatch_ntfy_notifications(context.session, context.workspace_id)}
 
 
 @router.post("/price-observations", response_model=PriceObservationResponse, status_code=201)
@@ -121,15 +127,17 @@ async def evaluate_listing(listing_id: UUID, context: Context) -> ListingEvaluat
 
 
 @router.get("/notifications", response_model=list[NotificationResponse])
-async def notifications(context: Context) -> list[NotificationResponse]:
-    rows = (
-        await context.session.execute(
-            select(NotificationRow)
-            .where(NotificationRow.workspace_id == context.workspace_id)
-            .order_by(desc(NotificationRow.created_at))
-            .limit(100)
+async def notifications(context: Context, pending_only: bool = False) -> list[NotificationResponse]:
+    query = select(NotificationRow).where(NotificationRow.workspace_id == context.workspace_id)
+    if pending_only:
+        query = query.join(
+            NotificationDeliveryRow, NotificationDeliveryRow.notification_id == NotificationRow.id
+        ).where(
+            NotificationDeliveryRow.workspace_id == context.workspace_id,
+            NotificationDeliveryRow.channel == "desktop",
+            NotificationDeliveryRow.status == "PENDING",
         )
-    ).scalars()
+    rows = (await context.session.execute(query.order_by(desc(NotificationRow.created_at)).limit(100))).scalars()
     return [
         NotificationResponse(
             id=row.id,

@@ -61,3 +61,22 @@ async def test_worker_reconnects_after_transient_api_failure() -> None:
     with pytest.raises(StopLoop):
         await agent.run_forever()
     assert agent.register_calls == 2
+
+
+async def test_rules_mode_disables_models_and_deep_fallback() -> None:
+    agent = WorkerAgent(WorkerSettings(_env_file=None, worker_mode="rules"))
+    try:
+        assert agent.capabilities == ["rules"]
+        assert not agent.ollama.configured_models
+        assert agent.tesseract_path is None
+        job = {
+            "jobType": "rule_analysis",
+            "listingId": "00000000-0000-4000-8000-000000000123",
+            "payload": {"title": "RTX 4070 Super", "description": "", "categoryProfile": "computer"},
+        }
+        assert (await agent._analyze(job))[2] == "rules-v1"
+        job["jobType"] = "deep_text_analysis"
+        with pytest.raises(RuntimeError):
+            await agent._analyze(job)
+    finally:
+        await agent.client.aclose()

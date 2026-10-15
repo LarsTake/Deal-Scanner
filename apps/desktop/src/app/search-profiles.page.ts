@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { RouterLink } from '@angular/router';
 import type { SearchProfile, SearchProfileCreate } from '@deal-scanner/contracts';
 
 import { ApiService } from './api.service';
@@ -20,6 +21,7 @@ import { ApiService } from './api.service';
     MatSelectModule,
     MatSlideToggleModule,
     ReactiveFormsModule,
+    RouterLink,
   ],
   template: `
     <header class="page-header"><div><p class="eyebrow">Automatisierung</p><h1>Suchaufträge</h1><p>Jeder Auftrag definiert Kategorie, Preiskorridor und Bewertungsschwellen.</p></div></header>
@@ -30,6 +32,12 @@ import { ApiService } from './api.service';
         <form [formGroup]="form" (ngSubmit)="create()">
           <mat-form-field><mat-label>Name</mat-label><input matInput formControlName="name" /></mat-form-field>
           <mat-form-field><mat-label>Suchbegriff</mat-label><input matInput formControlName="query" /></mat-form-field>
+          <mat-form-field><mat-label>Quellen</mat-label><mat-select formControlName="enabledPlatforms" multiple>
+            <mat-option value="ebay">eBay (Browse API)</mat-option>
+            <mat-option value="kleinanzeigen">Kleinanzeigen (Websuche)</mat-option>
+            <mat-option value="mydealz">mydealz (Community-Deals)</mat-option>
+            <mat-option value="vinted">Vinted (Katalogsuche)</mat-option>
+          </mat-select><mat-hint>Websuche im Scheduler aktivieren. Schreibweisen wie RTX-4070 und RTX 4070 werden erkannt.</mat-hint></mat-form-field>
           <mat-form-field><mat-label>Kategorie</mat-label><mat-select formControlName="categoryProfile">
             <mat-option value="computer">Computer</mat-option><mat-option value="simracing">Simracing</mat-option>
             <mat-option value="fpv">FPV & Drohnen</mat-option><mat-option value="general">Allgemein</mat-option>
@@ -40,9 +48,13 @@ import { ApiService } from './api.service';
           <mat-form-field><mat-label>Ausgeschlossene Begriffe (Komma)</mat-label><input matInput formControlName="excludedTerms" /></mat-form-field>
           <mat-form-field><mat-label>Erforderliche Produkte (Komma)</mat-label><input matInput formControlName="requiredProducts" /></mat-form-field>
           <mat-form-field><mat-label>Ausgeschlossene Produkte (Komma)</mat-label><input matInput formControlName="excludedProducts" /></mat-form-field>
+          <div class="form-row"><mat-form-field><mat-label>Scanintervall (Minuten)</mat-label><input matInput type="number" min="5" max="10080" formControlName="scanIntervalMinutes" /></mat-form-field>
+          <mat-form-field><mat-label>Datenqualität mindestens</mat-label><input matInput type="number" min="0" max="100" formControlName="minimumDataQuality" /></mat-form-field></div>
           <div class="form-row"><mat-form-field><mat-label>Deal mindestens</mat-label><input matInput type="number" formControlName="minimumDealScore" /></mat-form-field><mat-form-field><mat-label>Risiko maximal</mat-label><input matInput type="number" formControlName="maximumRiskScore" /></mat-form-field></div>
           <div class="form-row"><mat-form-field><mat-label>Marktvorteil mindestens (%)</mat-label><input matInput type="number" formControlName="minimumMarketAdvantagePercent" /></mat-form-field><mat-form-field><mat-label>Anzeige maximal (Stunden)</mat-label><input matInput type="number" formControlName="maximumListingAgeHours" /></mat-form-field></div>
           <div class="row"><mat-slide-toggle formControlName="desktopEnabled">Desktop</mat-slide-toggle><mat-slide-toggle formControlName="ntfyEnabled">ntfy</mat-slide-toggle></div>
+          <mat-slide-toggle formControlName="notifyOnFirstRun">Vorhandene Treffer beim ersten Lauf melden</mat-slide-toggle>
+          <mat-form-field><mat-label>Archivieren nach Tagen (leer = aus)</mat-label><input matInput type="number" formControlName="archiveAfterDays" /><mat-hint>Nur seit 48 Stunden nicht mehr gesehene Treffer; Favoriten bleiben sichtbar.</mat-hint></mat-form-field>
           <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Speichert…' : 'Suchauftrag speichern' }}</button>
           @if (editingId()) { <button mat-stroked-button type="button" (click)="cancelEdit()">Abbrechen</button> }
         </form>
@@ -53,6 +65,7 @@ import { ApiService } from './api.service';
             <small>Deal ≥ {{ profile.minimumDealScore }} · Risiko ≤ {{ profile.maximumRiskScore }} · alle {{ profile.scanIntervalMinutes }} Min.</small>
             <p>{{ profile.location ?? 'ohne Ortsfilter' }}{{ profile.radiusKm ? ' · ' + profile.radiusKm + ' km' : '' }}</p>
             <div class="row actions">
+              <a mat-stroked-button routerLink="/listings" [queryParams]="{searchProfileId: profile.id}">Treffer ansehen</a>
               <button mat-stroked-button (click)="edit(profile)">Bearbeiten</button>
               <button mat-stroked-button (click)="toggle(profile)">{{ profile.enabled ? 'Pausieren' : 'Fortsetzen' }}</button>
               <button mat-stroked-button (click)="remove(profile)">Löschen</button>
@@ -72,6 +85,7 @@ export class SearchProfilesPage implements OnInit {
   readonly form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     query: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    enabledPlatforms: new FormControl<string[]>(['ebay'], { nonNullable: true, validators: [Validators.required] }),
     categoryProfile: new FormControl<'computer' | 'simracing' | 'fpv' | 'general'>('computer', { nonNullable: true }),
     minimumPrice: new FormControl<number | null>(null),
     maximumPrice: new FormControl<number | null>(null),
@@ -81,12 +95,16 @@ export class SearchProfilesPage implements OnInit {
     excludedTerms: new FormControl('', { nonNullable: true }),
     requiredProducts: new FormControl('', { nonNullable: true }),
     excludedProducts: new FormControl('', { nonNullable: true }),
+    scanIntervalMinutes: new FormControl(15, { nonNullable: true, validators: [Validators.min(5), Validators.max(10080)] }),
+    minimumDataQuality: new FormControl(40, { nonNullable: true, validators: [Validators.min(0), Validators.max(100)] }),
     minimumDealScore: new FormControl(75, { nonNullable: true }),
     maximumRiskScore: new FormControl(45, { nonNullable: true }),
     minimumMarketAdvantagePercent: new FormControl(15, { nonNullable: true }),
     maximumListingAgeHours: new FormControl<number | null>(24),
     desktopEnabled: new FormControl(true, { nonNullable: true }),
     ntfyEnabled: new FormControl(false, { nonNullable: true }),
+    notifyOnFirstRun: new FormControl(false, { nonNullable: true }),
+    archiveAfterDays: new FormControl<number | null>(14),
   });
 
   async ngOnInit(): Promise<void> {
@@ -118,9 +136,12 @@ export class SearchProfilesPage implements OnInit {
           maximumListingAgeHours: value.maximumListingAgeHours,
           desktopEnabled: value.desktopEnabled,
           ntfyEnabled: value.ntfyEnabled,
+          notifyOnFirstRun: value.notifyOnFirstRun,
+          archiveAfterDays: value.archiveAfterDays,
+          minimumDataQuality: value.minimumDataQuality,
         },
-        enabledPlatforms: ['ebay'],
-        scanIntervalMinutes: 15,
+        enabledPlatforms: value.enabledPlatforms,
+        scanIntervalMinutes: value.scanIntervalMinutes,
         enabled: true,
       };
       const editingId = this.editingId();
@@ -142,10 +163,14 @@ export class SearchProfilesPage implements OnInit {
       maximumListingAgeHours: 24,
       desktopEnabled: true,
       ntfyEnabled: false,
+      notifyOnFirstRun: false,
+      archiveAfterDays: 14,
+      minimumDataQuality: 40,
     };
     this.form.patchValue({
       name: profile.name,
       query: profile.query,
+      enabledPlatforms: profile.enabledPlatforms,
       categoryProfile: profile.categoryProfile,
       minimumPrice: profile.minimumPrice === null ? null : Number(profile.minimumPrice),
       maximumPrice: profile.maximumPrice === null ? null : Number(profile.maximumPrice),
@@ -161,17 +186,23 @@ export class SearchProfilesPage implements OnInit {
       maximumListingAgeHours: notificationSettings.maximumListingAgeHours ?? 24,
       desktopEnabled: notificationSettings.desktopEnabled ?? true,
       ntfyEnabled: notificationSettings.ntfyEnabled ?? false,
+      notifyOnFirstRun: notificationSettings.notifyOnFirstRun ?? false,
+      archiveAfterDays: notificationSettings.archiveAfterDays === null ? null : notificationSettings.archiveAfterDays ?? 14,
+      minimumDataQuality: notificationSettings.minimumDataQuality ?? 40,
+      scanIntervalMinutes: profile.scanIntervalMinutes,
     });
   }
 
   cancelEdit(): void {
     this.editingId.set(null);
     this.form.reset({
-      name: '', query: '', categoryProfile: 'computer', minimumPrice: null, maximumPrice: null,
+      name: '', query: '', enabledPlatforms: ['ebay'], categoryProfile: 'computer', minimumPrice: null, maximumPrice: null,
       location: '', radiusKm: null, requiredTerms: '', excludedTerms: '', requiredProducts: '',
       excludedProducts: '', minimumDealScore: 75, maximumRiskScore: 45,
       minimumMarketAdvantagePercent: 15, maximumListingAgeHours: 24,
       desktopEnabled: true, ntfyEnabled: false,
+      notifyOnFirstRun: false, archiveAfterDays: 14,
+      scanIntervalMinutes: 15, minimumDataQuality: 40,
     });
   }
 

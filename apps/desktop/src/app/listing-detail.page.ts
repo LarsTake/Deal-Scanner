@@ -55,10 +55,21 @@ import { ApiService } from './api.service';
         <div class="row actions">
           <button mat-stroked-button (click)="toggleFavorite(item)">{{ item.isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern' }}</button>
           <button mat-stroked-button (click)="toggleHidden(item)">{{ item.isHidden ? 'Wieder einblenden' : 'Ausblenden' }}</button>
-          <button mat-stroked-button (click)="reanalyze()">Neu analysieren</button>
+          <button mat-stroked-button (click)="reanalyze()">KI-Tiefenanalyse anfordern</button>
           <button mat-flat-button (click)="evaluate()">Neu bewerten</button>
         </div>
       </mat-card>
+      <section class="section-head"><div><p class="eyebrow">Beobachtungen</p><h2>Preisverlauf und Auffälligkeiten</h2></div></section>
+      <p><small>Sachliche Hinweise, getrennt vom Risiko-Score. Keine zusätzlichen Push-Meldungen.</small></p>
+      <div class="listing-grid">
+        @for (finding of item.findings; track finding.id) {
+          <mat-card class="listing-card">
+            <h3>{{ finding.title }}</h3><p>{{ finding.description }}</p>
+            <small>{{ finding.observedAt }} · {{ finding.source }}</small>
+            <details><summary>Belege und Grenzwerte</summary><pre>{{ finding.evidence | json }}</pre></details>
+          </mat-card>
+        } @empty { <div class="empty">Keine entsprechenden Beobachtungen vorhanden. Das bestätigt weder Sicherheit noch Vollständigkeit.</div> }
+      </div>
       <section class="section-head"><div><p class="eyebrow">Struktur</p><h2>Erkannte Produkte und Attribute</h2></div></section>
       <div class="listing-grid">
         @for (product of item.products; track product.id) {
@@ -131,6 +142,9 @@ import { ApiService } from './api.service';
             <h3>{{ evaluation.marketValueMedian ?? 'Keine belastbare Schätzung' }} {{ item.currency }}</h3>
             <p>Spanne {{ evaluation.marketValueMinimum ?? '–' }} bis {{ evaluation.marketValueMaximum ?? '–' }} · Marge {{ evaluation.estimatedMargin ?? '–' }}</p>
             <small>Deal {{ evaluation.dealScore ?? '–' }} · Risiko {{ evaluation.riskScore }}</small>
+            <details><summary>Vergleichsgrundlage und Ausschlussgründe</summary>
+              <pre>{{ evaluation.explanation['market'] | json }}</pre>
+            </details>
           </mat-card>
         } @empty { <div class="empty">Noch keine Bewertungshistorie.</div> }
       </div>

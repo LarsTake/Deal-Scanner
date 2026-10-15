@@ -1,4 +1,9 @@
 .git
+.env
+.env.*
+!.env.example
+.backups
+.cache
 .venv
 node_modules
 **/node_modules

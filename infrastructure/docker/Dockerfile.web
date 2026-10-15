@@ -1,0 +1,11 @@
+FROM node:24-alpine AS build
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @deal-scanner/desktop build
+
+FROM caddy:2.10-alpine
+COPY infrastructure/docker/Caddyfile.web /etc/caddy/Caddyfile
+COPY --from=build /app/apps/desktop/dist/browser /srv
+EXPOSE 8080

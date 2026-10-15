@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .comparison_service import COMPARISON_VERSION
 from .db_models import (
     DealEvaluationRow,
     ListingImageRow,
@@ -158,6 +159,10 @@ class MockErpIntegrationAdapter:
                     "calculationVersion": evaluation.calculation_version,
                 }
                 if evaluation is not None
+                and (
+                    evaluation.calculation_version.endswith(f"+{COMPARISON_VERSION}")
+                    or (evaluation.deal_score is None and evaluation.estimated_market_value_median is None)
+                )
                 else None
             ),
         }

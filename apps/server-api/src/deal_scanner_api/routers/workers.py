@@ -144,6 +144,7 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
     worker = await _owned_worker(context, payload.worker_id)
     now = datetime.now(UTC)
     settings = get_settings()
+    capabilities = sorted(set(payload.capabilities) & set(worker.capabilities))
     async with context.session.begin_nested():
         expired_jobs = (
             await context.session.execute(
@@ -168,14 +169,14 @@ async def claim_job(payload: JobClaimRequest, context: Context) -> JobResponse |
                 expired.available_at = now + timedelta(seconds=retry_delays[expired.attempts - 1])
         capability_filter = (
             or_(
-                AnalysisJobRow.required_capability.in_(payload.capabilities),
+                AnalysisJobRow.required_capability.in_(capabilities),
                 and_(
                     AnalysisJobRow.job_type == "text_analysis",
                     AnalysisJobRow.required_capability == "text-small",
                 ),
             )
-            if "rules" in payload.capabilities
-            else AnalysisJobRow.required_capability.in_(payload.capabilities)
+            if "rules" in capabilities
+            else AnalysisJobRow.required_capability.in_(capabilities)
         )
         result = await context.session.execute(
             select(AnalysisJobRow)
@@ -263,9 +264,11 @@ async def complete_job(job_id: UUID, payload: JobCompleteRequest, context: Conte
     job = await _leased_job(context, job_id, payload.worker_id)
     if payload.input_hash != job.input_hash:
         raise HTTPException(status_code=409, detail="job input hash changed")
+    if job.job_type == "deep_text_analysis" and payload.model_name == "rules-v1":
+        raise HTTPException(status_code=422, detail="deep analysis cannot be completed by a rules-only result")
     text_result: TextAnalysisResult | None = None
     image_result: ImageOcrResult | None = None
-    if job.job_type == "text_analysis":
+    if job.job_type in {"text_analysis", "rule_analysis", "deep_text_analysis"}:
         try:
             text_result = TextAnalysisResult.model_validate(payload.result)
         except ValidationError as exc:
@@ -293,7 +296,20 @@ async def complete_job(job_id: UUID, payload: JobCompleteRequest, context: Conte
     job.status = "COMPLETE"
     job.completed_at = datetime.now(UTC)
     listing = await context.session.get(ListingRow, job.listing_id)
-    if listing:
+    newer_deep_result = None
+    if job.job_type == "rule_analysis":
+        newer_deep_result = await context.session.scalar(
+            select(AnalysisJobRow.id)
+            .where(
+                AnalysisJobRow.workspace_id == context.workspace_id,
+                AnalysisJobRow.listing_id == job.listing_id,
+                AnalysisJobRow.snapshot_id == job.snapshot_id,
+                AnalysisJobRow.job_type == "deep_text_analysis",
+                AnalysisJobRow.status == "COMPLETE",
+            )
+            .limit(1)
+        )
+    if listing and listing.current_snapshot_id == job.snapshot_id and newer_deep_result is None:
         if text_result is not None:
             listing.analysis_status = "COMPLETE"
             listing.status = "TEXT_ANALYZED"

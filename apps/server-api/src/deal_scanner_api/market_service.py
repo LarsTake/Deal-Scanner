@@ -15,16 +15,17 @@ from deal_scanner_scoring import (
     PriceObservation,
 )
 from fastapi import HTTPException
-from sqlalchemy import desc, or_, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .comparison_service import COMPARISON_VERSION, select_comparisons
 from .db_models import (
     DealEvaluationRow,
     ListingProductRow,
     ListingRow,
+    ListingSnapshotRow,
     MarketValueEstimateRow,
     NotificationRow,
-    PriceObservationRow,
     ProductAttributeRow,
     SearchProfileRow,
 )
@@ -110,31 +111,7 @@ async def estimate_listing_market(
     if listing is None:
         raise HTTPException(status_code=404, detail="listing not found")
 
-    canonical_ids = list(
-        (
-            await session.execute(
-                select(ListingProductRow.canonical_product_id)
-                .where(
-                    ListingProductRow.workspace_id == workspace_id,
-                    ListingProductRow.listing_id == listing_id,
-                    ListingProductRow.canonical_product_id.is_not(None),
-                )
-                .distinct()
-            )
-        ).scalars()
-    )
-    scope = PriceObservationRow.listing_id == listing_id
-    if canonical_ids:
-        scope = or_(scope, PriceObservationRow.canonical_product_id.in_(canonical_ids))
-    rows = (
-        await session.execute(
-            select(PriceObservationRow).where(
-                PriceObservationRow.workspace_id == workspace_id,
-                PriceObservationRow.currency == listing.currency,
-                scope,
-            )
-        )
-    ).scalars()
+    selection = await select_comparisons(session, workspace_id, listing)
     observations = [
         PriceObservation(
             price=row.observed_price,
@@ -143,9 +120,12 @@ async def estimate_listing_market(
             kind=row.observation_kind,
             source_quality=float(row.source_quality),
         )
-        for row in rows
+        for row in selection.rows
     ]
-    return listing, MarketValueEngine().estimate(observations)
+    estimate = MarketValueEngine().estimate(observations)
+    estimate.calculation_version += f"+{COMPARISON_VERSION}"
+    estimate.explanation.extend(selection.explanations())
+    return listing, estimate
 
 
 async def evaluate_listing_record(
@@ -228,6 +208,7 @@ async def evaluate_listing_record(
     minimum_advantage = Decimal("0")
     maximum_age_hours: int | None = None
     desktop_enabled = True
+    minimum_quality = 40
     ntfy_enabled = False
     if listing.search_profile_id is not None:
         profile = await session.get(SearchProfileRow, listing.search_profile_id)
@@ -245,6 +226,7 @@ async def evaluate_listing_record(
             if isinstance(raw_maximum_age, int) and not isinstance(raw_maximum_age, bool) and raw_maximum_age > 0:
                 maximum_age_hours = raw_maximum_age
             desktop_enabled = settings.get("desktop_enabled", True) is True
+            minimum_quality = settings.get("minimum_data_quality", 40)
             ntfy_enabled = settings.get("ntfy_enabled", False) is True
     total_cost = listing.price + listing.shipping_cost
     advantage_percent = (
@@ -262,13 +244,20 @@ async def evaluate_listing_record(
     )
     advantage_qualifies = advantage_percent is not None and advantage_percent >= minimum_advantage
     age_qualifies = maximum_age_hours is None or (age_hours is not None and age_hours <= maximum_age_hours)
+    snapshot = (
+        await session.get(ListingSnapshotRow, listing.current_snapshot_id) if listing.current_snapshot_id else None
+    )
+    silent_baseline = bool(snapshot and snapshot.raw_data.get("_tracking", {}).get("silentBaseline"))
     qualifies = (
         allow_notification
+        and not silent_baseline
+        and not listing.is_hidden
         and deal.score is not None
         and deal.score >= minimum_deal
         and risk_score <= maximum_risk
         and advantage_qualifies
         and age_qualifies
+        and estimate.data_quality_score >= minimum_quality
         and (desktop_enabled or ntfy_enabled)
     )
     notification_created = False
@@ -304,8 +293,10 @@ async def evaluate_listing_record(
             "minimumDealScore": minimum_deal,
             "maximumRiskScore": maximum_risk,
             "minimumMarketAdvantagePercent": str(minimum_advantage),
+            "minimumDataQuality": minimum_quality,
             "maximumListingAgeHours": maximum_age_hours,
             "title": listing.title,
+            "url": listing.url,
         }
         notification = NotificationRow(
             workspace_id=workspace_id,

@@ -28,6 +28,7 @@ export type ImageAccess = components['schemas']['ImageAccessResponse'];
 export type ExtensionConnection = components['schemas']['ExtensionConnectionResponse'];
 export type ExtensionConnectionCreate = components['schemas']['ExtensionConnectionCreate'];
 export type ExtensionConnectionCreated = components['schemas']['ExtensionConnectionCreatedResponse'];
+export type RestockConfiguration = components['schemas']['RestockConfiguration'];
 
 export type SystemStatus = components['schemas']['SystemStatusResponse'];
 

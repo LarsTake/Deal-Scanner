@@ -8,7 +8,7 @@ from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
 from time import perf_counter
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 import httpx
@@ -39,6 +39,7 @@ class WorkerSettings(BaseSettings):
     ollama_vision_model: str = "gemma4:12b"
     ollama_embedding_model: str = "qwen3-embedding:0.6b"
     worker_name: str = "local-analysis-worker"
+    worker_mode: Literal["auto", "rules", "ai"] = "auto"
     worker_poll_seconds: float = 5.0
     worker_renew_seconds: float = 90.0
     tesseract_command: str = "tesseract"
@@ -55,21 +56,22 @@ class WorkerAgent:
         if settings.development_user_id:
             headers["X-Development-User"] = settings.development_user_id
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
-        extraction_model = settings.ollama_extraction_model or settings.ollama_text_model
+        rules_only = settings.worker_mode == "rules"
+        extraction_model = "" if rules_only else settings.ollama_extraction_model or settings.ollama_text_model
         self.ollama = OllamaProvider(
             settings.ollama_url,
             extraction_model,
             self.client,
-            reasoning_model=settings.ollama_reasoning_model,
-            vision_model=settings.ollama_vision_model,
-            embedding_model=settings.ollama_embedding_model,
+            reasoning_model="" if rules_only else settings.ollama_reasoning_model,
+            vision_model="" if rules_only else settings.ollama_vision_model,
+            embedding_model="" if rules_only else settings.ollama_embedding_model,
         )
         self.worker_id: UUID | None = None
-        self.tesseract_path = shutil.which(settings.tesseract_command)
+        self.tesseract_path = None if rules_only else shutil.which(settings.tesseract_command)
         if self.tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = self.tesseract_path
         self.capabilities = (
-            ["rules"]
+            ([] if settings.worker_mode == "ai" else ["rules"])
             + (["text-small"] if self.ollama.model else [])
             + (["ocr"] if self.ollama.vision_model or self.tesseract_path else [])
             + (["vision"] if self.ollama.vision_model else [])
@@ -78,7 +80,7 @@ class WorkerAgent:
 
     async def register(self) -> None:
         health = await self.ollama.health_check() if self.ollama.configured_models else None
-        gpu, vram_gb = await self._detect_gpu()
+        gpu, vram_gb = (None, None) if self.settings.worker_mode == "rules" else await self._detect_gpu()
         response = await self.client.post(
             "/api/v1/workers/register",
             json={
@@ -91,6 +93,7 @@ class WorkerAgent:
                 "vramGb": vram_gb,
                 "runtime": {
                     "python": platform.python_version(),
+                    "workerMode": self.settings.worker_mode,
                     "ollama": self.settings.ollama_url,
                     "modelAssignments": {
                         "extraction": self.ollama.model,
@@ -255,7 +258,11 @@ class WorkerAgent:
             description=payload["description"],
             category_profile=payload["categoryProfile"],
         )
-        if self.ollama.model:
+        if job["jobType"] == "deep_text_analysis" and not self.ollama.model:
+            raise RuntimeError(
+                "KI-Tiefenanalyse benötigt ein konfiguriertes Textmodell; Regel-Fallback ist deaktiviert"
+            )
+        if self.ollama.model and job["jobType"] != "rule_analysis":
             text_result = await self.ollama.analyze_text(request)
             model_name = "+".join(
                 dict.fromkeys(model for model in (self.ollama.model, self.ollama.reasoning_model) if model)
@@ -270,9 +277,7 @@ class WorkerAgent:
                 overall_confidence=(
                     sum(product_confidences) / len(product_confidences) if product_confidences else 0.5
                 ),
-                missing_information=[
-                    "Kein lokales Textmodell konfiguriert; Ergebnis basiert ausschließlich auf Regeln."
-                ],
+                missing_information=["Grundanalyse basiert auf Regeln; KI-Tiefenanalyse erfolgt separat."],
             )
             model_name = "rules-v1"
             prompt_version = "rules-v1"

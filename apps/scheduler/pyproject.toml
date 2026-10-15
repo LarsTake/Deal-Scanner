@@ -6,6 +6,8 @@ dependencies = [
   "deal-scanner-core",
   "deal-scanner-ebay",
   "deal-scanner-email",
+  "deal-scanner-kleinanzeigen-web",
+  "deal-scanner-marketplace-web",
   "httpx>=0.28,<1",
   "pydantic-settings>=2.10,<3",
   "sqlalchemy[asyncio]>=2.0.41,<3",
@@ -17,6 +19,8 @@ dependencies = [
 deal-scanner-core = { workspace = true }
 deal-scanner-ebay = { workspace = true }
 deal-scanner-email = { workspace = true }
+deal-scanner-kleinanzeigen-web = { workspace = true }
+deal-scanner-marketplace-web = { workspace = true }
 
 [project.scripts]
 deal-scanner-scheduler = "deal_scanner_scheduler.main:run"

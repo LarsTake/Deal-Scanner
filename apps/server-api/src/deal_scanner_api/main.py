@@ -15,7 +15,7 @@ from .database import engine
 from .db_models import Base
 from .problems import install_problem_handlers
 from .rate_limit import FixedWindowRateLimiter
-from .routers import auth, health, images, imports, listings, market, search_profiles, system, workers
+from .routers import auth, health, images, imports, listings, market, restock, search_profiles, system, workers
 from .schemas import ProblemDetails
 from .settings import get_settings
 
@@ -117,7 +117,7 @@ async def security_headers(
     return response
 
 
-for module in (auth, health, images, imports, listings, market, search_profiles, system, workers):
+for module in (auth, health, images, imports, listings, market, restock, search_profiles, system, workers):
     app.include_router(module.router, prefix="/api/v1")
 
 

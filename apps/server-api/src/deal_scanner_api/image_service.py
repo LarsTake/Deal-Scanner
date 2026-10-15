@@ -17,6 +17,8 @@ from .settings import Settings, get_settings
 IMAGE_HOSTS = {
     "ebay": {"i.ebayimg.com"},
     "kleinanzeigen": {"img.kleinanzeigen.de", "img.classistatic.de"},
+    "mydealz": {"static.mydealz.de"},
+    "vinted": {"images1.vinted.net", "images2.vinted.net"},
 }
 
 

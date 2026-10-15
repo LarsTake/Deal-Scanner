@@ -2,6 +2,15 @@
 
 ## Lokal und Docker
 
+Die optionale automatische Kleinanzeigen-Websuche verwendet Scrapling. Aktivierung:
+`DEAL_SCANNER_KLEINANZEIGEN_WEB_ENABLED=true` in `.env`, Scheduler neu starten und im
+Suchauftrag die Quelle **Kleinanzeigen (Websuche)** auswählen. Details, Grenzen und die
+Analyse der Referenzprojekte stehen in [reference-integrations.md](reference-integrations.md).
+mydealz und Vinted werden analog mit `DEAL_SCANNER_MYDEALZ_WEB_ENABLED` und
+`DEAL_SCANNER_VINTED_WEB_ENABLED` aktiviert. Unter **Einstellungen → Shop-Restock** können
+konkrete Produktlinks eingetragen werden. Stille Erstaufnahme und Archivierung sind pro
+Suchauftrag konfigurierbar; größere Meldungslisten werden gebündelt zugestellt.
+
 Installiert werden Python 3.12, `uv`, Node.js 24, pnpm 10 und für Desktop-Builds Rust/Cargo.
 `uv sync --all-packages --frozen` und `pnpm install --frozen-lockfile` stellen die gesperrten
 Abhängigkeiten her. Danach starten `uv run --package deal-scanner-api uvicorn

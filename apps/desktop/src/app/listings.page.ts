@@ -4,8 +4,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ApiProblemError } from '@deal-scanner/api-client';
+import { ApiProblemError, type ListingFilters } from '@deal-scanner/api-client';
 import type { FeedbackCreate, ListingSummary } from '@deal-scanner/contracts';
 
 import { ApiService } from './api.service';
@@ -13,9 +17,31 @@ import { OfflineCacheService } from './offline-cache.service';
 
 @Component({
   standalone: true,
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatChipsModule, MatProgressSpinnerModule, RouterLink],
+  imports: [DatePipe, MatButtonModule, MatCardModule, MatChipsModule, MatProgressSpinnerModule, RouterLink,
+    ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   template: `
     <header class="page-header"><div><p class="eyebrow">Inventar</p><h1>{{ title }}</h1><p>Deal-Potenzial und Risiko bleiben bewusst zwei getrennte Bewertungen.</p></div></header>
+    <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="form-card">
+      <div class="form-row">
+        <mat-form-field><mat-label>In Treffern suchen</mat-label><input matInput formControlName="q" /></mat-form-field>
+        <mat-form-field><mat-label>Plattformen</mat-label><mat-select formControlName="platforms" multiple>
+          <mat-option value="ebay">eBay</mat-option><mat-option value="kleinanzeigen">Kleinanzeigen</mat-option>
+          <mat-option value="mydealz">mydealz</mat-option><mat-option value="vinted">Vinted</mat-option>
+        </mat-select></mat-form-field>
+        <mat-form-field><mat-label>Bewertung</mat-label><mat-select formControlName="assessment">
+          <mat-option value="all">Alle Treffer</mat-option><mat-option value="interesting">Interessante Deals</mat-option>
+          <mat-option value="suspicious">Auffällige Treffer</mat-option><mat-option value="unknown">Unzureichende Daten</mat-option>
+        </mat-select></mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field><mat-label>Deal mindestens</mat-label><input matInput type="number" min="0" max="100" formControlName="minimumDealScore" placeholder="75" /></mat-form-field>
+        <mat-form-field><mat-label>Risiko-Grenze</mat-label><input matInput type="number" min="0" max="100" formControlName="maximumRiskScore" placeholder="45" /></mat-form-field>
+        <mat-form-field><mat-label>Datenqualität mindestens</mat-label><input matInput type="number" min="0" max="100" formControlName="minimumDataQuality" placeholder="40" /></mat-form-field>
+      </div>
+      <p><small>Interessant: Deal ≥ 75, Risiko ≤ 45, Qualität ≥ 40 (falls leer). Auffällig: Risiko über der Grenze. Unklar: Marktwert fehlt oder Qualität zu gering. Keine KI erforderlich.</small></p>
+      <div class="row"><button mat-flat-button type="submit" [disabled]="loading()">Filter anwenden</button>
+        <button mat-stroked-button type="button" [disabled]="loading()" (click)="resetFilters()">Zurücksetzen</button></div>
+    </form>
     @if (loading()) { <mat-spinner diameter="36" /> }
     @if (error()) { <div class="notice error">{{ error() }}</div> }
     <div class="listing-grid wide">
@@ -68,21 +94,56 @@ export class ListingsPage implements OnInit {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly imageUrls = signal<Record<string, string>>({});
+  readonly filterForm = new FormGroup({
+    q: new FormControl('', { nonNullable: true }),
+    platforms: new FormControl<string[]>([], { nonNullable: true }),
+    assessment: new FormControl<NonNullable<ListingFilters['assessment']>>('all', { nonNullable: true }),
+    minimumDealScore: new FormControl<number | null>(null),
+    maximumRiskScore: new FormControl<number | null>(null),
+    minimumDataQuality: new FormControl<number | null>(null),
+  });
+  private filters: ListingFilters = {};
 
   ngOnInit(): void {
+    const searchProfileId = this.route.snapshot.queryParamMap.get('searchProfileId');
+    if (searchProfileId) this.filters = { searchProfileId };
     void this.loadMore();
+  }
+
+  async applyFilters(): Promise<void> {
+    if (this.loading()) return;
+    const value = this.filterForm.getRawValue();
+    this.filters = { ...this.filters, q: value.q || undefined,
+      platforms: value.platforms.length ? value.platforms : undefined, assessment: value.assessment,
+      minimumDealScore: value.minimumDealScore ?? undefined, maximumRiskScore: value.maximumRiskScore ?? undefined,
+      minimumDataQuality: value.minimumDataQuality ?? undefined };
+    this.listings.set([]);
+    for (const url of Object.values(this.imageUrls())) URL.revokeObjectURL(url);
+    this.imageUrls.set({});
+    this.nextCursor.set(null);
+    await this.loadMore();
+  }
+
+  async resetFilters(): Promise<void> {
+    if (this.loading()) return;
+    this.filterForm.reset({ q: '', platforms: [], assessment: 'all', minimumDealScore: null,
+      maximumRiskScore: null, minimumDataQuality: null });
+    this.filters = {};
+    await this.applyFilters();
   }
 
   async loadMore(): Promise<void> {
     this.loading.set(true);
     try {
-      const page = await this.api.listings(this.nextCursor() ?? undefined, this.view);
+      this.error.set('');
+      const page = await this.api.listings(this.nextCursor() ?? undefined, this.view, this.filters);
       this.listings.update((items) => [...items, ...page.items]);
       await this.offline.cacheListings(page.items);
       await this.loadImages(page.items);
       this.nextCursor.set(page.nextCursor ?? null);
     } catch (error) {
-      if (!this.nextCursor()) {
+      const filtered = Object.entries(this.filters).some(([key, value]) => value !== undefined && !(key === 'assessment' && value === 'all'));
+      if (!this.nextCursor() && !filtered) {
         const cached = this.filterView(await this.offline.readListings());
         if (cached.length) {
           this.listings.set(cached);

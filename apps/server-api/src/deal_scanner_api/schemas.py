@@ -35,6 +35,9 @@ class NotificationSettings(CamelModel):
     maximum_listing_age_hours: int | None = Field(default=None, ge=1, le=8_760)
     desktop_enabled: bool = True
     ntfy_enabled: bool = False
+    notify_on_first_run: bool = False
+    archive_after_days: int | None = Field(default=14, ge=1, le=3650)
+    minimum_data_quality: int = Field(default=40, ge=0, le=100)
 
 
 class SearchProfileCreate(CamelModel):
@@ -102,7 +105,7 @@ class SellerResponse(SellerInput):
 
 
 class ManualImportRequest(CamelModel):
-    platform: Literal["ebay", "kleinanzeigen", "manual"]
+    platform: Literal["ebay", "kleinanzeigen", "manual", "mydealz", "vinted"]
     external_id: str = Field(min_length=1, max_length=255)
     url: HttpUrl
     title: str = Field(min_length=1, max_length=500)
@@ -117,6 +120,7 @@ class ManualImportRequest(CamelModel):
     provider_version: str = "manual-v1"
     search_profile_id: UUID | None = None
     seller: SellerInput | None = None
+    provider_sync_run_id: UUID | None = None
 
 
 class RiskSignalResponse(CamelModel):
@@ -242,6 +246,16 @@ class ListingSummary(CamelModel):
         return format(value, "f") if value is not None else None
 
 
+class ListingFindingResponse(CamelModel):
+    id: str
+    kind: str
+    title: str
+    description: str
+    observed_at: datetime
+    source: str
+    evidence: dict[str, Any]
+
+
 class ListingDetail(ListingSummary):
     description: str
     location: str | None
@@ -255,6 +269,7 @@ class ListingDetail(ListingSummary):
     feedback: list[FeedbackResponse] = Field(default_factory=list)
     seller: SellerResponse | None = None
     comparison_observations: list[PriceObservationResponse] = Field(default_factory=list)
+    findings: list[ListingFindingResponse] = Field(default_factory=list)
 
 
 class CorrectedProductInput(CamelModel):

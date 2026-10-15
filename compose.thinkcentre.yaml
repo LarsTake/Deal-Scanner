@@ -1,0 +1,27 @@
+# Use alongside compose.yaml. Authentication/database must be configured first.
+services:
+  api:
+    environment:
+      DEAL_SCANNER_AUTH_MODE: supabase
+      DEAL_SCANNER_ENVIRONMENT: production
+      DEAL_SCANNER_DATABASE_URL: ${DEAL_SCANNER_DATABASE_URL:?Set the production PostgreSQL connection}
+      DEAL_SCANNER_SUPABASE_URL: ${DEAL_SCANNER_SUPABASE_URL:?Set the Supabase project URL}
+    mem_limit: 512m
+    cpus: 1.0
+  scheduler:
+    mem_limit: 320m
+    cpus: 0.5
+  web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    ports: ["127.0.0.1:8088:8080"]
+    networks: [internal]
+    depends_on:
+      api: { condition: service_healthy }
+    read_only: true
+    tmpfs: ["/data:size=8m", "/config:size=8m", "/tmp:size=8m"]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.25

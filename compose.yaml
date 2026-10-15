@@ -37,7 +37,7 @@ services:
       DEAL_SCANNER_HEALTH_FILE: /tmp/deal-scanner-scheduler-health
     depends_on:
       api: { condition: service_healthy }
-    volumes: ["mail-archive:/app/.data/mail-archive"]
+    volumes: ["mail-archive:/app/.data/mail-archive", "parser-data:/app/.data/scrapling"]
     healthcheck:
       test: ["CMD", "python", "-c", "import os,time; limit=max(float(os.getenv('DEAL_SCANNER_SCHEDULER_INTERVAL_SECONDS','300'))*2+60,120); raise SystemExit(0 if time.time()-os.path.getmtime('/tmp/deal-scanner-scheduler-health') < limit else 1)"]
       interval: 30s
@@ -46,6 +46,27 @@ services:
       start_period: 60s
     mem_limit: 384m
     cpus: 0.75
+
+  rule-worker:
+    <<: *common
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.worker
+    environment:
+      DEAL_SCANNER_API_URL: http://api:8000
+      DEAL_SCANNER_WORKER_MODE: rules
+      DEAL_SCANNER_WORKER_NAME: server-rules
+      DEAL_SCANNER_HEALTH_FILE: /tmp/deal-scanner-rule-health
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,time; raise SystemExit(0 if time.time()-os.path.getmtime('/tmp/deal-scanner-rule-health') < 120 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    mem_limit: 320m
+    cpus: 0.5
 
   analysis-worker:
     <<: *common
@@ -56,6 +77,7 @@ services:
     environment:
       DEAL_SCANNER_API_URL: http://api:8000
       DEAL_SCANNER_OLLAMA_URL: http://host.docker.internal:11434
+      DEAL_SCANNER_WORKER_MODE: ai
       DEAL_SCANNER_HEALTH_FILE: /tmp/deal-scanner-worker-health
     extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
@@ -92,3 +114,4 @@ volumes:
   caddy-data: {}
   caddy-config: {}
   mail-archive: {}
+  parser-data: {}

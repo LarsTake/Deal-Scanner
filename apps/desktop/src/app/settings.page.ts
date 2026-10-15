@@ -10,6 +10,7 @@ import type { ExtensionConnection, ExtensionConnectionCreated } from '@deal-scan
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loopback.service';
+import { defaultApiUrl } from './connection-target';
 
 @Component({
   standalone: true,
@@ -30,6 +31,17 @@ import { ExtensionLoopbackService, type LoopbackPairing } from './extension-loop
       @if (saved()) { <span class="notice">Gespeichert.</span> }
       @if (error()) { <span class="notice error">{{ error() }}</span> }
     </form></mat-card>
+    <section class='section-head'><div><p class='eyebrow'>Verfügbarkeit</p><h2>Shop-Restock</h2></div></section>
+    <mat-card class='form-card compact'>
+      <p>Produktlinks von Otto, MediaMarkt, Saturn, Amazon oder Müller; eine URL pro Zeile. Meldungen kommen beim Wechsel auf verfügbar.</p>
+      <mat-form-field><mat-label>Produktlinks</mat-label><textarea matInput [formControl]='restockUrls' rows='5'></textarea></mat-form-field>
+      <mat-slide-toggle [formControl]='restockEnabled'>Überwachung aktiv</mat-slide-toggle>
+      <mat-slide-toggle [formControl]='restockNtfy'>Auch per ntfy melden</mat-slide-toggle>
+      <div class='row'><button mat-flat-button type='button' (click)='saveRestock()'>Restock speichern</button>
+        <button mat-stroked-button type='button' (click)='checkRestock()'>Verfügbarkeit prüfen</button></div>
+      @if (restockMessage()) { <div class='notice'>{{ restockMessage() }}</div> }
+      @if (restockError()) { <div class='notice error'>{{ restockError() }}</div> }
+    </mat-card>
     <section class='section-head'><div><p class='eyebrow'>Browser-Erweiterung</p><h2>Dauerhafte Kontoverbindung</h2></div></section>
     <mat-card class='form-card compact'>
       <p>Die Verbindung wird nach deiner Anmeldung als widerrufbares Geräte-Token erstellt. Passwort und Supabase-Sitzung bleiben in der Desktop-App.</p>
@@ -80,6 +92,11 @@ export class SettingsPage implements OnInit {
   private readonly api = inject(ApiService);
   readonly loopback = inject(ExtensionLoopbackService);
   readonly saved = signal(false);
+  readonly restockUrls = new FormControl('', { nonNullable: true });
+  readonly restockEnabled = new FormControl(false, { nonNullable: true });
+  readonly restockNtfy = new FormControl(false, { nonNullable: true });
+  readonly restockMessage = signal('');
+  readonly restockError = signal('');
   readonly error = signal('');
   readonly pairing = signal<LoopbackPairing | null>(null);
   readonly loopbackError = signal('');
@@ -92,7 +109,7 @@ export class SettingsPage implements OnInit {
     validators: [Validators.required, Validators.maxLength(120)],
   });
   readonly form = new FormGroup({
-    apiUrl: new FormControl(localStorage.getItem('deal-scanner-api-url') ?? 'http://127.0.0.1:8000', { nonNullable: true, validators: [Validators.required] }),
+    apiUrl: new FormControl(localStorage.getItem('deal-scanner-api-url') ?? defaultApiUrl(window.location, '__TAURI_INTERNALS__' in window), { nonNullable: true, validators: [Validators.required] }),
     supabaseUrl: new FormControl(localStorage.getItem('deal-scanner-supabase-url') ?? '', { nonNullable: true }),
     supabaseKey: new FormControl(localStorage.getItem('deal-scanner-supabase-key') ?? '', { nonNullable: true }),
     ebayEnabled: new FormControl(true, { nonNullable: true }),
@@ -113,6 +130,12 @@ export class SettingsPage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    try {
+      const configuration = await this.api.restockConfiguration();
+      this.restockUrls.setValue((configuration.urls ?? []).join('\n'));
+      this.restockEnabled.setValue(configuration.enabled);
+      this.restockNtfy.setValue(configuration.ntfyEnabled);
+    } catch { /* Restock settings remain editable while offline. */ }
     try {
       const ebay = (await this.api.providerConfigurations()).find((item) => item.provider === 'ebay');
       if (ebay) {
@@ -143,6 +166,35 @@ export class SettingsPage implements OnInit {
       this.saved.set(true);
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Provider-Konfiguration konnte nicht gespeichert werden');
+    }
+  }
+
+  async saveRestock(): Promise<void> {
+    this.restockError.set('');
+    this.restockMessage.set('');
+    try {
+      await this.api.saveRestockConfiguration({
+        urls: this.restockUrls.value.split('\n').map((url) => url.trim()).filter(Boolean),
+        enabled: this.restockEnabled.value,
+        desktopEnabled: true, ntfyEnabled: this.restockNtfy.value,
+        notifyOnFirstRun: false, intervalSeconds: 300,
+      });
+      this.restockMessage.set('Restock-Einstellungen gespeichert. Der Scheduler prüft alle fünf Minuten.');
+    } catch (error) {
+      this.restockError.set(error instanceof Error ? error.message : 'Restock konnte nicht gespeichert werden.');
+    }
+  }
+
+  async checkRestock(): Promise<void> {
+    this.restockError.set('');
+    try {
+      const result = await this.api.checkRestock();
+      const states = result['states'] as Record<string, { available?: boolean | null; title?: string }>;
+      const summaries = Object.entries(states ?? {}).map(([url, state]) =>
+        `${state.title ?? url}: ${state.available === true ? 'verfügbar' : state.available === false ? 'nicht verfügbar' : 'unbekannt'}`);
+      this.restockMessage.set(`${String(result['checked'] ?? 0)} Produktseiten geprüft. ${summaries.join(' · ')}`);
+    } catch (error) {
+      this.restockError.set(error instanceof Error ? error.message : 'Restock-Prüfung fehlgeschlagen.');
     }
   }
 

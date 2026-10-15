@@ -11,9 +11,11 @@ from deal_scanner_extraction import RuleExtractor
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .comparison_service import single_product_scope
 from .db_models import (
     CanonicalProductRow,
     ListingProductRow,
+    ListingRow,
     PriceObservationRow,
     ProductAliasRow,
     ProductAttributeRow,
@@ -33,14 +35,14 @@ def _clean_label(value: str | None) -> str | None:
 
 
 def canonicalize_detection(detection: ProductDetection) -> ProductDetection:
-    candidates = RuleExtractor().analyze(detection.model, detection.evidence).products
+    candidates = RuleExtractor().analyze(detection.model, "").products
     known = next((item for item in candidates if item.product_type == detection.product_type), None)
     if known is not None:
         return detection.model_copy(
             update={
                 "manufacturer": known.manufacturer,
                 "model": known.model,
-                "variant": known.variant,
+                "variant": known.variant or _clean_label(detection.variant),
             }
         )
     return detection.model_copy(
@@ -64,7 +66,6 @@ async def _resolve_canonical_product(
         for value in (
             detection.model,
             " ".join(filter(None, (detection.manufacturer, detection.model))),
-            detection.evidence,
         )
         if value and normalize_alias(value)
     }
@@ -77,6 +78,11 @@ async def _resolve_canonical_product(
                     ProductAliasRow.workspace_id == workspace_id,
                     ProductAliasRow.normalized_alias.in_(aliases),
                     CanonicalProductRow.product_type == detection.product_type,
+                    CanonicalProductRow.workspace_id == workspace_id,
+                    CanonicalProductRow.category_profile == category_profile,
+                    func.coalesce(CanonicalProductRow.variant, "") == (detection.variant or ""),
+                    func.coalesce(CanonicalProductRow.manufacturer, "") == (detection.manufacturer or ""),
+                    func.lower(CanonicalProductRow.model) == detection.model.casefold(),
                 )
                 .limit(1)
             )
@@ -181,7 +187,9 @@ async def persist_listing_products(
             await session.flush()
         listing_products.append(existing)
 
-    if len(products) == 1:
+    listing = await session.get(ListingRow, listing_id)
+    scoped_product = single_product_scope(listing, listing_products) if listing else None
+    if scoped_product is not None:
         observations = (
             await session.execute(
                 select(PriceObservationRow).where(
@@ -192,7 +200,10 @@ async def persist_listing_products(
             )
         ).scalars()
         for observation in observations:
-            observation.canonical_product_id = products[0].id
+            # Attach imported prices only when the entire offer is one unit.
+            # Manually supplied bundle comparables keep their explicit scope.
+            if observation.metadata_json.get("snapshotId"):
+                observation.canonical_product_id = scoped_product
 
     await _persist_attributes(session, workspace_id, listing_products, attributes or [], source)
     return products

@@ -8,7 +8,7 @@ os.environ["DEAL_SCANNER_AUTO_CREATE_DB"] = "true"
 os.environ["DEAL_SCANNER_AUTH_MODE"] = "development"
 
 from deal_scanner_api.database import session_factory
-from deal_scanner_api.db_models import AnalysisJobRow, ListingImageRow
+from deal_scanner_api.db_models import AnalysisJobRow, DealEvaluationRow, ListingImageRow
 from deal_scanner_api.main import app
 from fastapi.testclient import TestClient
 
@@ -107,14 +107,14 @@ def test_end_to_end_import_feedback_and_worker_lease() -> None:
                 "name": "test-worker",
                 "operatingSystem": "test",
                 "hostname": "test-host",
-                "capabilities": ["text-small"],
+                "capabilities": ["rules", "text-small"],
             },
         )
         assert worker.status_code == 201, worker.text
         worker_id = worker.json()["id"]
         job = client.post(
             "/api/v1/jobs/claim",
-            json={"workerId": worker_id, "capabilities": ["text-small"]},
+            json={"workerId": worker_id, "capabilities": ["rules", "text-small"]},
         )
         assert job.status_code == 200, job.text
         assert job.json()["status"] == "LEASED"
@@ -149,7 +149,7 @@ def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> Non
                 "name": "lease-one",
                 "operatingSystem": "test",
                 "hostname": "lease-one",
-                "capabilities": ["text-small"],
+                "capabilities": ["rules", "text-small"],
             },
         ).json()
         second_worker = client.post(
@@ -159,13 +159,13 @@ def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> Non
                 "name": "lease-two",
                 "operatingSystem": "test",
                 "hostname": "lease-two",
-                "capabilities": ["text-small"],
+                "capabilities": ["rules", "text-small"],
             },
         ).json()
         claimed = client.post(
             "/api/v1/jobs/claim",
             headers=headers,
-            json={"workerId": first_worker["id"], "capabilities": ["text-small"]},
+            json={"workerId": first_worker["id"], "capabilities": ["rules", "text-small"]},
         ).json()
         original_expiry = claimed["leaseExpiresAt"]
         renewed = client.post(
@@ -180,7 +180,7 @@ def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> Non
         recovery = client.post(
             "/api/v1/jobs/claim",
             headers=headers,
-            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+            json={"workerId": second_worker["id"], "capabilities": ["rules", "text-small"]},
         )
         assert recovery.status_code == 200
         assert recovery.json() is None
@@ -195,7 +195,7 @@ def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> Non
         second_claim = client.post(
             "/api/v1/jobs/claim",
             headers=headers,
-            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+            json={"workerId": second_worker["id"], "capabilities": ["rules", "text-small"]},
         ).json()
         assert second_claim["id"] == claimed["id"]
         late = client.post(
@@ -226,7 +226,7 @@ def test_worker_lease_renew_crash_retry_dead_letter_and_late_completion() -> Non
         third_claim = client.post(
             "/api/v1/jobs/claim",
             headers=headers,
-            json={"workerId": second_worker["id"], "capabilities": ["text-small"]},
+            json={"workerId": second_worker["id"], "capabilities": ["rules", "text-small"]},
         ).json()
         assert third_claim["attempts"] == 3
         dead = client.post(
@@ -404,7 +404,7 @@ def test_evaluation_keeps_risk_separate_and_creates_notification() -> None:
                     "observedPrice": price,
                     "currency": "EUR",
                     "observationKind": "soldConfirmed",
-                    "observedAt": f"2026-07-{18 + index}T12:00:00Z",
+                    "observedAt": (datetime.now(UTC) - timedelta(days=3 - index)).isoformat(),
                 },
             )
             assert observed.status_code == 201, observed.text
@@ -453,6 +453,7 @@ def test_erp_mock_uses_stable_purchase_contract() -> None:
 
 def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -> None:
     target = payload("Abholung und Funktionstest möglich")
+    target["title"] = "NVIDIA RTX 4070 Super Grafikkarte"
     target["externalId"] = "automatic-evaluation-listing"
     target["price"] = "100.00"
     with TestClient(app) as client:
@@ -472,7 +473,7 @@ def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -
                     "observedPrice": price,
                     "currency": "EUR",
                     "observationKind": "soldConfirmed",
-                    "observedAt": f"2026-07-{18 + index}T12:00:00Z",
+                    "observedAt": (datetime.now(UTC) - timedelta(days=3 - index)).isoformat(),
                 },
             )
             assert observed.status_code == 201, observed.text
@@ -485,13 +486,13 @@ def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -
                 "name": "automatic-worker",
                 "operatingSystem": "test",
                 "hostname": "automatic-host",
-                "capabilities": ["text-small"],
+                "capabilities": ["rules", "text-small"],
             },
         )
         worker_id = worker.json()["id"]
         job = client.post(
             "/api/v1/jobs/claim",
-            json={"workerId": worker_id, "capabilities": ["text-small"]},
+            json={"workerId": worker_id, "capabilities": ["rules", "text-small"]},
         )
         assert job.status_code == 200, job.text
         assert job.json()["listingId"] == listing_id
@@ -554,6 +555,38 @@ def test_worker_completion_canonicalizes_product_and_evaluates_automatically() -
         duplicate_evaluation = client.post(f"/api/v1/listings/{listing_id}/evaluate")
         assert duplicate_evaluation.status_code == 200, duplicate_evaluation.text
         assert duplicate_evaluation.json()["notificationCreated"] is False
+
+        basic_job = client.post(
+            "/api/v1/jobs/claim", json={"workerId": worker_id, "capabilities": ["rules", "text-small"]}
+        ).json()
+        assert basic_job["jobType"] == "rule_analysis"
+        late_basic = client.post(
+            f"/api/v1/jobs/{basic_job['id']}/complete",
+            json={
+                "workerId": worker_id,
+                "analysisType": "text",
+                "modelName": "rules-v1",
+                "modelVersion": "1",
+                "promptVersion": "rules-v1",
+                "resultSchemaVersion": "1.0.0",
+                "inputHash": basic_job["inputHash"],
+                "result": {
+                    "category": "computer",
+                    "products": [],
+                    "attributes": [],
+                    "riskSignals": [],
+                    "contradictions": [],
+                    "missingInformation": [],
+                    "overallConfidence": 0.5,
+                    "schemaVersion": "1.0.0",
+                },
+                "confidence": 0.5,
+            },
+        )
+        assert late_basic.status_code == 200, late_basic.text
+        preserved = client.get(f"/api/v1/listings/{listing_id}").json()
+        assert preserved["dealScore"] == detail.json()["dealScore"]
+        assert any(signal["type"] == "external_payment_link" for signal in preserved["riskSignals"])
 
 
 def test_provider_sync_and_mail_import_history_are_persisted() -> None:
@@ -739,7 +772,7 @@ def test_search_profile_filters_and_notification_age_threshold_roundtrip() -> No
                     "observedPrice": price,
                     "currency": "EUR",
                     "observationKind": "soldConfirmed",
-                    "observedAt": f"2026-07-{18 + index}T12:00:00Z",
+                    "observedAt": (datetime.now(UTC) - timedelta(days=3 - index)).isoformat(),
                 },
             )
             assert response.status_code == 201, response.text
@@ -809,7 +842,7 @@ def test_provider_configuration_references_but_never_accepts_secrets() -> None:
         assert unsupported.status_code == 422
 
 
-def test_rule_only_worker_can_claim_text_analysis_job() -> None:
+def test_rule_only_worker_can_claim_rule_analysis_job() -> None:
     headers = {"X-Development-User": "00000000-0000-4000-8000-000000000919"}
     target = payload()
     target["externalId"] = "rule-only-worker"
@@ -833,6 +866,83 @@ def test_rule_only_worker_can_claim_text_analysis_job() -> None:
             json={"workerId": worker.json()["id"], "capabilities": ["rules"]},
         )
         assert job.status_code == 200, job.text
-        assert job.json()["jobType"] == "text_analysis"
-        assert job.json()["requiredCapability"] == "text-small"
+        assert job.json()["jobType"] == "rule_analysis"
+        assert job.json()["requiredCapability"] == "rules"
         assert job.json()["status"] == "LEASED"
+
+
+def test_deep_jobs_are_deduplicated_and_rules_cannot_claim_them() -> None:
+    headers = {"X-Development-User": "00000000-0000-4000-8000-000000000920"}
+    with TestClient(app) as client:
+        imported = client.post("/api/v1/imports/manual", headers=headers, json=payload()).json()
+        listing_id = imported["listing"]["id"]
+        first = client.post(f"/api/v1/listings/{listing_id}/reanalyze", headers=headers)
+        second = client.post(f"/api/v1/listings/{listing_id}/reanalyze", headers=headers)
+        assert first.status_code == second.status_code == 201
+        assert first.json()["id"] == second.json()["id"]
+        assert first.json()["jobType"] == "deep_text_analysis"
+        worker = client.post(
+            "/api/v1/workers/register",
+            headers=headers,
+            json={"name": "rules", "operatingSystem": "test", "hostname": "rules", "capabilities": ["rules"]},
+        ).json()
+        # Even a spoofed claim cannot expand the registered capability set.
+        claim = {"workerId": worker["id"], "capabilities": ["rules", "text-small"]}
+        job = client.post("/api/v1/jobs/claim", headers=headers, json=claim).json()
+        assert job["jobType"] == "rule_analysis"
+        assert client.post("/api/v1/jobs/claim", headers=headers, json=claim).json() is None
+        ai_worker = client.post(
+            "/api/v1/workers/register",
+            headers=headers,
+            json={"name": "ai", "operatingSystem": "test", "hostname": "ai", "capabilities": ["text-small"]},
+        ).json()
+        deep = client.post(
+            "/api/v1/jobs/claim", headers=headers, json={"workerId": ai_worker["id"], "capabilities": ["text-small"]}
+        ).json()
+        assert deep["id"] == first.json()["id"]
+
+
+def test_listing_assessments_filter_before_pagination_and_keep_unknowns() -> None:
+    headers = {"X-Development-User": "00000000-0000-4000-8000-000000000921"}
+    with TestClient(app) as client:
+        listings = []
+        for index in range(4):
+            target = payload()
+            target["externalId"] = f"assessment-{index}"
+            target["title"] = f"Filter GPU {index}"
+            listings.append(client.post("/api/v1/imports/manual", headers=headers, json=target).json()["listing"])
+
+        async def seed() -> None:
+            async with session_factory() as session:
+                for listing, score, risk, quality in (
+                    (listings[0], 90, 10, 80),
+                    (listings[1], 95, 80, 80),
+                    (listings[2], 90, 10, 20),
+                ):
+                    session.add(
+                        DealEvaluationRow(
+                            workspace_id=UUID(listing["workspaceId"]),
+                            listing_id=UUID(listing["id"]),
+                            deal_score=score,
+                            risk_score=risk,
+                            data_quality_score=quality,
+                            explanation={},
+                            calculation_version="filter-test+comparability-v1",
+                            created_at=datetime.now(UTC) + timedelta(seconds=1),
+                        )
+                    )
+                await session.commit()
+
+        asyncio.run(seed())
+
+        def ids(**params: object) -> set[str]:
+            response = client.get("/api/v1/listings", headers=headers, params=params)
+            assert response.status_code == 200, response.text
+            return {item["id"] for item in response.json()["items"]}
+
+        assert ids(assessment="interesting", limit=1) == {listings[0]["id"]}
+        assert ids(assessment="suspicious") == {listings[1]["id"]}
+        assert ids(assessment="unknown") == {listings[2]["id"], listings[3]["id"]}
+        assert ids(q="GPU 1") == {listings[1]["id"]}
+        assert ids(platforms="vinted") == set()
+        assert len(ids()) == 4

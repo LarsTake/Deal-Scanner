@@ -1,0 +1,11 @@
+# Existing Caddy must join this exact external network as well.
+services:
+  web:
+    networks:
+      internal: {}
+      existing-proxy:
+        aliases: [deal-scanner-web]
+networks:
+  existing-proxy:
+    external: true
+    name: ${DEAL_SCANNER_PROXY_NETWORK:?Set the existing Caddy Docker network}

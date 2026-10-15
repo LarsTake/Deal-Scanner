@@ -102,6 +102,12 @@ async def _idempotent_import(
         listing = await context.session.get(ListingRow, existing.resource_id)
         if listing is None or listing.workspace_id != context.workspace_id:
             raise HTTPException(status_code=409, detail="idempotent resource is unavailable")
+        listing.last_seen_at = datetime.now(UTC)
+        if listing.is_hidden and listing.removed_at is not None:
+            listing.is_hidden = False
+            listing.removed_at = None
+            listing.version += 1
+        await context.session.commit()
         return ImportResponse(
             listing=await listing_detail(context.session, listing),
             snapshot_created=False,

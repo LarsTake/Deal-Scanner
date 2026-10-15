@@ -10,10 +10,11 @@ from uuid import UUID
 from deal_scanner_extraction import RuleExtractor, listing_text_fingerprint, listing_text_similarity
 from deal_scanner_scoring import RiskScoreEngine, RiskSignal
 from fastapi import HTTPException
-from sqlalchemy import desc, or_, select
+from sqlalchemy import desc, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .comparison_service import COMPARISON_VERSION, select_comparisons
 from .db_models import (
     AnalysisJobRow,
     AnalysisResultRow,
@@ -25,11 +26,13 @@ from .db_models import (
     ListingSnapshotRow,
     PriceObservationRow,
     ProductAttributeRow,
+    ProviderSyncRunRow,
     RiskSignalRow,
     SearchProfileRow,
     SellerRow,
     UserFeedbackRow,
 )
+from .findings_service import listing_findings
 from .product_service import persist_listing_products
 from .schemas import (
     AnalysisResultResponse,
@@ -55,6 +58,10 @@ ALLOWED_IMPORT_HOSTS = {
     "www.ebay.com",
     "kleinanzeigen.de",
     "www.kleinanzeigen.de",
+    "mydealz.de",
+    "www.mydealz.de",
+    "vinted.de",
+    "www.vinted.de",
 }
 
 
@@ -63,6 +70,16 @@ def validate_import_url(url: str, platform: str) -> None:
     if parsed.scheme != "https" or not parsed.hostname:
         raise HTTPException(status_code=422, detail="only HTTPS provider URLs are accepted")
     host = parsed.hostname.lower().rstrip(".")
+    platform_hosts = {
+        "ebay": {"ebay.de", "www.ebay.de", "ebay.com", "www.ebay.com"},
+        "kleinanzeigen": {"kleinanzeigen.de", "www.kleinanzeigen.de"},
+        "mydealz": {"mydealz.de", "www.mydealz.de"},
+        "vinted": {"vinted.de", "www.vinted.de"},
+    }
+    if parsed.username or parsed.password or parsed.port not in (None, 443):
+        raise HTTPException(status_code=422, detail="credentials and non-standard ports are forbidden in import URLs")
+    if platform in platform_hosts and host not in platform_hosts[platform]:
+        raise HTTPException(status_code=422, detail="URL host does not match the selected platform")
     if platform != "manual" and host not in ALLOWED_IMPORT_HOSTS:
         raise HTTPException(status_code=422, detail="URL host does not match an allowed provider")
     if platform == "manual" and host not in ALLOWED_IMPORT_HOSTS:
@@ -73,7 +90,9 @@ def validate_import_url(url: str, platform: str) -> None:
 
 
 def request_content_hash(payload: ManualImportRequest) -> str:
-    encoded = json.dumps(payload.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
+    encoded = json.dumps(
+        payload.model_dump(mode="json", exclude={"provider_sync_run_id"}), ensure_ascii=False, sort_keys=True
+    )
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
@@ -81,7 +100,7 @@ async def latest_evaluation(session: AsyncSession, listing_id: UUID) -> DealEval
     result = await session.execute(
         select(DealEvaluationRow)
         .where(DealEvaluationRow.listing_id == listing_id)
-        .order_by(desc(DealEvaluationRow.created_at))
+        .order_by(desc(DealEvaluationRow.created_at), desc(DealEvaluationRow.id))
         .limit(1)
     )
     return result.scalar_one_or_none()
@@ -89,6 +108,7 @@ async def latest_evaluation(session: AsyncSession, listing_id: UUID) -> DealEval
 
 async def listing_summary(session: AsyncSession, listing: ListingRow) -> ListingSummary:
     evaluation = await latest_evaluation(session, listing.id)
+    market_current = evaluation is not None and evaluation.calculation_version.endswith(f"+{COMPARISON_VERSION}")
     product_models = list(
         (
             await session.execute(
@@ -109,6 +129,8 @@ async def listing_summary(session: AsyncSession, listing: ListingRow) -> Listing
             )
         ).scalars()
     )
+    if evaluation is not None and evaluation.deal_score is not None and not market_current:
+        warning_types.append("Marktwert nach neuen Vergleichsregeln neu bewerten")
     main_image_id = await session.scalar(
         select(ListingImageRow.id)
         .where(ListingImageRow.listing_id == listing.id)
@@ -142,12 +164,12 @@ async def listing_summary(session: AsyncSession, listing: ListingRow) -> Listing
         published_at=listing.published_at,
         location=listing.location,
         distance_km=distance_km,
-        market_value_median=evaluation.estimated_market_value_median if evaluation else None,
-        data_quality_score=evaluation.data_quality_score if evaluation else None,
+        market_value_median=evaluation.estimated_market_value_median if evaluation and market_current else None,
+        data_quality_score=evaluation.data_quality_score if evaluation and market_current else None,
         main_image_id=main_image_id,
         detected_products=product_models,
         warnings=warning_types,
-        deal_score=evaluation.deal_score if evaluation else None,
+        deal_score=evaluation.deal_score if evaluation and market_current else None,
         risk_score=evaluation.risk_score if evaluation else None,
     )
 
@@ -221,22 +243,8 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         )
         for row in product_rows
     ]
-    canonical_ids = {row.canonical_product_id for row in product_rows if row.canonical_product_id is not None}
-    observation_scope = PriceObservationRow.listing_id == listing.id
-    if canonical_ids:
-        observation_scope = or_(observation_scope, PriceObservationRow.canonical_product_id.in_(canonical_ids))
-    observation_rows = (
-        await session.execute(
-            select(PriceObservationRow)
-            .where(
-                PriceObservationRow.workspace_id == listing.workspace_id,
-                PriceObservationRow.currency == listing.currency,
-                observation_scope,
-            )
-            .order_by(desc(PriceObservationRow.observed_at))
-            .limit(100)
-        )
-    ).scalars()
+    selection = await select_comparisons(session, listing.workspace_id, listing)
+    observation_rows = selection.rows[:100]
     comparison_observations = [
         PriceObservationResponse(
             id=row.id,
@@ -256,12 +264,16 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         for row in observation_rows
     ]
     snapshot_rows = (
-        await session.execute(
-            select(ListingSnapshotRow)
-            .where(ListingSnapshotRow.listing_id == listing.id)
-            .order_by(desc(ListingSnapshotRow.fetched_at))
+        (
+            await session.execute(
+                select(ListingSnapshotRow)
+                .where(ListingSnapshotRow.listing_id == listing.id)
+                .order_by(desc(ListingSnapshotRow.fetched_at))
+            )
         )
-    ).scalars()
+        .scalars()
+        .all()
+    )
     snapshots = [
         ListingSnapshotResponse(
             id=row.id,
@@ -372,6 +384,7 @@ async def listing_detail(session: AsyncSession, listing: ListingRow) -> ListingD
         feedback=feedback,
         seller=seller,
         comparison_observations=comparison_observations,
+        findings=listing_findings(listing, list(snapshot_rows), await latest_evaluation(session, listing.id)),
     )
 
 
@@ -439,6 +452,34 @@ async def import_listing(
     digest = request_content_hash(payload)
     text_fingerprint = listing_text_fingerprint(payload.title, payload.description)
     now = datetime.now(UTC)
+    tracking: dict[str, object] = {}
+    if payload.provider_sync_run_id is not None:
+        run = await session.get(ProviderSyncRunRow, payload.provider_sync_run_id)
+        if (
+            run is None
+            or run.workspace_id != workspace_id
+            or run.status != "RUNNING"
+            or run.search_profile_id != payload.search_profile_id
+            or run.provider != payload.platform
+        ):
+            raise HTTPException(status_code=422, detail="import must reference a matching running provider sync")
+        earlier = await session.scalar(
+            select(ProviderSyncRunRow.id)
+            .where(
+                ProviderSyncRunRow.workspace_id == workspace_id,
+                ProviderSyncRunRow.search_profile_id == run.search_profile_id,
+                ProviderSyncRunRow.provider == run.provider,
+                ProviderSyncRunRow.status == "COMPLETED",
+                ProviderSyncRunRow.started_at < run.started_at,
+            )
+            .limit(1)
+        )
+        search = await session.get(SearchProfileRow, run.search_profile_id)
+        tracking = {
+            "syncRunId": str(run.id),
+            "silentBaseline": earlier is None
+            and not (search and search.notification_settings.get("notify_on_first_run")),
+        }
     seller = await upsert_seller(session, workspace_id, payload.platform, payload.seller, now)
     if payload.search_profile_id is not None:
         profile = (
@@ -452,13 +493,16 @@ async def import_listing(
         if profile is None:
             raise HTTPException(status_code=404, detail="search profile not found")
     existing_result = await session.execute(
-        select(ListingRow).where(
+        select(ListingRow)
+        .where(
             ListingRow.workspace_id == workspace_id,
             ListingRow.platform == payload.platform,
             ListingRow.external_id == payload.external_id,
         )
+        .with_for_update()
     )
     listing = existing_result.scalar_one_or_none()
+    now = datetime.now(UTC)  # Timestamp after acquiring the existing offer's import lock.
     if listing is None:
         listing = ListingRow(
             workspace_id=workspace_id,
@@ -497,11 +541,26 @@ async def import_listing(
             listing.last_seen_at = now
     else:
         listing.last_seen_at = now
+        if listing.is_hidden and listing.removed_at is not None:
+            listing.is_hidden = False
+            listing.removed_at = None
+            listing.version += 1
         if seller is not None:
             listing.seller_id = seller.id
         if payload.search_profile_id is not None:
             listing.search_profile_id = payload.search_profile_id
 
+    normalized_input = payload.model_dump(mode="json", exclude={"provider_sync_run_id"})
+    current_snapshot = (
+        await session.get(ListingSnapshotRow, listing.current_snapshot_id) if listing.current_snapshot_id else None
+    )
+    if current_snapshot is not None and (
+        current_snapshot.content_hash == digest or current_snapshot.raw_data.get("normalizedInput") == normalized_input
+    ):
+        await session.commit()
+        return ImportResponse(
+            listing=await listing_detail(session, listing), snapshot_created=False, analysis_job_id=None
+        )
     snapshot_result = await session.execute(
         select(ListingSnapshotRow).where(
             ListingSnapshotRow.listing_id == listing.id,
@@ -509,6 +568,10 @@ async def import_listing(
         )
     )
     snapshot = snapshot_result.scalar_one_or_none()
+    if snapshot is not None and snapshot.id != listing.current_snapshot_id:
+        # A -> B -> A is a new observation, not an unchanged import of historical A.
+        digest = hashlib.sha256(f"{digest}:after:{listing.current_snapshot_id}".encode()).hexdigest()
+        snapshot = None
     if snapshot is not None:
         await session.commit()
         return ImportResponse(
@@ -523,7 +586,8 @@ async def import_listing(
         content_hash=digest,
         raw_data={
             **payload.raw_data,
-            "normalizedInput": payload.model_dump(mode="json"),
+            "normalizedInput": payload.model_dump(mode="json", exclude={"provider_sync_run_id"}),
+            "_tracking": tracking,
             "textFingerprint": text_fingerprint,
         },
         provider_version=payload.provider_version,
@@ -557,6 +621,7 @@ async def import_listing(
     listing.description = payload.description
     listing.price = payload.price
     listing.shipping_cost = payload.shipping_cost
+    listing.currency = payload.currency
     listing.status = "RULE_ANALYZED"
     listing.analysis_status = "PENDING"
 
@@ -666,8 +731,8 @@ async def import_listing(
         workspace_id=workspace_id,
         listing_id=listing.id,
         snapshot_id=snapshot.id,
-        job_type="text_analysis",
-        required_capability="text-small",
+        job_type="rule_analysis",
+        required_capability="rules",
         input_hash=digest,
         priority=10,
         status="PENDING",

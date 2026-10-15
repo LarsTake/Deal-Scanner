@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import imaplib
 import os
+import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from email import policy
@@ -11,7 +12,7 @@ from email.parser import BytesParser
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 import structlog
@@ -19,6 +20,8 @@ from deal_scanner_core.models import SearchProfile
 from deal_scanner_ebay import EbayProvider, EbaySettings
 from deal_scanner_email import KleinanzeigenMailParser
 from deal_scanner_extraction import RuleExtractor
+from deal_scanner_kleinanzeigen_web import KleinanzeigenWebProvider, WebProviderSettings
+from deal_scanner_marketplace_web import PublicMarketplaceProvider
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -45,6 +48,11 @@ class SchedulerSettings(BaseSettings):
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     health_file: str = ""
+    kleinanzeigen_web_enabled: bool = False
+    kleinanzeigen_web_details_enabled: bool = True
+    mydealz_web_enabled: bool = False
+    vinted_web_enabled: bool = False
+    web_fetch_mode: Literal["http", "browser", "stealth"] = "http"
 
 
 class Scheduler:
@@ -57,14 +65,39 @@ class Scheduler:
             headers["X-Development-User"] = settings.development_user_id
         self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
         self._workspace_id: str | None = None
+        self._web_provider = (
+            KleinanzeigenWebProvider(
+                WebProviderSettings(
+                    fetch_details=settings.kleinanzeigen_web_details_enabled, fetch_mode=settings.web_fetch_mode
+                )
+            )
+            if settings.kleinanzeigen_web_enabled
+            else None
+        )
+        self._public_providers: dict[str, PublicMarketplaceProvider] = {}
+        if settings.mydealz_web_enabled:
+            self._public_providers["mydealz"] = PublicMarketplaceProvider("mydealz", fetch_mode=settings.web_fetch_mode)
+        if settings.vinted_web_enabled:
+            self._public_providers["vinted"] = PublicMarketplaceProvider("vinted", fetch_mode=settings.web_fetch_mode)
 
     async def sync_ebay(self) -> int:
-        if not self.settings.ebay_client_id or not self.settings.ebay_client_secret:
+        return await self._sync_marketplace("ebay")
+
+    async def sync_kleinanzeigen(self) -> int:
+        if self._web_provider is None:
+            return 0
+        return await self._sync_marketplace("kleinanzeigen")
+
+    async def sync_public_marketplaces(self) -> dict[str, int]:
+        return {platform: await self._sync_marketplace(platform) for platform in self._public_providers}
+
+    async def _sync_marketplace(self, platform: str) -> int:
+        if platform == "ebay" and (not self.settings.ebay_client_id or not self.settings.ebay_client_secret):
             return 0
         configuration_response = await self.client.get("/api/v1/provider-configurations")
         configuration_response.raise_for_status()
         ebay_configuration = next(
-            (item for item in configuration_response.json() if item["provider"] == "ebay"),
+            (item for item in configuration_response.json() if item["provider"] == platform),
             None,
         )
         if ebay_configuration is not None and not ebay_configuration["enabled"]:
@@ -73,21 +106,29 @@ class Scheduler:
         response = await self.client.get("/api/v1/search-profiles")
         response.raise_for_status()
         imported = 0
-        provider = EbayProvider(
-            EbaySettings(
-                client_id=self.settings.ebay_client_id,
-                client_secret=self.settings.ebay_client_secret,
-                environment=str(provider_settings.get("environment", self.settings.ebay_environment)),
-                marketplace_id=str(provider_settings.get("marketplaceId", "EBAY_DE")),
+        provider: EbayProvider | KleinanzeigenWebProvider | PublicMarketplaceProvider | None
+        if platform == "ebay":
+            provider = EbayProvider(
+                EbaySettings(
+                    client_id=self.settings.ebay_client_id,
+                    client_secret=self.settings.ebay_client_secret,
+                    environment=str(provider_settings.get("environment", self.settings.ebay_environment)),
+                    marketplace_id=str(provider_settings.get("marketplaceId", "EBAY_DE")),
+                )
             )
-        )
+        elif platform == "kleinanzeigen":
+            provider = self._web_provider
+        else:
+            provider = self._public_providers.get(platform)
+        if provider is None:
+            return 0
         try:
             for item in response.json():
-                if not item["enabled"] or "ebay" not in item["enabledPlatforms"]:
+                if not item["enabled"] or platform not in item["enabledPlatforms"]:
                     continue
                 history_response = await self.client.get(
                     "/api/v1/provider-sync-runs",
-                    params={"provider": "ebay", "searchProfileId": item["id"], "limit": 1},
+                    params={"provider": platform, "searchProfileId": item["id"], "limit": 1},
                 )
                 history_response.raise_for_status()
                 history = history_response.json()["items"]
@@ -112,7 +153,7 @@ class Scheduler:
                 delta_window_end = datetime.now(UTC)
                 run_response = await self.client.post(
                     "/api/v1/provider-sync-runs",
-                    json={"searchProfileId": item["id"], "provider": "ebay", "cursor": cursor},
+                    json={"searchProfileId": item["id"], "provider": platform, "cursor": cursor},
                 )
                 run_response.raise_for_status()
                 run_id = run_response.json()["id"]
@@ -153,12 +194,16 @@ class Scheduler:
                             profile,
                             normalized.title,
                             normalized.description,
-                            normalized.location,
+                            (
+                                profile.location
+                                if snapshot.payload.get("locationFilter") == profile.location
+                                else normalized.location
+                            ),
                             snapshot.payload.get("distanceKm"),
                         ):
                             continue
                         payload: dict[str, Any] = {
-                            "platform": "ebay",
+                            "platform": platform,
                             "externalId": normalized.external_id,
                             "url": str(normalized.url),
                             "title": normalized.title,
@@ -173,6 +218,7 @@ class Scheduler:
                             "rawData": snapshot.payload,
                             "providerVersion": snapshot.provider_version,
                             "searchProfileId": item["id"],
+                            "providerSyncRunId": run_id,
                             "publishedAt": normalized.published_at.isoformat() if normalized.published_at else None,
                         }
                         seller_data = snapshot.payload.get("seller")
@@ -194,7 +240,11 @@ class Scheduler:
                         created = int(import_result["snapshotCreated"])
                         imported += created
                         run_imported += created
-                        image_urls = self._ebay_image_urls(snapshot.payload)
+                        image_urls = (
+                            snapshot.payload.get("imageUrls", [])
+                            if platform != "ebay"
+                            else self._ebay_image_urls(snapshot.payload)
+                        )
                         if created and image_urls:
                             image_result = await self.client.post(
                                 f"/api/v1/listings/{import_result['listing']['id']}/images",
@@ -225,7 +275,8 @@ class Scheduler:
                     )
                     failed.raise_for_status()
         finally:
-            await provider.close()
+            if platform == "ebay":
+                await provider.close()
         return imported
 
     @staticmethod
@@ -237,9 +288,9 @@ class Scheduler:
         distance_km: object | None = None,
     ) -> bool:
         text = f"{title}\n{description}".casefold()
-        if any(term.casefold() not in text for term in profile.required_terms if term.strip()):
+        if any(not Scheduler._term_matches(term, text) for term in profile.required_terms if term.strip()):
             return False
-        if any(term.casefold() in text for term in profile.excluded_terms if term.strip()):
+        if any(Scheduler._term_matches(term, text) for term in profile.excluded_terms if term.strip()):
             return False
         detected = RuleExtractor().analyze(title, description).products
         product_text = " ".join(
@@ -258,6 +309,14 @@ class Scheduler:
             except ArithmeticError:
                 return False
         return True
+
+    @staticmethod
+    def _term_matches(term: str, text: str) -> bool:
+        # Treat punctuation/spacing as optional within a term, but never cross title/description boundaries.
+        compact_term = re.sub(r"[\W_]+", "", term.casefold())
+        return bool(compact_term) and any(
+            compact_term in re.sub(r"[\W_]+", "", line.casefold()) for line in text.splitlines()
+        )
 
     @staticmethod
     def _ebay_image_urls(payload: dict[str, Any]) -> list[str]:
@@ -466,19 +525,33 @@ class Scheduler:
                 await asyncio.sleep(self.settings.scheduler_interval_seconds)
         finally:
             await self.client.aclose()
+            if self._web_provider is not None:
+                await self._web_provider.close()
+            for provider in self._public_providers.values():
+                await provider.close()
 
     def _mark_healthy(self) -> None:
         if self.settings.health_file:
             Path(self.settings.health_file).touch()
 
+    async def _maintain_tracking(self) -> None:
+        for path in ("/api/v1/listings/maintenance/archive", "/api/v1/restock/check", "/api/v1/notifications/dispatch"):
+            response = await self.client.post(path)
+            response.raise_for_status()
+
     async def _run_locked_cycle(self) -> None:
         started_at = perf_counter()
         if not self.settings.database_url.startswith("postgresql"):
-            ebay_imports, email_imports = await asyncio.gather(self.sync_ebay(), self.poll_imap())
+            ebay_imports, email_imports, web_imports, public_imports = await asyncio.gather(
+                self.sync_ebay(), self.poll_imap(), self.sync_kleinanzeigen(), self.sync_public_marketplaces()
+            )
+            await self._maintain_tracking()
             logger.info(
                 "scheduler_cycle_completed",
                 ebay_imports=ebay_imports,
                 email_imports=email_imports,
+                kleinanzeigen_web_imports=web_imports,
+                public_marketplace_imports=public_imports,
                 duration_ms=round((perf_counter() - started_at) * 1000, 2),
             )
             return
@@ -492,11 +565,16 @@ class Scheduler:
                     logger.info("scheduler_cycle_skipped", reason="advisory_lock_held")
                     return
                 try:
-                    ebay_imports, email_imports = await asyncio.gather(self.sync_ebay(), self.poll_imap())
+                    ebay_imports, email_imports, web_imports, public_imports = await asyncio.gather(
+                        self.sync_ebay(), self.poll_imap(), self.sync_kleinanzeigen(), self.sync_public_marketplaces()
+                    )
+                    await self._maintain_tracking()
                     logger.info(
                         "scheduler_cycle_completed",
                         ebay_imports=ebay_imports,
                         email_imports=email_imports,
+                        kleinanzeigen_web_imports=web_imports,
+                        public_marketplace_imports=public_imports,
                         duration_ms=round((perf_counter() - started_at) * 1000, 2),
                     )
                 finally:

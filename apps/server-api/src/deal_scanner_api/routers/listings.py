@@ -12,11 +12,13 @@ from deal_scanner_core.models import ProductDetection
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import and_, desc, or_, select
 
+from ..comparison_service import COMPARISON_VERSION
 from ..context import Context
 from ..db_models import (
     AnalysisJobRow,
     AnalysisResultRow,
     AuditEventRow,
+    DealEvaluationRow,
     ListingRow,
     ListingSnapshotRow,
     UserFeedbackRow,
@@ -24,8 +26,14 @@ from ..db_models import (
 from ..product_service import persist_listing_products
 from ..schemas import FeedbackCreate, JobResponse, ListingDetail, ListingPage
 from ..services import listing_detail, listing_summary
+from ..tracking_service import archive_expired_listings
 
 router = APIRouter(prefix="/listings", tags=["listings"])
+
+
+@router.post("/maintenance/archive")
+async def archive_old_offers(context: Context) -> dict[str, int]:
+    return {"archived": await archive_expired_listings(context.session, context.workspace_id)}
 
 
 def _encode_cursor(listing: ListingRow) -> str:
@@ -48,6 +56,13 @@ async def list_listings(
     limit: int = Query(default=30, ge=1, le=100),
     cursor: str | None = None,
     view: Literal["all", "new", "favorites", "hidden"] = "all",
+    assessment: Literal["all", "interesting", "suspicious", "unknown"] = "all",
+    q: str | None = Query(default=None, max_length=100),
+    platforms: list[str] | None = Query(default=None),
+    search_profile_id: UUID | None = Query(default=None, alias="searchProfileId"),
+    minimum_deal_score: int | None = Query(default=None, ge=0, le=100, alias="minimumDealScore"),
+    maximum_risk_score: int | None = Query(default=None, ge=0, le=100, alias="maximumRiskScore"),
+    minimum_data_quality: int | None = Query(default=None, ge=0, le=100, alias="minimumDataQuality"),
 ) -> ListingPage:
     query = select(ListingRow).where(ListingRow.workspace_id == context.workspace_id)
     if view == "hidden":
@@ -58,6 +73,60 @@ async def list_listings(
         query = query.where(ListingRow.is_favorite.is_(True))
     elif view == "new":
         query = query.where(ListingRow.first_seen_at >= datetime.now(UTC) - timedelta(hours=24))
+    if platforms:
+        query = query.where(ListingRow.platform.in_(platforms))
+    if search_profile_id is not None:
+        query = query.where(ListingRow.search_profile_id == search_profile_id)
+    if q and q.strip():
+        term = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.where(
+            or_(
+                ListingRow.title.ilike(f"%{term}%", escape="\\"), ListingRow.description.ilike(f"%{term}%", escape="\\")
+            )
+        )
+    if assessment != "all" or any(
+        value is not None for value in (minimum_deal_score, maximum_risk_score, minimum_data_quality)
+    ):
+        latest = (
+            select(DealEvaluationRow.id)
+            .where(
+                DealEvaluationRow.workspace_id == context.workspace_id,
+                DealEvaluationRow.listing_id == ListingRow.id,
+            )
+            .order_by(DealEvaluationRow.created_at.desc(), DealEvaluationRow.id.desc())
+            .limit(1)
+            .correlate(ListingRow)
+            .scalar_subquery()
+        )
+        query = query.outerjoin(DealEvaluationRow, DealEvaluationRow.id == latest)
+        market_current = DealEvaluationRow.calculation_version.endswith(f"+{COMPARISON_VERSION}")
+        quality = minimum_data_quality if minimum_data_quality is not None else 40
+        risk = maximum_risk_score if maximum_risk_score is not None else 45
+        if assessment == "interesting":
+            query = query.where(
+                market_current,
+                DealEvaluationRow.deal_score >= (minimum_deal_score if minimum_deal_score is not None else 75),
+                DealEvaluationRow.risk_score <= risk,
+                DealEvaluationRow.data_quality_score >= quality,
+            )
+        elif assessment == "suspicious":
+            query = query.where(DealEvaluationRow.risk_score > risk)
+        elif assessment == "unknown":
+            query = query.where(
+                or_(
+                    DealEvaluationRow.id.is_(None),
+                    DealEvaluationRow.deal_score.is_(None),
+                    DealEvaluationRow.data_quality_score < quality,
+                    ~market_current,
+                )
+            )
+        else:
+            if minimum_deal_score is not None:
+                query = query.where(market_current, DealEvaluationRow.deal_score >= minimum_deal_score)
+            if maximum_risk_score is not None:
+                query = query.where(DealEvaluationRow.risk_score <= maximum_risk_score)
+            if minimum_data_quality is not None:
+                query = query.where(market_current, DealEvaluationRow.data_quality_score >= minimum_data_quality)
     if cursor:
         cursor_time, cursor_id = _decode_cursor(cursor)
         query = query.where(
@@ -93,19 +162,38 @@ async def get_listing(listing_id: UUID, context: Context) -> ListingDetail:
 @router.post("/{listing_id}/reanalyze", response_model=JobResponse, status_code=201)
 async def reanalyze(listing_id: UUID, context: Context) -> JobResponse:
     result = await context.session.execute(
-        select(ListingRow).where(ListingRow.id == listing_id, ListingRow.workspace_id == context.workspace_id)
+        select(ListingRow)
+        .where(ListingRow.id == listing_id, ListingRow.workspace_id == context.workspace_id)
+        .with_for_update()
     )
     listing = result.scalar_one_or_none()
     if listing is None or listing.current_snapshot_id is None:
         raise HTTPException(status_code=404, detail="listing snapshot not found")
     snapshot = await context.session.get(ListingSnapshotRow, listing.current_snapshot_id)
     assert snapshot is not None
+    pending = (
+        await context.session.execute(
+            select(AnalysisJobRow)
+            .where(
+                AnalysisJobRow.workspace_id == context.workspace_id,
+                AnalysisJobRow.listing_id == listing.id,
+                AnalysisJobRow.snapshot_id == snapshot.id,
+                AnalysisJobRow.job_type == "deep_text_analysis",
+                AnalysisJobRow.status.in_(["PENDING", "RETRY", "LEASED"]),
+            )
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if pending is not None:
+        from .workers import _job_response
+
+        return _job_response(pending)
     digest = hashlib.sha256(f"{snapshot.content_hash}:manual:{uuid4()}".encode()).hexdigest()
     job = AnalysisJobRow(
         workspace_id=context.workspace_id,
         listing_id=listing.id,
         snapshot_id=snapshot.id,
-        job_type="text_analysis",
+        job_type="deep_text_analysis",
         required_capability="text-small",
         input_hash=digest,
         priority=20,
@@ -160,6 +248,8 @@ async def create_feedback(listing_id: UUID, payload: FeedbackCreate, context: Co
     }
     state_update = state_updates.get(payload.feedback_type)
     if state_update is not None:
+        if payload.feedback_type in {"hide", "unhide"}:
+            listing.removed_at = None  # Manual choices must never be undone by the importer.
         field, value = state_update
         if getattr(listing, field) != value:
             setattr(listing, field, value)

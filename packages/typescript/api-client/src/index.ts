@@ -20,6 +20,7 @@ import type {
   ProviderSyncRunPage,
   SearchProfile,
   SearchProfileCreate,
+  RestockConfiguration,
   SystemStatus,
   Worker,
 } from '@deal-scanner/contracts';
@@ -29,6 +30,16 @@ export interface ClientOptions {
   baseUrl: string;
   token?: () => Promise<string | null>;
   developmentUserId?: string;
+}
+
+export interface ListingFilters {
+  q?: string;
+  platforms?: string[];
+  searchProfileId?: string;
+  assessment?: 'all' | 'interesting' | 'suspicious' | 'unknown';
+  minimumDealScore?: number;
+  maximumRiskScore?: number;
+  minimumDataQuality?: number;
 }
 
 export class ApiProblemError extends Error {
@@ -113,10 +124,11 @@ export class DealScannerClient {
   async listings(
     cursor?: string,
     view: 'all' | 'new' | 'favorites' | 'hidden' = 'all',
+    filters: ListingFilters = {},
   ): Promise<ListingPage> {
     return this.unwrap(
       await this.client.GET('/api/v1/listings', {
-        params: { query: { cursor, view } },
+        params: { query: { cursor, view, ...filters } },
       }),
     );
   }
@@ -218,7 +230,21 @@ export class DealScannerClient {
   }
 
   async notifications(): Promise<Notification[]> {
-    return this.unwrap(await this.client.GET('/api/v1/notifications'));
+    return this.unwrap(await this.client.GET('/api/v1/notifications', {
+      params: { query: { pending_only: true } },
+    }));
+  }
+
+  async restockConfiguration(): Promise<RestockConfiguration> {
+    return this.unwrap(await this.client.GET('/api/v1/restock'));
+  }
+
+  async saveRestockConfiguration(configuration: RestockConfiguration): Promise<RestockConfiguration> {
+    return this.unwrap(await this.client.PUT('/api/v1/restock', { body: configuration }));
+  }
+
+  async checkRestock(): Promise<Record<string, unknown>> {
+    return this.unwrap(await this.client.POST('/api/v1/restock/check'));
   }
 
   async markNotificationDelivered(notificationId: string): Promise<void> {
@@ -281,7 +307,7 @@ export class DealScannerClient {
   }
 
   async configureProvider(
-    provider: 'ebay' | 'kleinanzeigenEmail' | 'browser' | 'manual',
+    provider: 'ebay' | 'kleinanzeigen' | 'kleinanzeigenEmail' | 'browser' | 'manual' | 'mydealz' | 'vinted',
     configuration: ProviderConfigurationUpsert,
   ): Promise<ProviderConfiguration> {
     return this.unwrap(

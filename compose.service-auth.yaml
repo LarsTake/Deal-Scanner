@@ -1,0 +1,23 @@
+# Add to compose.yaml + compose.thinkcentre.yaml after setting up the secret file.
+services:
+  scheduler:
+    environment:
+      DEAL_SCANNER_SERVICE_AUTH_MODE: supabase
+      DEAL_SCANNER_SERVICE_PASSWORD_FILE: /run/secrets/service_password
+      DEAL_SCANNER_SERVICE_EMAIL: ${DEAL_SCANNER_SERVICE_EMAIL:?Set the scanner login email}
+      DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY: ${DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY:?Set the publishable key}
+      DEAL_SCANNER_API_TOKEN: ""
+      DEAL_SCANNER_DEVELOPMENT_USER_ID: ""
+    secrets: [service_password]
+  rule-worker:
+    environment:
+      DEAL_SCANNER_SERVICE_AUTH_MODE: supabase
+      DEAL_SCANNER_SERVICE_PASSWORD_FILE: /run/secrets/service_password
+      DEAL_SCANNER_SERVICE_EMAIL: ${DEAL_SCANNER_SERVICE_EMAIL:?Set the scanner login email}
+      DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY: ${DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY:?Set the publishable key}
+      DEAL_SCANNER_API_TOKEN: ""
+      DEAL_SCANNER_DEVELOPMENT_USER_ID: ""
+    secrets: [service_password]
+secrets:
+  service_password:
+    file: ./.secrets/service-password.txt

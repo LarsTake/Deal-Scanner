@@ -17,21 +17,15 @@ import pytesseract  # type: ignore[import-untyped]
 import structlog
 from deal_scanner_core.models import ImageOcrResult, TextAnalysisRequest, TextAnalysisResult
 from deal_scanner_extraction import RuleExtractor
+from deal_scanner_service_auth import ServiceSettings, create_api_auth
 from PIL import Image
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .ollama import OllamaProvider
 
 logger = structlog.get_logger("deal_scanner_worker")
 
 
-class WorkerSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="DEAL_SCANNER_", env_file=".env", extra="ignore")
-
-    environment: str = "development"
-    api_url: str = "http://127.0.0.1:8000"
-    api_token: str | None = None
-    development_user_id: str | None = None
+class WorkerSettings(ServiceSettings):
     ollama_url: str = "http://127.0.0.1:11434"
     ollama_text_model: str = ""
     ollama_extraction_model: str = "gemma4:12b"
@@ -50,12 +44,7 @@ class WorkerSettings(BaseSettings):
 class WorkerAgent:
     def __init__(self, settings: WorkerSettings) -> None:
         self.settings = settings
-        headers: dict[str, str] = {}
-        if settings.api_token:
-            headers["Authorization"] = f"Bearer {settings.api_token}"
-        if settings.development_user_id:
-            headers["X-Development-User"] = settings.development_user_id
-        self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
+        self.client = httpx.AsyncClient(base_url=settings.api_url, auth=create_api_auth(settings), timeout=30)
         rules_only = settings.worker_mode == "rules"
         extraction_model = "" if rules_only else settings.ollama_extraction_model or settings.ollama_text_model
         self.ollama = OllamaProvider(

@@ -15,6 +15,7 @@ dist/
 target/
 .data/
 .backups/
+.secrets/
 coverage/
 apps/desktop/src-tauri/gen/
 graphify-out/.graphify_*

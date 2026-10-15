@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .backups
+.secrets
 .cache
 .venv
 node_modules

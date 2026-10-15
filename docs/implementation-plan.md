@@ -100,6 +100,26 @@ Prüfstand: 110 Python- und 24 TypeScript-Tests bestanden; 11 externe/PostgreSQL
 übersprungen. Python-/TypeScript-Typprüfungen, Lint und Produktionsbuild erfolgreich.
 Produktiver Windows-Betrieb und Last-/Restore-Abnahme bleiben ausstehend.
 
+### Vierte Ausbaustufe: Dienstanmeldung mit Token-Erneuerung
+
+Scheduler und Worker nutzen eine gemeinsame Anmeldekomponente. Optionaler
+Supabase-Passwortlogin aus einer lokal geschützten Secret-Datei, getrennte Sitzungen
+pro Prozess, automatische und serialisierte Refresh-Token-Rotation vor Ablauf.
+Bei API-401 höchstens ein erneuter Versuch; keine automatischen Replays anderer
+Schreibfehler. Abgelehnte Erneuerungen sperren die Sitzung bis zum bewussten Neustart.
+API-Credentials gehen nicht an Ollama oder fremde Bildadressen.
+
+Docker-Override, Windows-Einrichtung und Anmeldetest:
+[Dienstanmeldung](service-auth.md). Die Passwortdatei ist nicht verschlüsselt,
+aber vom Git-/Build-Kontext ausgeschlossen und nur in die beiden Dienste eingebunden.
+Bestehende Benutzerrechte gelten unverändert; keine neue eingeschränkte Maschinenrolle.
+Eine Sitzungserneuerung ist keine Garantie gegen Free-Tarif-Projektpausen.
+
+Zusätzlich sind die schon verwendeten Extraction-Pakete und der asyncpg-Treiber
+explizite Image-Abhängigkeiten. Prüfstand: 128 Python-Tests bestanden, 11 externe/
+PostgreSQL-Tests übersprungen; Lint/Typprüfung erfolgreich, Images gebaut.
+Windows-Passwortdatei und echte Supabase-Anmeldung noch nicht live abgenommen.
+
 P0.1–P0.3 werden zunächst lokal implementiert und mit Regressionstests geprüft.
 Erst danach wird P0.4 auf dem tatsächlichen ThinkCentre abgenommen. Der bisher genannte
 RAM-Rahmen von ungefähr 1,5 GiB ist ein Budgetziel, kein gemessener Verbrauch dieses Stacks.

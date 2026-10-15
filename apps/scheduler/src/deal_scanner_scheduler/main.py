@@ -22,19 +22,14 @@ from deal_scanner_email import KleinanzeigenMailParser
 from deal_scanner_extraction import RuleExtractor
 from deal_scanner_kleinanzeigen_web import KleinanzeigenWebProvider, WebProviderSettings
 from deal_scanner_marketplace_web import PublicMarketplaceProvider
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from deal_scanner_service_auth import ServiceSettings, create_api_auth
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 logger = structlog.get_logger("deal_scanner_scheduler")
 
 
-class SchedulerSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="DEAL_SCANNER_", env_file=".env", extra="ignore")
-
-    api_url: str = "http://127.0.0.1:8000"
-    api_token: str | None = None
-    development_user_id: str | None = None
+class SchedulerSettings(ServiceSettings):
     ebay_environment: str = "sandbox"
     ebay_client_id: str = ""
     ebay_client_secret: str = ""
@@ -45,8 +40,6 @@ class SchedulerSettings(BaseSettings):
     scheduler_interval_seconds: int = 300
     database_url: str = ""
     mail_archive_dir: str = ".data/mail-archive"
-    supabase_url: str = ""
-    supabase_publishable_key: str = ""
     health_file: str = ""
     kleinanzeigen_web_enabled: bool = False
     kleinanzeigen_web_details_enabled: bool = True
@@ -58,12 +51,7 @@ class SchedulerSettings(BaseSettings):
 class Scheduler:
     def __init__(self, settings: SchedulerSettings) -> None:
         self.settings = settings
-        headers: dict[str, str] = {}
-        if settings.api_token:
-            headers["Authorization"] = f"Bearer {settings.api_token}"
-        if settings.development_user_id:
-            headers["X-Development-User"] = settings.development_user_id
-        self.client = httpx.AsyncClient(base_url=settings.api_url, headers=headers, timeout=30)
+        self.client = httpx.AsyncClient(base_url=settings.api_url, auth=create_api_auth(settings), timeout=30)
         self._workspace_id: str | None = None
         self._web_provider = (
             KleinanzeigenWebProvider(

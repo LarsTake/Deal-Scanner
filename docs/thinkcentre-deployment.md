@@ -15,7 +15,9 @@ HTTP-Sammler, nicht für Browserautomatisierung oder lokale KI auf dem Server.
    `DEAL_SCANNER_AUTO_CREATE_DB=false`, `DEAL_SCANNER_DATABASE_URL` mit
    `postgresql+asyncpg://…` und `DEAL_SCANNER_SUPABASE_URL`.
    `DEAL_SCANNER_API_TOKEN` muss ein gültiger Benutzer-Zugangstoken für den
-   Workspace sein; Scheduler/Worker brauchen eine Erneuerungsstrategie vor Ablauf.
+   Workspace sein, falls der alte statische Token-Modus verwendet wird.
+   Für dauerhaften Scheduler-/Regel-Worker-Betrieb stattdessen die
+   [Dienstanmeldung mit Erneuerung](service-auth.md) einrichten.
    Ein Service-Role-Key ist kein Ersatz für einen Benutzer-Token.
 3. Gewünschte HTTP-Quellen aktivieren. Browser-/Stealth-Modi ausgeschaltet lassen.
    In der Weboberfläche Supabase-URL/Publishable-Key hinterlegen und anmelden.

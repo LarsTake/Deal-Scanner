@@ -315,6 +315,4 @@ class WorkerAgent:
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
     settings = WorkerSettings()
-    if settings.environment == "production" and not settings.api_token:
-        raise RuntimeError("production analysis worker requires an API token")
     asyncio.run(WorkerAgent(settings).run_forever())

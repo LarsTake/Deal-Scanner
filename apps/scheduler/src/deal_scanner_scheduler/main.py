@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import imaplib
-import os
 import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -573,6 +572,4 @@ class Scheduler:
 
 def run() -> None:
     structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
-    if os.getenv("DEAL_SCANNER_ENVIRONMENT") == "production" and not os.getenv("DEAL_SCANNER_API_TOKEN"):
-        raise RuntimeError("production scheduler requires an API token")
     asyncio.run(Scheduler(SchedulerSettings()).run_forever())

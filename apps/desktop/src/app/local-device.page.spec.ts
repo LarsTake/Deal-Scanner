@@ -35,6 +35,24 @@ describe('local worker controls', () => {
     expect(page.busy()).toBe(false);
   });
 
+  it('does not overwrite saved settings with an empty form after a failed initial load', async () => {
+    Object.defineProperty(page, 'native', { value: true });
+    await page.save();
+    expect(invoke).not.toHaveBeenCalled();
+    expect(page.error()).toContain('zuerst erfolgreich geladen');
+  });
+
+  it('restores all saved model roles and the executable when the page is recreated', async () => {
+    const config = { localMode: true, serverUrl: 'http://127.0.0.1:8000',
+      executable: 'C:\\worker\\deal-scanner-worker.exe', textModel: 'text-model',
+      reasoningModel: 'risk-model', embeddingModel: 'embedding-model', visionModel: 'vision-model', images: true };
+    Object.defineProperty(page, 'native', { value: true });
+    invoke.mockResolvedValue({ running: false, config });
+    await page.ngOnInit();
+    expect(page.form.getRawValue()).toMatchObject(config);
+    page.ngOnDestroy();
+  });
+
   it('stops and refreshes the native process status', async () => {
     vi.mocked(invoke).mockResolvedValue({ running: false, legacyService: false, passwordSaved: true, config: {} });
     await page.stop();

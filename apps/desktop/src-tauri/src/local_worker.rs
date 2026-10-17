@@ -2,11 +2,13 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::Mutex,
 };
 use tauri::{Manager, State, WebviewWindow};
+
+static CONFIG_WRITE: Mutex<()> = Mutex::new(());
 
 #[derive(Default)]
 pub struct LocalWorker(pub Mutex<Option<Child>>);
@@ -97,13 +99,136 @@ fn local_only(window: &WebviewWindow) -> Result<(), String> {
 }
 
 fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let path = app
+    let legacy = app
         .path()
         .app_local_data_dir()
         .map_err(|_| "App-Verzeichnis nicht verfügbar")?
         .join("local-worker");
+    #[cfg(windows)]
+    let path = app
+        .path()
+        .home_dir()
+        .map_err(|_| "Benutzerverzeichnis nicht verfügbar")?
+        .join(".deal-scanner")
+        .join("local-worker");
+    #[cfg(not(windows))]
+    let path = legacy.clone();
     fs::create_dir_all(&path).map_err(|_| "App-Verzeichnis konnte nicht erstellt werden")?;
+    if path != legacy {
+        let _guard = CONFIG_WRITE.lock().map_err(|_| "Einstellungen gesperrt")?;
+        migrate_config(&legacy, &path)?;
+    }
     Ok(path)
+}
+
+fn read_config(path: &Path) -> Result<WorkerConfig, String> {
+    let read = |name| -> Option<WorkerConfig> {
+        serde_json::from_slice(&fs::read(path.join(name)).ok()?).ok()
+    };
+    read("config.json")
+        .or_else(|| read("config.json.bak"))
+        .ok_or_else(|| {
+            "Gespeicherte Worker-Einstellungen sind nicht lesbar. Sie wurden nicht überschrieben."
+                .into()
+        })
+}
+
+fn write_config(path: &Path, config: &WorkerConfig) -> Result<(), String> {
+    use std::io::Write;
+    let temporary = path.join("config.json.pending");
+    let destination = path.join("config.json");
+    let bytes = serde_json::to_vec_pretty(config).map_err(|_| "Konfiguration ungültig")?;
+    let mut file = fs::File::create(&temporary).map_err(|_| "Einstellungen nicht schreibbar")?;
+    file.write_all(&bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|_| "Einstellungen konnten nicht gesichert werden")?;
+    drop(file);
+    if destination.is_file()
+        && fs::read(&destination)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<WorkerConfig>(&bytes).ok())
+            .is_some()
+    {
+        fs::copy(&destination, path.join("config.json.bak"))
+            .map_err(|_| "Sicherung der Einstellungen fehlgeschlagen")?;
+    } else if !path.join("config.json.bak").exists() {
+        fs::copy(&temporary, path.join("config.json.bak"))
+            .map_err(|_| "Erste Sicherung der Einstellungen fehlgeschlagen")?;
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn MoveFileExW(existing: *const u16, replacement: *const u16, flags: u32) -> i32;
+        }
+        let from: Vec<u16> = temporary.as_os_str().encode_wide().chain(Some(0)).collect();
+        let to: Vec<u16> = destination
+            .as_os_str()
+            .encode_wide()
+            .chain(Some(0))
+            .collect();
+        if unsafe { MoveFileExW(from.as_ptr(), to.as_ptr(), 0x1 | 0x8) } == 0 {
+            return Err("Einstellungen konnten nicht dauerhaft ersetzt werden".into());
+        }
+    }
+    #[cfg(not(windows))]
+    fs::rename(temporary, destination).map_err(|_| "Einstellungen konnten nicht ersetzt werden")?;
+    Ok(())
+}
+
+fn write_password(path: &Path, password: &str) -> Result<(), String> {
+    #[cfg(unix)]
+    {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(path)
+            .map_err(|_| "Passwortdatei nicht schreibbar")?;
+        file.write_all(password.as_bytes())
+            .map_err(|_| "Passwort konnte nicht gespeichert werden")?;
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        fs::write(path, "").map_err(|_| "Passwortdatei nicht schreibbar")?;
+        let user = std::env::var("USERNAME").map_err(|_| "Benutzer nicht verfügbar")?;
+        let ok = Command::new("icacls")
+            .arg(path)
+            .args(["/inheritance:r", "/grant:r", &format!("{user}:F")])
+            .creation_flags(0x08000000)
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        if !ok {
+            return Err("Passwortdatei konnte nicht abgesichert werden".into());
+        }
+        fs::write(path, password.as_bytes())
+            .map_err(|_| "Passwort konnte nicht gespeichert werden")?;
+    }
+    Ok(())
+}
+
+fn migrate_config(legacy: &Path, target: &Path) -> Result<(), String> {
+    if target.join("config.json").exists()
+        || target.join("config.json.bak").exists()
+        || (!legacy.join("config.json").exists() && !legacy.join("config.json.bak").exists())
+    {
+        return Ok(());
+    }
+    let mut config = read_config(legacy)?;
+    if !config.password_file.is_empty() && Path::new(&config.password_file).is_file() {
+        let password = fs::read_to_string(&config.password_file)
+            .map_err(|_| "Bisheriges Worker-Passwort nicht lesbar")?;
+        let destination = target.join("password");
+        write_password(&destination, &password)?;
+        config.password_file = destination.to_string_lossy().into_owned();
+    }
+    write_config(target, &config)
 }
 
 pub fn server_url(value: &str) -> Result<url::Url, String> {
@@ -133,10 +258,9 @@ pub fn server_url(value: &str) -> Result<url::Url, String> {
 }
 
 fn load(app: &tauri::AppHandle) -> Result<WorkerConfig, String> {
-    let path = data_dir(app)?.join("config.json");
-    if path.exists() {
-        return serde_json::from_slice(&fs::read(path).map_err(|_| "Konfiguration nicht lesbar")?)
-            .map_err(|_| "Konfiguration ungültig".into());
+    let directory = data_dir(app)?;
+    if directory.join("config.json").exists() || directory.join("config.json.bak").exists() {
+        return read_config(&directory);
     }
     let mut config = WorkerConfig::default();
     #[cfg(target_os = "macos")]
@@ -246,44 +370,11 @@ pub fn save_local_worker(
     config.server_urls = saved.server_urls;
     if !password.is_empty() {
         let path = dir.join("password");
-        #[cfg(unix)]
-        {
-            use std::io::Write;
-            use std::os::unix::fs::OpenOptionsExt;
-            let mut file = fs::OpenOptions::new()
-                .write(true)
-                .create(true)
-                .truncate(true)
-                .mode(0o600)
-                .open(&path)
-                .map_err(|_| "Passwortdatei nicht schreibbar")?;
-            file.write_all(password.as_bytes())
-                .map_err(|_| "Passwort konnte nicht gespeichert werden")?;
-        }
-        #[cfg(windows)]
-        {
-            fs::write(&path, "").map_err(|_| "Passwortdatei nicht schreibbar")?;
-            let user = std::env::var("USERNAME").map_err(|_| "Benutzer nicht verfügbar")?;
-            let ok = Command::new("icacls")
-                .arg(&path)
-                .args(["/inheritance:r", "/grant:r", &format!("{user}:F")])
-                .output()
-                .map(|o| o.status.success())
-                .unwrap_or(false);
-            if !ok {
-                let _ = fs::remove_file(path);
-                return Err("Passwortdatei konnte nicht abgesichert werden".into());
-            }
-            fs::write(&path, password.as_bytes())
-                .map_err(|_| "Passwort konnte nicht gespeichert werden")?;
-        }
+        write_password(&path, &password)?;
         config.password_file = path.to_string_lossy().into_owned();
     }
-    fs::write(
-        dir.join("config.json"),
-        serde_json::to_vec_pretty(&config).map_err(|_| "Konfiguration ungültig")?,
-    )
-    .map_err(|_| "Konfiguration nicht gespeichert".into())
+    let _guard = CONFIG_WRITE.lock().map_err(|_| "Einstellungen gesperrt")?;
+    write_config(&dir, &config)
 }
 
 pub fn worker_env(config: &WorkerConfig) -> BTreeMap<&'static str, String> {
@@ -536,11 +627,9 @@ pub fn save_server_connection(window: WebviewWindow, addresses: Vec<String>) -> 
     }
     let mut config = load(window.app_handle())?;
     config.server_urls = addresses;
-    fs::write(
-        data_dir(window.app_handle())?.join("config.json"),
-        serde_json::to_vec_pretty(&config).map_err(|_| "Konfiguration ungültig")?,
-    )
-    .map_err(|_| "Serveradresse konnte nicht gespeichert werden".into())
+    let directory = data_dir(window.app_handle())?;
+    let _guard = CONFIG_WRITE.lock().map_err(|_| "Einstellungen gesperrt")?;
+    write_config(&directory, &config)
 }
 
 #[tauri::command]
@@ -598,6 +687,50 @@ pub async fn research_local(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn worker_settings_survive_reload_migration_and_damaged_primary_file() {
+        let root = std::env::temp_dir().join(format!(
+            "scanner-config-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let legacy = root.join("legacy");
+        let stable = root.join("stable");
+        fs::create_dir_all(&legacy).unwrap();
+        fs::create_dir_all(&stable).unwrap();
+        let config = WorkerConfig {
+            executable: "installed-worker.exe".into(),
+            text_model: "text-model".into(),
+            reasoning_model: "risk-model".into(),
+            embedding_model: "embedding-model".into(),
+            vision_model: "vision-model".into(),
+            images: true,
+            server_url: "https://scanner.example.com".into(),
+            ..Default::default()
+        };
+        write_config(&legacy, &config).unwrap();
+        migrate_config(&legacy, &stable).unwrap();
+        let loaded = read_config(&stable).unwrap();
+        assert_eq!(loaded.text_model, "text-model");
+        assert_eq!(loaded.executable, "installed-worker.exe");
+        assert_eq!(loaded.reasoning_model, "risk-model");
+        assert_eq!(loaded.embedding_model, "embedding-model");
+        assert!(loaded.images);
+        let mut updated = loaded;
+        updated.text_model = "new-selection".into();
+        write_config(&stable, &updated).unwrap();
+        migrate_config(&legacy, &stable).unwrap();
+        assert_eq!(read_config(&stable).unwrap().text_model, "new-selection");
+        fs::write(stable.join("config.json"), b"{truncated").unwrap();
+        assert_eq!(read_config(&stable).unwrap().text_model, "text-model");
+        write_config(&stable, &updated).unwrap();
+        assert_eq!(read_config(&stable).unwrap().text_model, "new-selection");
+        fs::remove_dir_all(root).unwrap();
+    }
+
     #[test]
     fn local_auth_is_restricted_to_loopback() {
         let mut config = WorkerConfig {

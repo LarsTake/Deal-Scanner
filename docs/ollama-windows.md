@@ -154,7 +154,11 @@ den Start; unter **Worker** im Dashboard Heartbeat und abgeschlossene Jobs prüf
 Ohne wartende Jobs ist der Worker untätig.
 
 Konfiguration, Passwortdatei und `worker.log` liegen unter
-`%LOCALAPPDATA%\de.dealscanner.desktop\local-worker`. Das Worker-Passwort ist durch
+`%USERPROFILE%\.deal-scanner\local-worker`. Bisherige Dateien unter
+`%LOCALAPPDATA%\de.dealscanner.desktop\local-worker` werden beim ersten Start
+automatisch übernommen. Die letzte Konfiguration wird als `config.json.bak`
+gesichert und bei einer beschädigten Hauptdatei zum Laden verwendet.
+Das Worker-Passwort ist durch
 Benutzerzugriffsrechte geschützt, aber **nicht verschlüsselt**. Diese Dateien nicht
 weitergeben oder einchecken. Dashboard-Token liegen getrennt im Stronghold-Tresor.
 App-Updates aktualisieren nicht automatisch Server, Python-Checkout oder Modelle.

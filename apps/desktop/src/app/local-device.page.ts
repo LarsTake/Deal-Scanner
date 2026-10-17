@@ -141,6 +141,7 @@ export class LocalDevicePage implements OnInit, OnDestroy {
     });
   }
   private async persist(): Promise<void> {
+    if (this.native && !this.status()) throw new Error('Die gespeicherten Einstellungen müssen zuerst erfolgreich geladen werden. Bitte die App neu starten.');
     if (!this.form.controls.localMode.value) this.fillServerAuth();
     const { password, ...values } = this.form.getRawValue();
     await this.invoke('save_local_worker', { config: { ...values, passwordFile: '' }, password });

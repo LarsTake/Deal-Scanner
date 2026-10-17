@@ -47,7 +47,12 @@ reichert Inserate nicht automatisch mit Webdaten an.
 ## Speicherung und Pakete
 
 Konfiguration, Passwortdatei und Logs liegen im App-Local-Data-Verzeichnis unter
-`local-worker`. Das Worker-Passwort ist auf Unix mit `0600` und auf Windows durch
+`local-worker`; unter Windows werden sie jetzt in `%USERPROFILE%\.deal-scanner\local-worker`
+gespeichert, unabhängig vom Start über Verknüpfung, Installer oder eine andere App.
+Vorhandene Windows-Einstellungen werden einmal automatisch übernommen; der neue
+Speicherstand wird anschließend nicht mehr durch die alte Datei ersetzt.
+Konfigurationen werden atomar mit einer Sicherung `config.json.bak` geschrieben.
+Das Worker-Passwort ist auf Unix mit `0600` und auf Windows durch
 eine Benutzer-ACL geschützt, aber nicht verschlüsselt. Dashboard-Token liegen
 getrennt im Stronghold-Tresor. Logs können Angebotsdaten enthalten.
 

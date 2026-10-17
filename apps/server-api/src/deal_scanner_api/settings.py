@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     auto_create_db: bool = True
     auth_mode: str = "development"
     supabase_url: str | None = None
+    supabase_publishable_key: str = ""
     supabase_service_role_key: str = ""
     supabase_jwt_audience: str = "authenticated"
     cors_origins: str = "http://127.0.0.1:4200,http://localhost:4200,tauri://localhost,http://tauri.localhost"

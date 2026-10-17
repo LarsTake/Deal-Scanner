@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from .database import engine
 from .db_models import Base
 from .problems import install_problem_handlers
+from .public_config import public_auth_config
 from .rate_limit import FixedWindowRateLimiter
 from .routers import auth, health, images, imports, listings, market, restock, search_profiles, system, workers
 from .schemas import ProblemDetails
@@ -73,6 +74,13 @@ app.add_middleware(
     ],
 )
 install_problem_handlers(app)
+
+
+@app.get("/api/v1/client-config")
+async def client_config(response: Response) -> dict[str, str | None]:
+    """Unauthenticated bootstrap: deliberately expose only browser-safe settings."""
+    response.headers["Cache-Control"] = "no-store"
+    return public_auth_config(settings)
 
 
 @app.middleware("http")

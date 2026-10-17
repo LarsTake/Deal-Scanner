@@ -16,7 +16,8 @@ import { defaultApiUrl } from './connection-target';
   standalone: true,
   imports: [MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSlideToggleModule, ReactiveFormsModule],
   template: `
-    <header class="page-header"><div><p class="eyebrow">Konfiguration</p><h1>Einstellungen</h1><p>Publishable Supabase-Daten sind keine Service-Secrets. Änderungen der API-URL greifen nach einem Neustart.</p></div></header>
+    <header class="page-header"><div><p class="eyebrow">Konfiguration</p><h1>Einstellungen</h1><p>Die öffentlichen Anmeldedaten werden automatisch vom Server geladen. Änderungen der API-URL greifen nach einem Neustart.</p></div></header>
+    @if (auth.serverConfigured()) { <p class="notice">Supabase wurde automatisch von deinem Server eingerichtet. Du kannst dich direkt anmelden.</p> }
     <mat-card class="form-card compact"><form [formGroup]="form" (ngSubmit)="save()">
       <mat-form-field><mat-label>API-URL</mat-label><input matInput formControlName="apiUrl" /></mat-form-field>
       <mat-form-field><mat-label>Supabase-URL</mat-label><input matInput formControlName="supabaseUrl" /></mat-form-field>

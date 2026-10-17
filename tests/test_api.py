@@ -28,6 +28,14 @@ def payload(description: str = "Abholung möglich") -> dict[str, object]:
     }
 
 
+def test_client_config_is_public_and_not_cacheable() -> None:
+    with TestClient(app) as client:
+        response = client.get("/api/v1/client-config")
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "no-store"
+        assert set(response.json()) == {"authMode", "supabaseUrl", "supabasePublishableKey"}
+
+
 def set_job_times(job_id: str, *, expire_lease: bool = False, make_available: bool = False) -> None:
     async def update() -> None:
         async with session_factory() as session:

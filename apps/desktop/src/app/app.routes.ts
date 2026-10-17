@@ -13,6 +13,9 @@ import { SystemPage } from './system.page';
 import { WorkersPage } from './workers.page';
 
 export const routes: Routes = [
+  { path: '', pathMatch: 'full', canMatch: [() => '__TAURI_INTERNALS__' in window],
+    loadComponent: () => import('./local-device.page').then((module) => module.LocalDevicePage), title: 'Dieses Gerät' },
+  { path: 'local-device', loadComponent: () => import('./local-device.page').then((module) => module.LocalDevicePage), title: 'Dieses Gerät' },
   { path: '', component: DashboardPage, title: 'Dashboard' },
   { path: 'search-profiles', component: SearchProfilesPage, title: 'Suchaufträge' },
   { path: 'listings', component: ListingsPage, title: 'Angebote', data: { title: 'Alle Angebote', view: 'all' } },

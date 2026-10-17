@@ -20,7 +20,13 @@ HTTP-Sammler, nicht für Browserautomatisierung oder lokale KI auf dem Server.
    [Dienstanmeldung mit Erneuerung](service-auth.md) einrichten.
    Ein Service-Role-Key ist kein Ersatz für einen Benutzer-Token.
 3. Gewünschte HTTP-Quellen aktivieren. Browser-/Stealth-Modi ausgeschaltet lassen.
-   In der Weboberfläche Supabase-URL/Publishable-Key hinterlegen und anmelden.
+   `DEAL_SCANNER_SUPABASE_PUBLISHABLE_KEY` zusätzlich zur Supabase-URL in der
+   Server-`.env` setzen. Die Weboberfläche lädt beide öffentlichen Werte automatisch
+   über `/api/v1/client-config`, auch auf neuen Geräten vor der Anmeldung.
+   In der installierten Desktop-App einmal die API-URL des Servers unter Einstellungen
+   eintragen und die App neu starten. Ein älterer/offline Server erlaubt weiterhin
+   manuelle Konfiguration. Es werden keine Passwörter, Datenbank-URLs oder privaten
+   API-Schlüssel veröffentlicht; Service-Role- und Secret-Keys werden abgewiesen.
    Keine Datenbankpasswörter oder Service-Role-Keys in die Oberfläche eingeben.
 4. Freien Speicher und Backupziel prüfen. Die externe Datenbank ist in diesem Stack
    nicht enthalten; bei lokaler Supabase-Installation kommt deren RAM hinzu.

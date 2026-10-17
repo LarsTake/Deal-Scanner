@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { SecureTokenStore } from './secure-token.store';
+import { defaultApiUrl } from './connection-target';
 
 function runsInTauri(): boolean {
   return '__TAURI_INTERNALS__' in window;
@@ -10,17 +11,45 @@ function runsInTauri(): boolean {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private client: SupabaseClient | null = null;
+  private authSubscription: { unsubscribe(): void } | null = null;
   readonly userEmail = signal<string | null>(null);
   readonly configured = signal(false);
+  readonly serverConfigured = signal(false);
 
   constructor(private readonly tokens: SecureTokenStore) {
     this.configureFromStorage();
   }
 
   configure(url: string, publishableKey: string): void {
+    if (this.client && localStorage.getItem('deal-scanner-supabase-url') === url &&
+        localStorage.getItem('deal-scanner-supabase-key') === publishableKey) return;
     localStorage.setItem('deal-scanner-supabase-url', url);
     localStorage.setItem('deal-scanner-supabase-key', publishableKey);
     this.configureFromStorage();
+  }
+
+  async initializeFromServer(): Promise<void> {
+    const base = localStorage.getItem('deal-scanner-api-url') ??
+      defaultApiUrl(window.location, runsInTauri());
+    try {
+      const response = await fetch(`${base.replace(/\/$/, '')}/api/v1/client-config`, {
+        signal: AbortSignal.timeout(5000),
+        credentials: 'omit',
+        cache: 'no-store',
+      });
+      if (!response.ok) return;
+      const config: unknown = await response.json();
+      if (!config || typeof config !== 'object') return;
+      const values = config as Record<string, unknown>;
+      if (values['authMode'] !== 'supabase' || typeof values['supabaseUrl'] !== 'string' ||
+          typeof values['supabasePublishableKey'] !== 'string' || !values['supabasePublishableKey']) return;
+      const url = new URL(values['supabaseUrl']);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+      this.configure(values['supabaseUrl'], values['supabasePublishableKey']);
+      this.serverConfigured.set(true);
+    } catch {
+      // Offline or older server: keep the existing manual configuration usable.
+    }
   }
 
   async unlockDesktop(passphrase: string): Promise<boolean> {
@@ -60,6 +89,8 @@ export class AuthService {
     const url = localStorage.getItem('deal-scanner-supabase-url');
     const key = localStorage.getItem('deal-scanner-supabase-key');
     if (!url || !key) return;
+    this.authSubscription?.unsubscribe();
+    void this.client?.auth.stopAutoRefresh();
     this.client = createClient(url, key, {
       auth: {
         persistSession: !runsInTauri(),
@@ -76,7 +107,7 @@ export class AuthService {
         refreshToken: data.session.refresh_token,
       });
     });
-    this.client.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = this.client.auth.onAuthStateChange((_event, session) => {
       this.userEmail.set(session?.user.email ?? null);
       if (session) {
         void this.tokens
@@ -87,5 +118,6 @@ export class AuthService {
           .catch(() => undefined);
       }
     });
+    this.authSubscription = listener.subscription;
   }
 }

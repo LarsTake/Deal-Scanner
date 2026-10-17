@@ -170,7 +170,7 @@ import { ApiService } from './api.service';
       }
     }
   `,
-  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: #07120f; margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
+  styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: var(--surface-2); margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
 })
 export class ListingDetailPage implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);

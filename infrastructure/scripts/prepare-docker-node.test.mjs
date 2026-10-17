@@ -5,13 +5,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepare } from './prepare-docker-node.mjs';
 
-test('only removes root developer tools; keeps workspace pins and overrides', () => {
+for (const format of ['LF', 'CRLF', 'CRLF-BOM']) {
+test(`only removes root developer tools; keeps workspace pins and overrides (${format})`, () => {
   const root = mkdtempSync(join(tmpdir(), 'scanner-node-build-'));
   try {
-    const original = readFileSync(new URL('../../pnpm-lock.yaml', import.meta.url), 'utf8');
+    const original = readFileSync(new URL('../../pnpm-lock.yaml', import.meta.url), 'utf8')
+      .replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
     const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
     writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
-    writeFileSync(join(root, 'pnpm-lock.yaml'), original);
+    const lockInput = format === 'LF' ? original : original.replace(/\n/g, '\r\n');
+    writeFileSync(join(root, 'pnpm-lock.yaml'), (format === 'CRLF-BOM' ? '\uFEFF' : '') + lockInput);
     prepare(root);
     const prepared = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
     const lock = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8');
@@ -24,6 +27,7 @@ test('only removes root developer tools; keeps workspace pins and overrides', ()
     assert.equal(lock.slice(lock.indexOf(workspaceStart)), original.slice(original.indexOf(workspaceStart)));
   } finally { rmSync(root, { recursive: true }); }
 });
+}
 
 test('fails closed on an unexpected lock layout without editing the manifest', () => {
   const root = mkdtempSync(join(tmpdir(), 'scanner-node-build-'));

@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 export function prepare(root) {
   const manifestPath = resolve(root, 'package.json');
   const lockPath = resolve(root, 'pnpm-lock.yaml');
-  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  const lock = readFileSync(lockPath, 'utf8');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8').replace(/^\uFEFF/, ''));
+  // Windows checkouts can use CRLF (and editors may add a UTF-8 BOM). Normalize
+  // encoding markers/line endings only, before checking the pinned YAML layout.
+  const lock = readFileSync(lockPath, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
   const start = lock.indexOf('\n  .:\n', lock.indexOf('\nimporters:\n'));
   if (start < 0 || !lock.startsWith("lockfileVersion: '9.0'\n")) {
     throw new Error('Unsupported pnpm lockfile layout: refusing to change dependency resolution.');
@@ -19,7 +21,8 @@ export function prepare(root) {
   const end = start + '\n  .:\n'.length + next;
   for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'scripts']) delete manifest[field];
   // Only the root importer changes. Workspace importers, snapshots and overrides
-  // stay byte-for-byte pinned, so --frozen-lockfile continues to validate them.
+  // stay pinned (apart from line-ending normalization), so --frozen-lockfile
+  // continues to validate them.
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(lockPath, lock.slice(0, start) + '\n  .: {}\n' + lock.slice(end));
 }

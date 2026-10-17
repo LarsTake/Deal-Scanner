@@ -45,6 +45,7 @@ class SchedulerSettings(ServiceSettings):
     mydealz_web_enabled: bool = False
     vinted_web_enabled: bool = False
     web_fetch_mode: Literal["http", "browser", "stealth"] = "http"
+    market_research_enabled: bool = True
 
 
 class Scheduler:
@@ -522,9 +523,83 @@ class Scheduler:
             Path(self.settings.health_file).touch()
 
     async def _maintain_tracking(self) -> None:
+        if self.settings.market_research_enabled:
+            try:
+                await self.research_market_prices()
+            except Exception as exc:
+                logger.warning("market_research_failed", error_type=type(exc).__name__)
         for path in ("/api/v1/listings/maintenance/archive", "/api/v1/restock/check", "/api/v1/notifications/dispatch"):
             response = await self.client.post(path)
             response.raise_for_status()
+
+    async def research_market_prices(self) -> None:
+        configurations = await self.client.get("/api/v1/provider-configurations")
+        configurations.raise_for_status()
+        enabled = {item["provider"]: item for item in configurations.json()}
+        providers: list[EbayProvider | KleinanzeigenWebProvider] = []
+        if (
+            self.settings.ebay_environment == "production"
+            and self.settings.ebay_client_id
+            and self.settings.ebay_client_secret
+            and enabled.get("ebay", {}).get("enabled", True)
+            and enabled.get("ebay", {}).get("settings", {}).get("environment", "production") == "production"
+        ):
+            providers.append(
+                EbayProvider(
+                    EbaySettings(
+                        client_id=self.settings.ebay_client_id,
+                        client_secret=self.settings.ebay_client_secret,
+                        environment="production",
+                    )
+                )
+            )
+        if self.settings.kleinanzeigen_web_enabled and enabled.get("kleinanzeigen", {}).get("enabled", True):
+            providers.append(KleinanzeigenWebProvider(WebProviderSettings(fetch_details=False, fetch_mode="http")))
+        if not providers:
+            return
+        try:
+            response = await self.client.get("/api/v1/market-research/targets", params={"limit": 3})
+            response.raise_for_status()
+            for target in response.json():
+                candidates: list[dict[str, Any]] = []
+                succeeded = False
+                for provider in providers:
+                    try:
+                        async with asyncio.timeout(45):
+                            count = 0
+                            # Deliberately no purchase-price corridor: avoid biasing the market estimate.
+                            profile = SearchProfile(name="Marktvergleich", query=target["query"])
+                            async for snapshot in provider.discover(profile):
+                                item = await provider.normalize(snapshot)
+                                if item.price.amount > 0:
+                                    candidates.append(
+                                        {
+                                            "platform": item.platform,
+                                            "url": str(item.url),
+                                            "title": item.title,
+                                            "description": item.description[:5000],
+                                            "price": str(item.price.amount),
+                                            "currency": item.price.currency,
+                                            "shipping": str(item.shipping_cost.amount) if item.shipping_cost else "0",
+                                        }
+                                    )
+                                count += 1
+                                if count >= 20:
+                                    break
+                            succeeded = True
+                    except Exception as exc:
+                        logger.warning(
+                            "market_research_provider_failed", provider=provider.platform, error_type=type(exc).__name__
+                        )
+                if succeeded:
+                    result = await self.client.post(
+                        f"/api/v1/listings/{target['id']}/market-research", json={"candidates": candidates}
+                    )
+                    result.raise_for_status()
+                    logger.info("market_research_completed", listing_id=target["id"], **result.json())
+        finally:
+            for provider in providers:
+                await provider.close()
 
     async def _run_locked_cycle(self) -> None:
         started_at = perf_counter()

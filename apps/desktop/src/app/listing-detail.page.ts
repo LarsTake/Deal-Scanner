@@ -132,6 +132,11 @@ import { ApiService } from './api.service';
             <h3>{{ observation.observedPrice }} {{ observation.currency }}</h3>
             <p>+ {{ observation.shippingCost }} Versand · {{ observation.condition ?? 'Zustand unbekannt' }}</p>
             <small>{{ observation.region ?? 'Region unbekannt' }} · {{ observation.observedAt }}</small>
+            @if (comparisonUrl(observation.metadata); as source) {
+              <p>{{ observation.metadata?.['sourceTitle'] }}</p>
+              <a mat-stroked-button [href]="source" target="_blank" rel="noopener noreferrer">Vergleichsangebot öffnen</a>
+              <small>Angebotspreis · kein bestätigter Verkauf</small>
+            }
           </mat-card>
         } @empty { <div class="empty">Keine passenden Vergleichsangebote vorhanden.</div> }
       </div>
@@ -173,6 +178,11 @@ import { ApiService } from './api.service';
   styles: `.description { white-space: pre-wrap; line-height: 1.65; } .listing-image { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: 10px; background: var(--surface-2); margin-bottom: 14px; } pre { overflow: auto; max-height: 24rem; white-space: pre-wrap; }`,
 })
 export class ListingDetailPage implements OnInit, OnDestroy {
+  comparisonUrl(metadata?: Record<string, unknown>): string | null {
+    const value = metadata?.['sourceUrl'];
+    return typeof value === 'string' && /^https:\/\/(?:[a-z0-9-]+\.)*(?:ebay\.de|ebay\.com|kleinanzeigen\.de)\//i.test(value)
+      ? value : null;
+  }
   private readonly api = inject(ApiService);
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
   readonly listing = signal<ListingDetail | null>(null);

@@ -5,8 +5,10 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from deal_scanner_core.market_identity import model_identity
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -65,6 +67,8 @@ class ComparisonSelection:
             *[f"Ausgeschlossen: {count} × {reason}." for reason, count in sorted(self.exclusions.items())],
             "Unbekannter Zustand wird nur mit unbekanntem Zustand verglichen.",
             "Manuell zugeordnete Verkäufe sind Nutzerevidenz, keine unabhängig verifizierten Verkäufe.",
+            "Recherchierte aktive Angebote sind Angebotspreise, keine bestätigten Verkäufe; "
+            "unbekannter Versand ist nicht eingerechnet.",
             "Verwendete Vergleichs-IDs: " + (", ".join(str(row.id) for row in self.rows) or "keine"),
         ]
 
@@ -131,6 +135,7 @@ async def select_comparisons(session: AsyncSession, workspace_id: UUID, listing:
     selected: list[PriceObservationRow] = []
     excluded: Counter[str] = Counter()
     seen_sources: set[UUID] = set()
+    research_urls: set[str] = set()
     for row in candidates:
         reason = None
         source = sources.get(row.listing_id) if row.listing_id else None
@@ -145,10 +150,31 @@ async def select_comparisons(session: AsyncSession, workspace_id: UUID, listing:
             and row.observation_kind in {"soldConfirmed", "manualSold"}
             and not row.metadata_json.get("snapshotId")
         )
-        if row.listing_id == listing.id and not attached_manual_sale:
+        research_url = row.metadata_json.get("sourceUrl")
+        observed_at = row.observed_at.replace(tzinfo=UTC) if row.observed_at.tzinfo is None else row.observed_at
+        researched = (
+            row.listing_id == listing.id
+            and row.observation_kind == "active"
+            and row.metadata_json.get("researchVersion") == "advertised-model-v1"
+            and row.metadata_json.get("identity") == model_identity(listing.title)
+            and bool(model_identity(listing.title))
+            and isinstance(research_url, str)
+            and observed_at >= datetime.now(UTC) - timedelta(days=14)
+        )
+        if researched and research_url in research_urls:
+            reason = "wiederholte recherchierte Angebotsquelle"
+        elif researched:
+            assert isinstance(research_url, str)
+            research_urls.add(research_url)
+            source = None
+        if reason:
+            pass
+        elif row.listing_id == listing.id and not attached_manual_sale and not researched:
             reason = "eigene Angebotshistorie"
-        elif source is not None and (
-            product_id is None or single_product_scope(source, source_products.get(source.id, [])) != product_id
+        elif (
+            not researched
+            and source is not None
+            and (product_id is None or single_product_scope(source, source_products.get(source.id, [])) != product_id)
         ):
             reason = "abweichender oder unklarer Angebotsumfang"
         elif row.listing_id is not None and row.listing_id != listing.id and source is None:

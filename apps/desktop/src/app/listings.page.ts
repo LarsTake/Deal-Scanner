@@ -51,6 +51,9 @@ import { OfflineCacheService } from './offline-cache.service';
           <div class="row"><mat-chip>{{ listing.platform }}</mat-chip><span>{{ listing.status }}</span></div>
           <h3><a [routerLink]="['/listings', listing.id]">{{ listing.title }}</a></h3>
           <div class="price">{{ listing.price }} {{ listing.currency }} <small>+ {{ listing.shippingCost }} Versand</small></div>
+          @if (listing.analysisStatus === 'COMPLETE' && listing.marketValueMedian == null) {
+            <p><small>Analyse verarbeitet · Marktpreis noch nicht belastbar. Passende Vergleichsangebote fehlen.</small></p>
+          }
           <div class="score-row">
             <div><small>Deal</small><b class="deal">{{ listing.dealScore ?? '–' }}</b></div>
             <div><small>Risiko</small><b class="risk">{{ listing.riskScore ?? '–' }}</b></div>

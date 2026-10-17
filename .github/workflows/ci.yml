@@ -57,6 +57,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Package Chrome extension
+        run: uv run python infrastructure/scripts/package_browser_extension.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: deal-scanner-chrome
+          path: artifacts/deal-scanner-chrome.zip
+          if-no-files-found: error
       - name: Verify generated contracts
         run: |
           pnpm openapi:export

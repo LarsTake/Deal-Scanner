@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 
 from .database import engine
 from .db_models import Base
+from .downloads import router as downloads_router
 from .problems import install_problem_handlers
 from .public_config import public_auth_config
 from .rate_limit import FixedWindowRateLimiter
@@ -127,6 +128,7 @@ async def security_headers(
 
 for module in (auth, health, images, imports, listings, market, restock, search_profiles, system, workers):
     app.include_router(module.router, prefix="/api/v1")
+app.include_router(downloads_router, prefix="/api/v1")
 
 
 @app.get("/", include_in_schema=False)

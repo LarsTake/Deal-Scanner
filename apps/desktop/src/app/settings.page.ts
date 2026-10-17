@@ -43,6 +43,20 @@ import { defaultApiUrl } from './connection-target';
       @if (restockMessage()) { <div class='notice'>{{ restockMessage() }}</div> }
       @if (restockError()) { <div class='notice error'>{{ restockError() }}</div> }
     </mat-card>
+    <section class='section-head'><div><p class='eyebrow'>Browser-Erweiterung</p><h2>Chrome-Erweiterung installieren</h2></div></section>
+    <mat-card class='form-card compact'>
+      <p>Importiert einzelne Angebote oder öffnet Artikel für Artikel mit vollständiger Beschreibung und blättert anschließend weiter.</p>
+      <button mat-flat-button type='button' (click)='downloadExtension()'>Chrome-Erweiterung herunterladen (ZIP)</button>
+      <ol>
+        <li>ZIP in einen dauerhaften Ordner entpacken.</li>
+        <li><code>chrome://extensions</code> in Chrome öffnen und den Entwicklermodus aktivieren.</li>
+        <li>„Entpackte Erweiterung laden“ wählen und den entpackten Ordner auswählen.</li>
+        <li>Im Scanner-Dashboard im Browser anmelden. Dann in der Erweiterung „Mit geöffnetem Scanner verbinden“ wählen. API und Geräte-Token werden automatisch übernommen.</li>
+      </ol>
+      <p>Auf Kleinanzeigen im Erweiterungs-Popup den Durchlauf starten. Seiten-/Angebotslimit und Pause sind einstellbar; Stoppen ist jederzeit möglich. Bei Fehlern oder Sicherheitsabfragen wird angehalten.</p>
+      <small>Chrome erlaubt ohne Web-Store-Veröffentlichung keine direkte Ein-Klick-Installation. Nach einem Server-Update die neue ZIP entpacken und die Erweiterung in Chrome neu laden.</small>
+      @if (extensionError()) { <div class='notice error'>{{ extensionError() }}</div> }
+    </mat-card>
     <section class='section-head'><div><p class='eyebrow'>Browser-Erweiterung</p><h2>Dauerhafte Kontoverbindung</h2></div></section>
     <mat-card class='form-card compact'>
       <p>Die Verbindung wird nach deiner Anmeldung als widerrufbares Geräte-Token erstellt. Passwort und Supabase-Sitzung bleiben in der Desktop-App.</p>
@@ -99,6 +113,7 @@ export class SettingsPage implements OnInit {
   readonly restockMessage = signal('');
   readonly restockError = signal('');
   readonly error = signal('');
+  readonly extensionError = signal('');
   readonly pairing = signal<LoopbackPairing | null>(null);
   readonly loopbackError = signal('');
   readonly permanentConnections = signal<ExtensionConnection[]>([]);
@@ -109,6 +124,23 @@ export class SettingsPage implements OnInit {
     nonNullable: true,
     validators: [Validators.required, Validators.maxLength(120)],
   });
+
+  async downloadExtension(): Promise<void> {
+    this.extensionError.set('');
+    const address = this.form.controls.apiUrl.value.replace(/\/$/, '') + '/api/v1/downloads/browser-extension';
+    try {
+      if (!['https:', 'http:'].includes(new URL(address).protocol)) throw new Error('Bitte eine gültige Scanner-API-Adresse eintragen.');
+      if ('__TAURI_INTERNALS__' in window) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('open_server_dashboard', { address });
+      } else {
+        const anchor = document.createElement('a');
+        anchor.href = address; anchor.download = 'deal-scanner-chrome.zip';
+        anchor.rel = 'noopener noreferrer'; anchor.target = '_blank';
+        anchor.click();
+      }
+    } catch (error) { this.extensionError.set(error instanceof Error ? error.message : String(error)); }
+  }
   readonly form = new FormGroup({
     apiUrl: new FormControl(localStorage.getItem('deal-scanner-api-url') ?? defaultApiUrl(window.location, '__TAURI_INTERNALS__' in window), { nonNullable: true, validators: [Validators.required] }),
     supabaseUrl: new FormControl(localStorage.getItem('deal-scanner-supabase-url') ?? '', { nonNullable: true }),

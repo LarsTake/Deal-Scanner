@@ -11,4 +11,5 @@ node_modules
 **/dist
 **/target
 .data
+artifacts
 graphify-out

@@ -1,4 +1,6 @@
 import { validateApiTarget } from './api-target';
+import { connectPreparedScanner, prepareActiveScanner, type PreparedScanner } from './connect';
+import type { ScanState } from './scan';
 
 const api = document.querySelector<HTMLInputElement>('#api')!;
 const token = document.querySelector<HTMLInputElement>('#token')!;
@@ -54,3 +56,42 @@ document.querySelector('#save')?.addEventListener('click', () => void (async () 
 })());
 
 export {};
+
+const connect = document.querySelector<HTMLButtonElement>('#connect')!;
+let preparedScanner: PreparedScanner | null = null;
+let prepareError = 'Bitte das Scanner-Dashboard im Browser öffnen und die Erweiterung dort erneut öffnen.';
+connect.disabled = true;
+void prepareActiveScanner().then((target) => { preparedScanner = target; })
+  .catch((error: unknown) => { if (error instanceof Error) prepareError = error.message; })
+  .finally(() => { connect.disabled = false; });
+
+connect.addEventListener('click', () => void (async () => {
+  if (!preparedScanner) { statusElement.textContent = prepareError; return; }
+  connect.disabled = true;
+  statusElement.textContent = 'Scanner-Konto wird verbunden …';
+  try {
+    const result = await connectPreparedScanner(preparedScanner);
+    api.value = result.apiUrl; storedToken = result.token; token.value = '';
+    statusElement.textContent = 'Mit deinem Scanner-Konto verbunden. API und Geräte-Token sind gespeichert.';
+  } catch (error) { statusElement.textContent = error instanceof Error ? error.message : 'Verbindung fehlgeschlagen.'; }
+  finally { connect.disabled = false; }
+})());
+
+const scanStatus = document.querySelector<HTMLElement>('#scan-status')!;
+const showScan = (state: (ScanState & { error?: string }) | null) => {
+  if (state) scanStatus.textContent = state.error ?? `${state.message} (${state.imported ?? 0} importiert)`;
+};
+void chrome.runtime.sendMessage({ type: 'SCAN_STATUS' }).then(showScan).catch(() => undefined);
+document.querySelector('#scan-start')?.addEventListener('click', () => void (async () => {
+  try {
+    showScan(await chrome.runtime.sendMessage({ type: 'SCAN_START', options: {
+      maxPages: Number(document.querySelector<HTMLInputElement>('#pages')!.value),
+      maxListings: Number(document.querySelector<HTMLInputElement>('#listings')!.value),
+      delaySeconds: Number(document.querySelector<HTMLInputElement>('#delay')!.value),
+    } }));
+  } catch (error) { scanStatus.textContent = String(error); }
+})());
+document.querySelector('#scan-stop')?.addEventListener('click', () => void (async () => {
+  try { showScan(await chrome.runtime.sendMessage({ type: 'SCAN_STOP' })); }
+  catch (error) { scanStatus.textContent = String(error); }
+})());

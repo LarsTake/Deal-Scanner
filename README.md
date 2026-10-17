@@ -11,6 +11,9 @@ Für die **Windows-App mit lokalem Ollama und eigenem zentralen Server** gibt es
 [Schritt-für-Schritt-Anleitung](docs/ollama-windows.md): Installation, automatische
 Supabase-Konfiguration, Analyse mit/ohne Bilder und optionale Webrecherche.
 Vorhandene Angebotsdaten lassen sich auch [mit cURL importieren](docs/import-with-curl.md).
+Die [Chrome-Erweiterung](docs/browser-extension.md) kann über die Einstellungen
+heruntergeladen, mit dem angemeldeten Konto gekoppelt und für einen begrenzten
+Artikeldurchlauf mit Seitenwechsel gestartet werden.
 
 Voraussetzungen: Python 3.12, `uv`, Node.js 24, `pnpm` 10. Die Supabase-CLI ist als exakt
 gepinntes Workspace-Werkzeug enthalten. Für Tauri werden zusätzlich Rust und die

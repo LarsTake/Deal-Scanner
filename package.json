@@ -7,6 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "browser-extension:package": "pnpm --filter @deal-scanner/browser-extension build && uv run python infrastructure/scripts/package_browser_extension.py",
     "dev": "pnpm --filter @deal-scanner/desktop start",
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",

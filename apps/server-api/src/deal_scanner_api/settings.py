@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     extension_origins: str = ""
     api_title: str = "Deal Scanner API"
     api_version: str = "0.1.0"
+    browser_extension_archive: str = "artifacts/deal-scanner-chrome.zip"
     default_lease_seconds: int = Field(default=300, ge=60, le=3600)
     development_user_id: str = "00000000-0000-4000-8000-000000000001"
     ntfy_url: str = ""

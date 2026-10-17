@@ -18,4 +18,11 @@ describe('validateApiTarget', () => {
     expect(() => validateApiTarget('http://scanner.example')).toThrow(/HTTPS/);
     expect(() => validateApiTarget('https://user:secret@scanner.example')).toThrow(/Zugangsdaten/);
   });
+
+  it('supports a local server on LAN or WLAN without granting every HTTP host', () => {
+    expect(validateApiTarget('http://192.168.1.10:8088')).toEqual({
+      apiUrl: 'http://192.168.1.10:8088', permissionPattern: 'http://192.168.1.10/*',
+    });
+    expect(() => validateApiTarget('http://8.8.8.8')).toThrow();
+  });
 });

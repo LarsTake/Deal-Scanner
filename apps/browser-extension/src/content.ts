@@ -1,4 +1,5 @@
 import type { ImportMessage, ImportOutcome, ImportResponseMessage, VisibleListing } from './types';
+import { detailStep, marketplaceUrl, searchStep, type ScanState } from './scan';
 
 function text(root: ParentNode, selectors: string[]): string {
   for (const selector of selectors) {
@@ -6,6 +7,11 @@ function text(root: ParentNode, selectors: string[]): string {
     if (value) return value;
   }
   return '';
+}
+
+function descriptionText(): string {
+  const element = document.querySelector<HTMLElement>('#viewad-description-text, [data-testid="description"]');
+  return (element?.innerText ?? element?.textContent ?? '').trim();
 }
 
 export function price(value: string): string {
@@ -35,7 +41,7 @@ function listingUrl(element: Element): string | null {
   if (!value) return null;
   try {
     const url = new URL(value, location.href);
-    return url.hostname.endsWith('kleinanzeigen.de') && url.pathname.includes('/s-anzeige/')
+    return ['www.kleinanzeigen.de', 'kleinanzeigen.de'].includes(url.hostname) && url.protocol === 'https:' && url.pathname.includes('/s-anzeige/')
       ? url.href
       : null;
   } catch {
@@ -97,7 +103,7 @@ export function collectDetail(): VisibleListing[] {
     externalId: externalId(location.href),
     url: location.href,
     title,
-    description: text(document, ['#viewad-description-text', '[data-testid="description"]']),
+    description: descriptionText(),
     price: price(text(document, ['#viewad-price', '[data-testid="price"]'])),
     currency: 'EUR',
     location: listingLocation,
@@ -235,3 +241,73 @@ button.textContent = location.pathname.includes('/s-anzeige/')
 button.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:2147483647;padding:12px 16px;border:0;border-radius:10px;background:#57e6ae;color:#07120f;font:700 14px system-ui;box-shadow:0 8px 30px #0008;cursor:pointer';
 button.addEventListener('click', () => void importVisible());
 document.body.append(button);
+
+export function nextResultsPage(root: ParentNode = document): string | null {
+  const link = root.querySelector<HTMLAnchorElement>(
+    'a[rel="next"], a.pagination-next, .pagination-next a, a[aria-label="Nächste Seite"], a[title="Nächste Seite"]',
+  );
+  return link?.getAttribute('href') ? marketplaceUrl(new URL(link.getAttribute('href')!, location.href).href) : null;
+}
+
+let scanBusy = false;
+export async function runScan(
+  navigate: (url: string) => void = (url) => location.assign(url),
+  pause: (milliseconds: number) => Promise<unknown> = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+): Promise<void> {
+  if (scanBusy) return;
+  scanBusy = true;
+  let state: ScanState | null = null;
+  const show = (value: ScanState) => { button.textContent = value.message; button.disabled = value.status === 'running'; };
+  try {
+    state = await chrome.runtime.sendMessage({ type: 'SCAN_STATUS' }) as ScanState | null;
+    if (!state || state.status !== 'running') { if (state) show(state); return; }
+    if (state.currentUrl !== marketplaceUrl(location.href)) throw new Error('Seite wurde außerhalb des Durchlaufs gewechselt. Bitte neu starten.');
+    button.disabled = true;
+    button.textContent = `${state.imported} importiert · ${state.visitedPages.length}/${state.maxPages} Seiten · warte …`;
+    await pause(state.delaySeconds * 1000);
+    const latest = await chrome.runtime.sendMessage({ type: 'SCAN_STATUS' }) as ScanState | null;
+    if (!latest || latest.id !== state.id || latest.status !== 'running') { if (latest) show(latest); return; }
+    state = latest;
+    if (document.querySelector('iframe[src*="captcha"], #captcha, #sec-cpt')
+        || /Sicherheitsüberprüfung|Zugriff verweigert/i.test(document.title)) {
+      throw new Error('Sicherheitsabfrage erkannt. Bitte manuell prüfen; der Durchlauf wurde gestoppt.');
+    }
+    if (state.phase === 'search') {
+      const cards = collectCards();
+      if (!cards.length) throw new Error('Keine Angebote erkannt. Seite prüfen und bei Bedarf neu starten.');
+      state = searchStep(state, cards.map((item) => item.url), nextResultsPage());
+    } else {
+      const listing = collectDetail()[0];
+      if (!listing || !listing.description.trim() || !document.querySelector('#viewad-price, [data-testid="price"]')) {
+        throw new Error('Angebotsdetails nicht vollständig geladen oder Angebot entfernt. Bitte Seite prüfen.');
+      }
+      const result = await chrome.runtime.sendMessage({ type: 'IMPORT_VISIBLE_LISTINGS', listings: [listing] }) as ImportResponseMessage;
+      if (!result || result.error) throw new Error(result?.error ?? 'Keine Importantwort.');
+      renderImportOutcomes(result.results);
+      state = detailStep(state, result.imported);
+    }
+    state.message = state.status === 'running'
+      ? `${state.imported} importiert · nächste ${state.phase === 'detail' ? 'Angebotsdetailseite' : 'Ergebnisseite'} …`
+      : state.message;
+    const saved = await chrome.runtime.sendMessage({ type: 'SCAN_PROGRESS', state }) as ScanState | null;
+    if (!saved) return;
+    show(saved);
+    if (saved.status === 'running') navigate(saved.currentUrl);
+  } catch (error) {
+    if (state?.status === 'running') {
+      state = { ...state, status: 'error', message: error instanceof Error ? error.message : 'Durchlauf fehlgeschlagen.' };
+      const saved = await chrome.runtime.sendMessage({ type: 'SCAN_PROGRESS', state }).catch(() => null) as ScanState | null;
+      show(saved ?? state);
+    }
+  } finally { scanBusy = false; }
+}
+
+if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+  chrome.runtime.onMessage.addListener((message, _sender, respond) => {
+    if (message.type !== 'SCAN_RUN') return false;
+    respond({ started: true });
+    void runScan();
+    return false;
+  });
+  void runScan();
+}

@@ -16,6 +16,7 @@ target/
 .data/
 .backups/
 .secrets/
+artifacts/deal-scanner-chrome.zip
 coverage/
 apps/desktop/src-tauri/gen/
 graphify-out/.graphify_*

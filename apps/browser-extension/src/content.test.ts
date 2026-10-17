@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { collectCards, collectDetail, euroPrice, externalId, price, renderImportOutcomes } from './content';
+import { collectCards, collectDetail, euroPrice, externalId, nextResultsPage, price, renderImportOutcomes } from './content';
 
 describe('visible Kleinanzeigen extraction', () => {
   beforeEach(() => {
@@ -30,6 +30,14 @@ describe('visible Kleinanzeigen extraction', () => {
     expect(listing.location).toBe('Hamburg');
     expect(listing.seller?.displayName).toBe('Privater Anbieter');
     expect(listing.seller?.rawData.source).toBe('visibleBrowserPage');
+    expect(listing.description).toBe('Abholung und Funktionstest möglich');
+  });
+
+  it('follows only recognized pagination links and refuses external destinations', () => {
+    document.body.innerHTML = '<a rel="next" href="/s-computer/seite:2/k0">Weiter</a>';
+    expect(nextResultsPage()).toBe('https://www.kleinanzeigen.de/s-computer/seite:2/k0');
+    document.body.innerHTML = '<a rel="next" href="https://example.com">Weiter</a>';
+    expect(() => nextResultsPage()).toThrow();
   });
 
   it('renders a known listing score directly on the open detail page', () => {

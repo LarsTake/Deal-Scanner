@@ -1,5 +1,8 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)] [uri]$ServerUrl)
+param(
+    [Parameter(Mandatory)] [uri]$ServerUrl,
+    [switch]$IncludeWeb
+)
 
 $ErrorActionPreference = 'Stop'
 Get-Command docker -ErrorAction Stop | Out-Null
@@ -24,10 +27,8 @@ Push-Location $root
 try {
     $sourceFile = Join-Path $root 'apps\server-api\src\deal_scanner_api\main.py'
     if (-not (Test-Path -LiteralPath $sourceFile)) { throw 'API-Quellcode im Compose-Projekt nicht gefunden.' }
-    if (-not (Select-String -LiteralPath $sourceFile -Pattern '/api/v1/client-config' -SimpleMatch -Quiet)) {
-        & git pull --ff-only
-        if ($LASTEXITCODE -ne 0) { throw 'Git-Aktualisierung fehlgeschlagen. Vorhandene lokale Aenderungen wurden nicht verworfen.' }
-    }
+    & git pull --ff-only
+    if ($LASTEXITCODE -ne 0) { throw 'Git-Aktualisierung fehlgeschlagen. Vorhandene lokale Aenderungen wurden nicht verworfen.' }
     if (-not (Select-String -LiteralPath $sourceFile -Pattern '/api/v1/client-config' -SimpleMatch -Quiet)) {
         throw 'Der ausgecheckte Server-Code enthaelt den Konfigurationsendpunkt noch nicht.'
     }
@@ -56,9 +57,17 @@ try {
     foreach ($file in $files) { $composeArgs += @('-f', $file) }
     & docker @composeArgs config --quiet
     if ($LASTEXITCODE -ne 0) { throw 'Compose-Konfiguration ungueltig.' }
-    & docker @composeArgs build api
+    $services = @('api')
+    if ($IncludeWeb) {
+        $availableServices = @(& docker @composeArgs config --services)
+        if ($LASTEXITCODE -ne 0 -or 'web' -notin $availableServices) {
+            throw 'IncludeWeb erwartet einen Web-Service im selben Compose-Projekt.'
+        }
+        $services += 'web'
+    }
+    & docker @composeArgs build @services
     if ($LASTEXITCODE -ne 0) { throw 'API-Build fehlgeschlagen; der bisherige Container wurde nicht ersetzt.' }
-    & docker @composeArgs up -d --no-deps api
+    & docker @composeArgs up -d --no-deps @services
     if ($LASTEXITCODE -ne 0) { throw 'API konnte nicht aktualisiert werden.' }
 
     $endpoint = $ServerUrl.AbsoluteUri.TrimEnd('/') + '/api/v1/client-config'

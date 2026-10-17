@@ -52,6 +52,9 @@ auf das Secret, niemals dessen Wert. Marketplace ist standardmäßig `EBAY_DE`. 
 
 ## E-Mail und Browser-Erweiterung
 
+Installation per ZIP aus der App, automatische Kontokopplung und der begrenzte
+Artikeldurchlauf mit Seitenwechsel stehen in [browser-extension.md](browser-extension.md).
+
 IMAP benötigt Host, Benutzer, Passwort und eine enge Absender-Allowlist. Unbekannte Formate
 landen in Quarantäne; Original-EMLs werden archiviert. Die gebaute MV3-Erweiterung liegt unter
 `apps/browser-extension/dist` und wird in Chrome/Edge als entpackte Erweiterung geladen. Sie

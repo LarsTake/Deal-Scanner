@@ -4,6 +4,7 @@ import type {
   ImportResponseMessage,
   VisibleListing,
 } from './types';
+import { handleScanMessage, type ScanMessage } from './scan-background';
 
 export interface Configuration {
   apiUrl?: string;
@@ -53,6 +54,7 @@ export async function importVisibleListings(
     try {
       response = await fetchImpl(`${apiUrl}/api/v1/imports/browser`, {
         method: 'POST',
+        signal: AbortSignal.timeout(25000),
         headers: {
           'Content-Type': 'application/json',
           'Idempotency-Key': `${listing.externalId}:${listing.rawData.capturedAt}`,
@@ -94,6 +96,7 @@ export async function importVisibleListings(
           `${apiUrl}/api/v1/listings/${encodeURIComponent(result.listing.id)}/images`,
           {
             method: 'POST',
+            signal: AbortSignal.timeout(25000),
             headers: {
               'Content-Type': 'application/json',
               ...authorization,
@@ -120,7 +123,13 @@ async function handleImport(message: ImportMessage): Promise<ImportResponseMessa
 }
 
 if (typeof chrome !== 'undefined') {
-  chrome.runtime.onMessage.addListener((message: ImportMessage, _sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message: ImportMessage | ScanMessage, sender, sendResponse) => {
+    if (!message || typeof message.type !== 'string') return false;
+    if (message.type.startsWith('SCAN_')) {
+      void handleScanMessage(message as ScanMessage, sender).then(sendResponse,
+        (error: unknown) => sendResponse({ error: failure(error) }));
+      return true;
+    }
     if (message.type !== 'IMPORT_VISIBLE_LISTINGS') return false;
     void handleImport(message).then(
       sendResponse,

@@ -9,6 +9,7 @@ import { OfflineCacheService } from './offline-cache.service';
 import { NotificationPollingService } from './notification-polling.service';
 import { OutboxSyncService } from './outbox-sync.service';
 import { AuthService } from './auth.service';
+import { ExtensionConnectService } from './extension-connect.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,8 +22,10 @@ export const appConfig: ApplicationConfig = {
       const auth = inject(AuthService);
       const notifications = inject(NotificationPollingService);
       const outbox = inject(OutboxSyncService);
+      const extension = inject(ExtensionConnectService);
       return auth.initializeFromServer().then(() => {
         if ('__TAURI_INTERNALS__' in window) return;
+        extension.start();
         notifications.start();
         outbox.start();
       });

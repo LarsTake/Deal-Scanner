@@ -65,8 +65,13 @@ try {
         }
         $services += 'web'
     }
-    & docker @composeArgs build @services
-    if ($LASTEXITCODE -ne 0) { throw 'API-Build fehlgeschlagen; der bisherige Container wurde nicht ersetzt.' }
+    foreach ($service in $services) {
+        Write-Host "Baue $service (nacheinander, bestehende Container laufen weiter)..."
+        & docker @composeArgs --parallel 1 build $service
+        if ($LASTEXITCODE -ne 0) {
+            throw "Build von $service fehlgeschlagen; kein Container wurde durch dieses Update ersetzt. Bei RPC/EOF zuerst Docker Desktop und 'docker info' pruefen, dann erneut starten."
+        }
+    }
     & docker @composeArgs up -d --no-deps @services
     if ($LASTEXITCODE -ne 0) { throw 'API konnte nicht aktualisiert werden.' }
 

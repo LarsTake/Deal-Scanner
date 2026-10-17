@@ -100,6 +100,13 @@ ThinkCentre-Update-Skript kann beides im selben Compose-Projekt aktualisieren:
 Einen außerhalb dieses Projekts betriebenen Web-Service zusätzlich neu bauen.
 Datenvolumes und `.env` beibehalten.
 
+Das Update-Skript baut API und Web nacheinander; beide Docker-Builds beschränken
+die parallelen Paket-Downloads. Bei `rpc error ... EOF` wurde die Verbindung zum
+Docker-Builddienst unterbrochen, etwa durch einen Docker-/WSL-Neustart oder
+Ressourcenmangel. Docker Desktop prüfen beziehungsweise neu starten und erst nach
+erfolgreichem `docker info` erneut bauen. Ein solcher Fehler beweist allein keinen
+Speichermangel. Das Skript ersetzt Container erst nach erfolgreichen Builds.
+
 Für lokale Updates: ZIP erneut herunterladen, im bisherigen Erweiterungsordner
 entpacken und unter `chrome://extensions` **Neu laden** wählen. Bereits offene
 Kleinanzeigen-Tabs ebenfalls neu laden. Bei unverändertem Installationspfad

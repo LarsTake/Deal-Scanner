@@ -7,6 +7,11 @@ Analyse-Worker sind getrennte Python-Prozesse.
 
 ## Schnellstart
 
+Für die **Windows-App mit lokalem Ollama und eigenem zentralen Server** gibt es eine
+[Schritt-für-Schritt-Anleitung](docs/ollama-windows.md): Installation, automatische
+Supabase-Konfiguration, Analyse mit/ohne Bilder und optionale Webrecherche.
+Vorhandene Angebotsdaten lassen sich auch [mit cURL importieren](docs/import-with-curl.md).
+
 Voraussetzungen: Python 3.12, `uv`, Node.js 24, `pnpm` 10. Die Supabase-CLI ist als exakt
 gepinntes Workspace-Werkzeug enthalten. Für Tauri werden zusätzlich Rust und die
 plattformabhängigen Tauri-Systembibliotheken benötigt; für den Serverbetrieb Docker.

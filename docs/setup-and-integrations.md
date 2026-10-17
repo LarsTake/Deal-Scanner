@@ -93,6 +93,9 @@ permanentes Scraping von Kleinanzeigen ist nicht Teil der Integration.
 
 ## Ollama, OCR und Benachrichtigungen
 
+Die Windows-Einrichtung mit Modellrollen, GPU-Einstellungen und einer separat
+aufrufbaren Webrecherche ist in [ollama-windows.md](ollama-windows.md) beschrieben.
+
 Der lokale Worker verwendet feste Modellrollen: `gemma4:12b` extrahiert Produkte, Komponenten
 und Attribute, `gpt-oss:latest` prüft unabhängig Risiken, Widersprüche und fehlende Angaben,
 `gemma4:12b` liest sichtbaren Text aus Angebotsbildern und `qwen3-embedding:0.6b` erzeugt

@@ -1,69 +1,58 @@
-# Desktop-App: ThinkCentre-Dashboard und lokale KI
+# Desktop-App und lokaler KI-Worker
 
-Die Tauri-App öffnet beim Start das konfigurierte Server-Dashboard im Standardbrowser.
-Das lokale App-Fenster bietet die Worker-Steuerung unter **Dieses Gerät · KI**.
-Die Server-Seite erhält damit keine Tauri-Laufzeit und keine lokalen Berechtigungen;
-jeder native Steuerbefehl prüft zusätzlich Fenstername und lokale Herkunft.
-Die ältere Server-Oberfläche würde sonst die eingebettete Webview als Desktop-App
-erkennen und beim Zugriff auf nicht freigegebene SQL-Funktionen nicht starten.
-Das Mac-Paket enthält keine App-Transport-Security-Ausnahmen. Die Dashboard-Adresse
-wird vor dem Öffnen auf HTTPS oder lokale HTTP-Adressen begrenzt. Für Zugangsdaten
-bleibt HTTPS auch im Heimnetz vorzuziehen.
+Die Tauri-App zeigt Dashboard, Suchaufträge und Angebote im eigenen Fenster.
+Unter **Dieses Gerät · KI** steuert sie einen lokalen Worker und bietet
+Textanalyse mit optionaler Webrecherche. Der Dashboard-Button öffnet auf Wunsch
+den Standardbrowser; beim Start wird kein Browser automatisch geöffnet.
 
-## Voraussetzungen
+Die vollständige [Windows-Anleitung](ollama-windows.md) beschreibt Installation,
+Server, Modelle und Fehlerdiagnose. Unter **Anmelden → Server verbinden** die
+eigene API-Adresse hinterlegen. `/api/v1/client-config` liefert automatisch die
+öffentliche Supabase-Konfiguration. Persönliche Dashboard-Sitzung und
+Worker-Dienstanmeldung bleiben getrennt. Keine Datenbankpasswörter oder
+Service-Role-Keys auf Endgeräten hinterlegen.
 
-- Windows oder macOS, erreichbarer Scanner-Server und laufendes lokales Ollama.
-- Installierte Python-Worker-Laufzeit: im Repository
-  `uv sync --all-packages --frozen` ausführen. Python/Worker werden derzeit **nicht**
-  in das App-Paket eingebettet. Ollama-Modelle werden nicht automatisch geladen.
-- Worker-Programmdatei wählen: `.venv/bin/deal-scanner-worker` unter macOS oder
-  `.venv/Scripts/deal-scanner-worker.exe` unter Windows.
-- Supabase-URL, Publishable-Key, Scanner-E-Mail und Scanner-Passwort hinterlegen.
-  Keine Datenbank-Zugangsdaten und keine Service-Role-Keys verwenden.
+Die CSP erlaubt Netzwerkverbindungen zu eigenen HTTP(S)-Servern und Supabase-
+Domains, ohne private IPs einzubauen. Native Steuerbefehle prüfen Fenstername
+und lokale Herkunft; externe Serverseiten dürfen keinen Worker steuern.
 
-Auf dem bereits eingerichteten Mac werden die Werte des bekannten LaunchAgents
-`de.deal-scanner.text-worker` gelesen. Sein Passwort wird nicht in die UI geladen.
-Solange dieser Dienst geladen ist, startet die App keinen zweiten Worker. **Stopp**
-deaktiviert dessen Autostart und entlädt den Dienst. Danach kann die App übernehmen.
+## Analyse
 
-## Bedienung
+Die App benötigt laufendes Ollama und eine separat installierte Worker-Laufzeit:
+`uv sync --all-packages --frozen`. Programmdatei: `.venv/bin/deal-scanner-worker`
+unter macOS oder `.venv/Scripts/deal-scanner-worker.exe` unter Windows. Python
+und Modelle sind nicht im Installer enthalten.
 
-1. Bei Bedarf die ThinkCentre-Adresse ändern, z. B. `http://192.168.178.169:8088`.
-2. Worker stoppen, bevor die Einstellungen geändert werden.
-3. Textmodell eintragen; optional Bildanalyse einschalten und ein installiertes,
-   bildfähiges Vision-Modell zuweisen.
-4. Einstellungen speichern und **Worker aktivieren** wählen.
-5. **Worker deaktivieren** stoppt den lokalen Prozess. Laufende Jobs können dabei
-   abgebrochen und nach Ablauf ihrer Lease erneut verarbeitet werden.
+Bei einem zentralen Server bleibt **Lokaler Betrieb auf diesem PC** ausgeschaltet.
+Die Option gilt ausschließlich für lokale Entwicklungs-APIs mit Entwicklungsauth.
+Textmodell ist Pflicht; Risiko- und Embedding-Modell sind optional. Bildanalyse
+benötigt ein installiertes Vision-Modell. Ohne Bildanalyse sind Vision und
+Tesseract deaktiviert.
 
-Der App-Worker läuft bei minimierter App weiter, nicht nach dem Beenden der App.
-Die App richtet keinen neuen OS-Autostart ein. Bei Ruhemodus oder ausgeschaltetem
-Computer pausiert die lokale KI; die serverseitige Sammlung läuft weiter.
-Das Statusfeld zeigt den lokalen Prozesszustand, nicht den Erfolg der Anmeldung
-oder einer Modellanalyse. Heartbeat/Jobs im Server-Dashboard und `worker.log`
-prüfen. Textmodus deaktiviert Vision und Tesseract; separate Reasoning- und
-Embedding-Stufen sind in diesem schlanken Profil ausgeschaltet.
+Vor Änderungen den Worker stoppen, speichern und **Analyse starten** wählen.
+**Analyse stoppen** beendet den eigenen Prozess, unter Windows auch dessen
+Kindprozesse. Laufende Jobs können nach Ablauf ihrer Lease neu verarbeitet werden.
+Der Worker läuft minimiert weiter, endet aber beim Schließen der App. Es wird
+kein neuer System-Autostart eingerichtet.
 
-Passwortdateien sind auf Unix mit `0600` geschützt; unter Windows wird die
-ACL-Vererbung entfernt und dem aktuellen Benutzer Zugriff gewährt. Sie sind nicht
-verschlüsselt. Speicherort: App-Local-Data-Verzeichnis, Unterordner `local-worker`.
-Worker-Logs können Angebotsinformationen enthalten.
+Auf macOS können Einstellungen des bisherigen LaunchAgents
+`de.deal-scanner.text-worker` übernommen werden. Solange dieser geladen ist,
+startet die App keinen zweiten Worker. Stoppen entlädt den Dienst und deaktiviert
+seinen Autostart, bevor die App übernimmt.
 
-## App-Pakete bauen
+Der Prozesszustand beweist keine erfolgreiche Analyse. Heartbeat und Jobs unter
+**Worker** und das lokale `worker.log` prüfen. Die separate Recherche mit Internet
+reichert Inserate nicht automatisch mit Webdaten an.
 
-Auf dem jeweiligen Zielsystem mit Node/pnpm, Rust und den Tauri-Buildvoraussetzungen:
+## Speicherung und Pakete
 
-```sh
-corepack pnpm install --frozen-lockfile
-corepack pnpm --filter @deal-scanner/desktop tauri build
-```
+Konfiguration, Passwortdatei und Logs liegen im App-Local-Data-Verzeichnis unter
+`local-worker`. Das Worker-Passwort ist auf Unix mit `0600` und auf Windows durch
+eine Benutzer-ACL geschützt, aber nicht verschlüsselt. Dashboard-Token liegen
+getrennt im Stronghold-Tresor. Logs können Angebotsdaten enthalten.
 
-macOS erzeugt `.app`/DMG; Windows erzeugt die konfigurierten Windows-Installer.
-Ergebnisse liegen unter `apps/desktop/src-tauri/target/release/bundle`.
-Der vorhandene GitHub-Workflow **Desktop artifacts** baut Windows und Apple-Silicon
-auf ihren jeweiligen Runnern. Er wurde durch diese lokale Implementierung nicht
-automatisch gestartet. Ohne Entwicklerzertifikate sind Artefakte nicht für eine
-ungeprüfte öffentliche Verteilung signiert/notarisiert.
-
-Das Dashboard lädt die Version, die tatsächlich auf dem ThinkCentre installiert
-ist. Ein Desktop-App-Update aktualisiert nicht automatisch den Server.
+Die Windows-Anleitung erklärt den lokalen Build und den GitHub-Workflow
+**Desktop artifacts**. Pakete liegen unter
+`apps/desktop/src-tauri/target/release/bundle`. Ohne Entwicklerzertifikate sind
+sie nicht signiert beziehungsweise notarisiert. Desktop-Updates aktualisieren
+Server, Python-Checkout und Modelle nicht automatisch.

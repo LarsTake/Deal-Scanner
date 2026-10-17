@@ -32,13 +32,11 @@ import { NavIconComponent, type NavIconName } from './nav-icon.component';
           @if (native) {
             <a mat-list-item routerLink="/local-device" routerLinkActive="active"><ds-nav-icon matListItemIcon name="computer" /><span matListItemTitle>Dieses Gerät · KI</span></a>
           }
-          @if (!native) {
           @for (item of navigation; track item.path) {
             <a mat-list-item [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/' }">
               <ds-nav-icon matListItemIcon [name]="item.icon" />
               <span matListItemTitle>{{ item.label }}</span>
             </a>
-          }
           }
         </mat-nav-list>
       </mat-sidenav>

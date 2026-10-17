@@ -18,12 +18,11 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { subscriptSizing: 'dynamic' } },
     provideAppInitializer(() => inject(OfflineCacheService).initialize()),
     provideAppInitializer(() => {
-      // The native control centre opens the remote dashboard in an isolated webview.
-      if ('__TAURI_INTERNALS__' in window) return;
       const auth = inject(AuthService);
       const notifications = inject(NotificationPollingService);
       const outbox = inject(OutboxSyncService);
       return auth.initializeFromServer().then(() => {
+        if ('__TAURI_INTERNALS__' in window) return;
         notifications.start();
         outbox.start();
       });

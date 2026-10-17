@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [switch]$Install,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$SkipWorker
 )
 
 $ErrorActionPreference = 'Stop'
@@ -104,7 +105,7 @@ try {
             )
         ).Id
     }
-    if (-not (Test-ProcessCommand -Pattern 'deal-scanner-worker\.exe')) {
+    if (-not $SkipWorker -and -not (Test-ProcessCommand -Pattern 'deal-scanner-worker\.exe')) {
         $started.worker = (
             Start-LoggedProcess -Name 'worker' -Executable $uv.Source -Arguments @(
                 '--system-certs', 'run', '--package', 'deal-scanner-worker', 'deal-scanner-worker'

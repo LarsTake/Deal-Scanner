@@ -15,6 +15,7 @@ export class AuthService {
   readonly userEmail = signal<string | null>(null);
   readonly configured = signal(false);
   readonly serverConfigured = signal(false);
+  readonly connectionMessage = signal('Scanner-Server verbinden, um die Anmeldung automatisch einzurichten.');
 
   constructor(private readonly tokens: SecureTokenStore) {
     this.configureFromStorage();
@@ -29,27 +30,88 @@ export class AuthService {
   }
 
   async initializeFromServer(): Promise<void> {
-    const base = localStorage.getItem('deal-scanner-api-url') ??
-      defaultApiUrl(window.location, runsInTauri());
-    try {
-      const response = await fetch(`${base.replace(/\/$/, '')}/api/v1/client-config`, {
-        signal: AbortSignal.timeout(5000),
-        credentials: 'omit',
-        cache: 'no-store',
-      });
-      if (!response.ok) return;
-      const config: unknown = await response.json();
-      if (!config || typeof config !== 'object') return;
-      const values = config as Record<string, unknown>;
-      if (values['authMode'] !== 'supabase' || typeof values['supabaseUrl'] !== 'string' ||
-          typeof values['supabasePublishableKey'] !== 'string' || !values['supabasePublishableKey']) return;
-      const url = new URL(values['supabaseUrl']);
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
-      this.configure(values['supabaseUrl'], values['supabasePublishableKey']);
-      this.serverConfigured.set(true);
-    } catch {
-      // Offline or older server: keep the existing manual configuration usable.
+    if (runsInTauri()) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const addresses = await invoke<string[]>('server_connection');
+        if (addresses.length) {
+          localStorage.setItem('deal-scanner-server-addresses', JSON.stringify(addresses));
+          localStorage.setItem('deal-scanner-api-url', addresses[0]);
+        }
+      } catch { /* Older desktop versions can still use the saved server address. */ }
     }
+    let addresses: string[] = [];
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem('deal-scanner-server-addresses') ?? '[]');
+      if (Array.isArray(stored)) addresses = stored.filter((value): value is string => typeof value === 'string').slice(0, 5);
+    } catch { /* A saved single address remains usable. */ }
+    if (!addresses.length) addresses = [localStorage.getItem('deal-scanner-api-url') ?? defaultApiUrl(window.location, runsInTauri())];
+    let failure = '';
+    for (const base of addresses) {
+      try {
+        const response = await fetch(`${base.replace(/\/$/, '')}/api/v1/client-config`, {
+          signal: AbortSignal.timeout(3000), credentials: 'omit', cache: 'no-store',
+        });
+        if (!response.ok) {
+          failure = 'Der Scanner-Server liefert keine Verbindungskonfiguration. Serveradresse und Serverversion prüfen.';
+          continue;
+        }
+        const config: unknown = await response.json();
+        if (!config || typeof config !== 'object') continue;
+        const values = config as Record<string, unknown>;
+        if (values['authMode'] === 'development') {
+          this.configured.set(false);
+          this.connectionMessage.set('Diese Adresse gehört zum lokalen Entwicklungsbetrieb. Für deine Kontoanmeldung bitte den zentralen Scanner-Server verbinden.');
+          return;
+        }
+        if (values['authMode'] !== 'supabase' || typeof values['supabaseUrl'] !== 'string' ||
+            typeof values['supabasePublishableKey'] !== 'string' || !values['supabasePublishableKey']) {
+          failure = 'Auf diesem Server fehlt die zentrale Anmeldekonfiguration. Sie muss einmal auf dem Server eingerichtet werden.';
+          continue;
+        }
+        const url = new URL(values['supabaseUrl']);
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') continue;
+        this.configure(values['supabaseUrl'], values['supabasePublishableKey']);
+        localStorage.setItem('deal-scanner-api-url', base.replace(/\/$/, ''));
+        this.serverConfigured.set(true);
+        this.connectionMessage.set(`Anmeldung automatisch vom Scanner-Server eingerichtet: ${base}`);
+        return;
+      } catch { /* Try the next configured network path without transmitting login credentials. */ }
+    }
+    this.connectionMessage.set(failure || 'Scanner-Server nicht erreichbar. Serveradresse und Netzwerkverbindung prüfen.');
+  }
+
+  async connectToServer(address: string): Promise<void> {
+    const addresses = address.split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
+    if (!addresses.length || addresses.length > 5) throw new Error('Bitte eine bis fünf Serveradressen eingeben.');
+    const origins = addresses.map((value) => {
+      const url = new URL(value);
+      const parts = url.hostname.split('.').map(Number);
+      const privateIp = parts.length === 4 && parts.every((part) => Number.isInteger(part) && part >= 0 && part <= 255) &&
+        (parts[0] === 10 || parts[0] === 127 || (parts[0] === 192 && parts[1] === 168) || (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31));
+      const local = url.hostname === 'localhost' || privateIp;
+      if ((url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) ||
+          url.username || url.password || url.search || url.hash || url.pathname !== '/') {
+        throw new Error('Bitte HTTPS verwenden; HTTP ist nur für lokale Serveradressen erlaubt.');
+      }
+      return url.origin;
+    });
+    if (runsInTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('save_server_connection', { addresses: [...new Set(origins)] });
+    }
+    localStorage.setItem('deal-scanner-server-addresses', JSON.stringify([...new Set(origins)]));
+    localStorage.setItem('deal-scanner-api-url', origins[0]);
+    this.authSubscription?.unsubscribe();
+    void this.client?.auth.stopAutoRefresh();
+    this.client = null;
+    this.configured.set(false);
+    this.serverConfigured.set(false);
+    this.userEmail.set(null);
+    localStorage.removeItem('deal-scanner-supabase-url');
+    localStorage.removeItem('deal-scanner-supabase-key');
+    await this.initializeFromServer();
+    if (!this.serverConfigured()) throw new Error(this.connectionMessage());
   }
 
   async unlockDesktop(passphrase: string): Promise<boolean> {
@@ -67,7 +129,7 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string, desktopPassphrase: string): Promise<void> {
-    if (!this.client) throw new Error('Supabase ist noch nicht konfiguriert.');
+    if (!this.client || !this.configured()) throw new Error(this.connectionMessage());
     if (runsInTauri()) await this.tokens.unlockDesktop(desktopPassphrase);
     const { data, error } = await this.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -77,6 +139,7 @@ export class AuthService {
       refreshToken: data.session.refresh_token,
     });
     this.userEmail.set(data.user.email ?? null);
+    localStorage.setItem('deal-scanner-user-email', data.user.email ?? '');
   }
 
   async signOut(): Promise<void> {

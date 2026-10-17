@@ -6,6 +6,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { AuthService } from './auth.service';
+import { defaultApiUrl } from './connection-target';
+
+function savedServerUrl(): string {
+  try {
+    const addresses: unknown = JSON.parse(localStorage.getItem('deal-scanner-server-addresses') ?? '[]');
+    if (Array.isArray(addresses)) {
+      const saved = addresses.filter((address): address is string => typeof address === 'string').join('\n');
+      if (saved) return saved;
+    }
+  } catch { /* Fall back to the last selected server if the saved list is damaged. */ }
+  return localStorage.getItem('deal-scanner-api-url') || defaultApiUrl(window.location, '__TAURI_INTERNALS__' in window);
+}
 
 @Component({
   standalone: true,
@@ -13,7 +25,11 @@ import { AuthService } from './auth.service';
   template: `
     <header class="page-header"><div><p class="eyebrow">Identität</p><h1>Anmelden</h1><p>Supabase-JWTs werden lokal validiert; der Desktop speichert die Sitzung im Stronghold-Tresor.</p></div></header>
     <mat-card class="form-card compact">
-      @if (!auth.configured()) { <div class="notice error">Supabase-URL und Publishable Key zuerst unter Einstellungen speichern.</div> }
+      <h2>Scanner-Server</h2>
+      <p>Die App lädt die Supabase-Konfiguration automatisch vom Server. Du benötigst hier keine Supabase-URL und keinen Schlüssel.</p>
+      <mat-form-field><mat-label>Scanner-Server</mat-label><input matInput [formControl]="serverUrl" placeholder="https://scanner.example.com" /></mat-form-field>
+      <button mat-stroked-button type="button" (click)="connectServer()" [disabled]="busy()">Server verbinden</button>
+      <p class="notice">{{ auth.connectionMessage() }}</p>
       @if (auth.userEmail()) { <div class="notice">Angemeldet als {{ auth.userEmail() }}</div><button mat-stroked-button (click)="signOut()">Abmelden</button> }
       @else {
         <form [formGroup]="form" (ngSubmit)="signIn()">
@@ -31,6 +47,7 @@ export class LoginPage {
   readonly auth = inject(AuthService);
   readonly busy = signal(false);
   readonly error = signal('');
+  readonly serverUrl = new FormControl(savedServerUrl(), { nonNullable: true });
   readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -49,6 +66,16 @@ export class LoginPage {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  async connectServer(): Promise<void> {
+    this.busy.set(true); this.error.set('');
+    try {
+      await this.auth.connectToServer(this.serverUrl.value);
+      window.location.reload();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Serververbindung fehlgeschlagen');
+    } finally { this.busy.set(false); }
   }
 
   async signOut(): Promise<void> {

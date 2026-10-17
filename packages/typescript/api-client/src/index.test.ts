@@ -7,6 +7,18 @@ afterEach(() => {
 });
 
 describe('DealScannerClient', () => {
+  it('uses the server selected after startup without rebuilding the API client', async () => {
+    let selected = 'http://127.0.0.1:8000';
+    const fetchMock = vi.fn(async (request: Request) => {
+      expect(request.url).toBe('http://192.168.178.169:8088/api/v1/system/status');
+      expect(request.headers.get('Authorization')).toBe('Bearer fixture');
+      return Response.json({ status: 'ok' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new DealScannerClient({ baseUrl: selected, resolveBaseUrl: () => selected, token: async () => 'fixture' });
+    selected = 'http://192.168.178.169:8088';
+    await expect(client.systemStatus()).resolves.toEqual({ status: 'ok' });
+  });
   it('serializes generated route parameters and applies authentication headers', async () => {
     const fetchMock = vi.fn(async (request: Request) => {
       expect(request.url).toBe(

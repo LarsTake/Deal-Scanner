@@ -28,6 +28,7 @@ import createClient, { type Client } from 'openapi-fetch';
 
 export interface ClientOptions {
   baseUrl: string;
+  resolveBaseUrl?: () => string;
   token?: () => Promise<string | null>;
   developmentUserId?: string;
 }
@@ -70,6 +71,12 @@ export function createGeneratedDealScannerClient(
   });
   client.use({
     onRequest: async ({ request }) => {
+      const base = options.resolveBaseUrl?.();
+      if (base) {
+        const current = new URL(request.url);
+        const target = new URL(base);
+        if (current.origin !== target.origin) request = new Request(`${target.origin}${current.pathname}${current.search}`, request);
+      }
       const token = await options.token?.();
       if (token) request.headers.set('Authorization', `Bearer ${token}`);
       if (options.developmentUserId) {

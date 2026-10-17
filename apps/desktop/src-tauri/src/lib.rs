@@ -17,6 +17,9 @@ pub fn run() {
             local_worker::start_local_worker,
             local_worker::stop_local_worker,
             local_worker::open_server_dashboard,
+            local_worker::research_local,
+            local_worker::server_connection,
+            local_worker::save_server_connection,
         ])
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_notification::init())

@@ -1,5 +1,18 @@
 # ThinkCentre: schlanker Dauerbetrieb
 
+## Paketdownloads beim Docker-Build
+
+API-Erweiterungsbuild und Web-Build entfernen ausschließlich im temporären
+Docker-Build-Kontext die Root-Entwicklungswerkzeuge aus Manifest und zugehörigem
+Lockfile-Importer. Damit wird insbesondere die Supabase-CLI nicht installiert.
+Workspace-Paketversionen und Sicherheits-Overrides bleiben unverändert gepinnt.
+Ein BuildKit-Paketcache spart wiederholte Downloads bei Quellcodeänderungen.
+Die erste Installation benötigt weiterhin Zugriff auf die Paketregistries.
+
+Auf kleinen Hosts API und Web mit zwei getrennten Build-Aufrufen nacheinander
+bauen. Bei einem Fehler keinen Container ersetzen. Ein erfolgreicher Build ändert
+noch nicht die laufenden Container; erst `docker compose up -d` übernimmt die Images.
+
 Vorbereitet für Windows 11 Pro/Docker Desktop mit 8 GB RAM. Noch nicht auf deinem
 ThinkCentre installiert oder unter Jellyfin-Last gemessen. Anleitung für den
 HTTP-Sammler, nicht für Browserautomatisierung oder lokale KI auf dem Server.

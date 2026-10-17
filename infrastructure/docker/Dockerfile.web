@@ -2,7 +2,9 @@ FROM node:24-alpine AS build
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 COPY . .
-RUN pnpm --filter @deal-scanner/desktop... install --frozen-lockfile --child-concurrency=1 --network-concurrency=4
+RUN node infrastructure/scripts/prepare-docker-node.mjs
+RUN --mount=type=cache,id=deal-scanner-pnpm,target=/pnpm/store \
+    pnpm --store-dir /pnpm/store --filter @deal-scanner/desktop... install --frozen-lockfile --child-concurrency=1 --network-concurrency=4
 RUN pnpm --filter @deal-scanner/desktop build
 
 FROM caddy:2.10-alpine
